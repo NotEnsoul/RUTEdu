@@ -367,6 +367,44 @@ object SubjectRepository {
                     isLocked = true,
                     color = Color(0xFF9E9E9E),
                     icon = Icons.Default.Lock
+                ),
+                Topic(
+                    id = "geo_4",
+                    name = "Kraje i stolice",
+                    description = "Wskazuj kraje na mapie",
+                    progress = 0.0f,
+                    isLocked = false,
+                    color = Color(0xFF3DBD7D),
+                    icon = Icons.Default.Public,
+                    lessons = listOf(
+                        Lesson(
+                            id = "geo_4_1",
+                            name = "Sąsiedzi Polski",
+                            description = "7 krajów graniczących z Polską",
+                            progress = 0.0f,
+                            isLocked = false,
+                            color = Color(0xFF3DBD7D),
+                            icon = Icons.Default.Public
+                        ),
+                        Lesson(
+                            id = "geo_4_2",
+                            name = "Kraje Azji",
+                            description = "Największe i najważniejsze kraje Azji",
+                            progress = 0.0f,
+                            isLocked = false,
+                            color = Color(0xFF4A80F0),
+                            icon = Icons.Default.Public
+                        ),
+                        Lesson(
+                            id = "geo_4_3",
+                            name = "Stolice Europy",
+                            description = "Wskaż kraj po nazwie stolicy",
+                            progress = 0.0f,
+                            isLocked = false,
+                            color = Color(0xFFF47B20),
+                            icon = Icons.Default.Public
+                        )
+                    )
                 )
             )
         )

@@ -20,6 +20,15 @@ data class Hint(
     val steps: List<String> = emptyList()
 )
 
+enum class MapRegion(
+    val lonMin: Float, val lonMax: Float,
+    val latMin: Float, val latMax: Float
+) {
+    EUROPE(-27f, 60f, 27f, 75f),
+    CENTRAL_EUROPE(-8f, 35f, 44f, 60f),
+    ASIA(25f, 155f, 5f, 75f)
+}
+
 sealed class Question(open val id: Int) {
     /** User types the numeric answer */
     data class FindAnswer(
@@ -77,6 +86,20 @@ sealed class Question(open val id: Int) {
         val unit: String = "",
         val triangleAngles: Pair<Int, Int>? = null,
         val inlineHint: String? = null,
+        val hint: Hint = Hint("")
+    ) : Question(id)
+
+    /**
+     * User taps the correct country on a map.
+     * @param countryKey    English name as in GeoJSON (e.g. "Poland")
+     * @param questionText  Full grammatically correct question in Polish
+     * @param region        Map viewport to use
+     */
+    data class MapQuiz(
+        override val id: Int,
+        val countryKey: String,
+        val questionText: String,
+        val region: MapRegion = MapRegion.EUROPE,
         val hint: Hint = Hint("")
     ) : Question(id)
 }

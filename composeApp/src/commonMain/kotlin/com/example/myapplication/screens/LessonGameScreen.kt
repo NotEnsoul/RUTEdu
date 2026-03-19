@@ -252,6 +252,12 @@ fun LessonGameScreen(
                     bottomPadding = bottomPadding,
                     onCorrect = onAnsweredCorrectly
                 )
+                is Question.MapQuiz -> MapQuizContent(
+                    question = question,
+                    accentColor = accentColor,
+                    bottomPadding = bottomPadding,
+                    onCorrect = onAnsweredCorrectly
+                )
             }
         }
     }
@@ -1075,7 +1081,7 @@ private fun TriangleCanvas(
 // ─────────────────────────────────────────────────────────────────────────────
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun HintBottomSheet(
+internal fun HintBottomSheet(
     hint: Hint,
     accentColor: Color,
     onDismiss: () -> Unit

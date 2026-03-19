@@ -7,9 +7,11 @@ import com.example.myapplication.models.MathOperator.SUBTRACT
 import com.example.myapplication.models.MathOperator.MULTIPLY
 import com.example.myapplication.models.MathOperator.DIVIDE
 import com.example.myapplication.models.MathOperator.POWER
+import com.example.myapplication.models.MapRegion
 import com.example.myapplication.models.Question
 import com.example.myapplication.models.Question.FindAnswer
 import com.example.myapplication.models.Question.FindOperator
+import com.example.myapplication.models.Question.MapQuiz
 import com.example.myapplication.models.Question.SelectFromList
 import com.example.myapplication.models.Question.TypeAnswer
 
@@ -357,6 +359,133 @@ object QuestionBank {
             Hint("20 ÷ 4 = 5.", steps = listOf("4 × 5 = 20", "Więc 20 ÷ 4 = 5")))
     )
 
+    // ── geo_1_1  Kraje Europy – quiz mapowy ───────────────────────────────────
+    private val geo_1_1: List<Question> = listOf(
+        MapQuiz(0, "Poland", "Gdzie leży Polska?", MapRegion.EUROPE,
+            Hint("Polska leży w środkowej Europie, nad Morzem Bałtyckim.",
+                steps = listOf("Centrum-wschodnia Europa", "Na południe od Morza Bałtyckiego"))),
+        MapQuiz(1, "Germany", "Gdzie leżą Niemcy?", MapRegion.EUROPE,
+            Hint("Niemcy leżą w środkowej Europie Zachodniej.",
+                steps = listOf("Na zachód od Polski", "Największy kraj Europy Zachodniej"))),
+        MapQuiz(2, "France", "Gdzie leży Francja?", MapRegion.EUROPE,
+            Hint("Francja leży w zachodniej Europie.",
+                steps = listOf("Na zachód od Niemiec", "Od La Manche po Morze Śródziemne"))),
+        MapQuiz(3, "Italy", "Gdzie leżą Włochy?", MapRegion.EUROPE,
+            Hint("Włochy to półwysep w kształcie buta.",
+                steps = listOf("Południe Europy", "Półwysep Apeniński wchodzi do Morza Śródziemnego"))),
+        MapQuiz(4, "Spain", "Gdzie leży Hiszpania?", MapRegion.EUROPE,
+            Hint("Hiszpania leży na Półwyspie Iberyjskim.",
+                steps = listOf("Skrajny południe-zachód Europy", "Sąsiaduje z Francją i Portugalią"))),
+        MapQuiz(5, "Ukraine", "Gdzie leży Ukraina?", MapRegion.EUROPE,
+            Hint("Ukraina to największy kraj w całości leżący w Europie.",
+                steps = listOf("Wschodnia Europa", "Na południe od Białorusi, na wschód od Polski"))),
+        MapQuiz(6, "Sweden", "Gdzie leży Szwecja?", MapRegion.EUROPE,
+            Hint("Szwecja leży na Półwyspie Skandynawskim.",
+                steps = listOf("Północna Europa — Skandynawia", "Wschodnia część Półwyspu Skandynawskiego"))),
+        MapQuiz(7, "Norway", "Gdzie leży Norwegia?", MapRegion.EUROPE,
+            Hint("Norwegia leży wzdłuż zachodniego wybrzeża Skandynawii.",
+                steps = listOf("Zachodnia część Półwyspu Skandynawskiego", "Długa linia brzegowa nad Atlantykiem"))),
+        MapQuiz(8, "Romania", "Gdzie leży Rumunia?", MapRegion.EUROPE,
+            Hint("Rumunia leży na Bałkanach.",
+                steps = listOf("Południowo-wschodnia Europa", "Sąsiaduje z Ukrainą, Bułgarią i Serbią"))),
+        MapQuiz(9, "Greece", "Gdzie leży Grecja?", MapRegion.EUROPE,
+            Hint("Grecja leży na południu Bałkanów.",
+                steps = listOf("Południe Europy", "Dużo wysp na Morzu Egejskim")))
+    )
+
+    // ── geo_4_1  Sąsiedzi Polski ──────────────────────────────────────────────
+    private val geo_4_1: List<Question> = listOf(
+        MapQuiz(0, "Germany", "Zaznacz Niemcy — sąsiada Polski", MapRegion.CENTRAL_EUROPE,
+            Hint("Niemcy graniczą z Polską na zachodzie.",
+                steps = listOf("Szukaj na zachód od Polski", "Nad Morzem Bałtyckim i Północnym"))),
+        MapQuiz(1, "Czechia", "Zaznacz Czechy — sąsiada Polski", MapRegion.CENTRAL_EUROPE,
+            Hint("Czechy graniczą z Polską na południe-zachodzie.",
+                steps = listOf("Szukaj na południe od Polski", "Bez dostępu do morza — w środku Europy"))),
+        MapQuiz(2, "Slovakia", "Zaznacz Słowację — sąsiada Polski", MapRegion.CENTRAL_EUROPE,
+            Hint("Słowacja graniczy z Polską na południu.",
+                steps = listOf("Na południe od Polski, na wschód od Czech", "Mały kraj w środkowej Europie"))),
+        MapQuiz(3, "Ukraine", "Zaznacz Ukrainę — sąsiada Polski", MapRegion.CENTRAL_EUROPE,
+            Hint("Ukraina graniczy z Polską na wschodzie.",
+                steps = listOf("Na wschód od Polski", "Duży kraj — największy w całości w Europie"))),
+        MapQuiz(4, "Belarus", "Zaznacz Białoruś — sąsiada Polski", MapRegion.CENTRAL_EUROPE,
+            Hint("Białoruś graniczy z Polską na północnym-wschodzie.",
+                steps = listOf("Północny-wschód od Polski", "Na południe od Litwy"))),
+        MapQuiz(5, "Lithuania", "Zaznacz Litwę — sąsiada Polski", MapRegion.CENTRAL_EUROPE,
+            Hint("Litwa graniczy z Polską na północy.",
+                steps = listOf("Na północ od Polski", "Jedno z trzech państw bałtyckich"))),
+        MapQuiz(6, "Russia", "Zaznacz Rosję (obwód kaliningradzki) — sąsiada Polski", MapRegion.CENTRAL_EUROPE,
+            Hint("Rosja graniczy z Polską przez obwód kaliningradzki.",
+                steps = listOf("Szukaj enklawy nad Morzem Bałtyckim", "Rosyjski obwód odcięty od Rosji, między Polską a Litwą")))
+    )
+
+    // ── geo_4_2  Kraje Azji ───────────────────────────────────────────────────
+    private val geo_4_2: List<Question> = listOf(
+        MapQuiz(0, "China", "Gdzie leżą Chiny?", MapRegion.ASIA,
+            Hint("Chiny to największy kraj Azji pod względem populacji.",
+                steps = listOf("Wschód Azji", "Sąsiad Mongolii, Rosji, Indii i Wietnamu"))),
+        MapQuiz(1, "Japan", "Gdzie leży Japonia?", MapRegion.ASIA,
+            Hint("Japonia to archipelag wysp na wschodnim wybrzeżu Azji.",
+                steps = listOf("Daleki Wschód — wyspy na Oceanie Spokojnym", "Na wschód od Korei i Chin"))),
+        MapQuiz(2, "India", "Gdzie leżą Indie?", MapRegion.ASIA,
+            Hint("Indie leżą na Półwyspie Indyjskim.",
+                steps = listOf("Azja Południowa", "Wielki półwysep wchodzący do Oceanu Indyjskiego"))),
+        MapQuiz(3, "South Korea", "Gdzie leży Korea Południowa?", MapRegion.ASIA,
+            Hint("Korea Południowa leży na Półwyspie Koreańskim.",
+                steps = listOf("Azja Wschodnia", "Południowa część Półwyspu Koreańskiego"))),
+        MapQuiz(4, "Mongolia", "Gdzie leży Mongolia?", MapRegion.ASIA,
+            Hint("Mongolia leży między Chinami a Rosją.",
+                steps = listOf("Azja Środkowa/Wschodnia", "Duży kraj otoczony Chinami od południa i Rosją od północy"))),
+        MapQuiz(5, "Kazakhstan", "Gdzie leży Kazachstan?", MapRegion.ASIA,
+            Hint("Kazachstan to największy kraj Azji Środkowej.",
+                steps = listOf("Azja Środkowa", "Na południe od Rosji, na północ od Morza Kaspijskiego"))),
+        MapQuiz(6, "Iran", "Gdzie leży Iran?", MapRegion.ASIA,
+            Hint("Iran leży na Bliskim Wschodzie.",
+                steps = listOf("Azja Zachodnia — Bliski Wschód", "Między Irakiem a Afganistanem, nad Zatoką Perską"))),
+        MapQuiz(7, "Saudi Arabia", "Gdzie leży Arabia Saudyjska?", MapRegion.ASIA,
+            Hint("Arabia Saudyjska zajmuje większość Półwyspu Arabskiego.",
+                steps = listOf("Półwysep Arabski", "Duży kraj w centrum Bliskiego Wschodu"))),
+        MapQuiz(8, "Vietnam", "Gdzie leży Wietnam?", MapRegion.ASIA,
+            Hint("Wietnam leży w Azji Południowo-Wschodniej.",
+                steps = listOf("Półwysep Indochiński", "Długi, wąski kraj wzdłuż Morza Południowochińskiego"))),
+        MapQuiz(9, "Thailand", "Gdzie leży Tajlandia?", MapRegion.ASIA,
+            Hint("Tajlandia leży w Azji Południowo-Wschodniej.",
+                steps = listOf("Azja Południowo-Wschodnia", "Na południe od Laosu, na zachód od Wietnamu")))
+    )
+
+    // ── geo_4_3  Stolice Europy ───────────────────────────────────────────────
+    private val geo_4_3: List<Question> = listOf(
+        MapQuiz(0, "France", "Wskaż kraj, którego stolicą jest Paryż", MapRegion.EUROPE,
+            Hint("Paryż to stolica Francji.",
+                steps = listOf("Francja leży w zachodniej Europie", "Graniczy z Niemcami, Belgią i Hiszpanią"))),
+        MapQuiz(1, "Germany", "Wskaż kraj, którego stolicą jest Berlin", MapRegion.EUROPE,
+            Hint("Berlin to stolica Niemiec.",
+                steps = listOf("Niemcy leżą w środkowej Europie", "Sąsiad Polski na zachodzie"))),
+        MapQuiz(2, "Italy", "Wskaż kraj, którego stolicą jest Rzym", MapRegion.EUROPE,
+            Hint("Rzym to stolica Włoch.",
+                steps = listOf("Włochy to półwysep w kształcie buta", "Morze Śródziemne — południe Europy"))),
+        MapQuiz(3, "Spain", "Wskaż kraj, którego stolicą jest Madryt", MapRegion.EUROPE,
+            Hint("Madryt to stolica Hiszpanii.",
+                steps = listOf("Półwysep Iberyjski — południe-zachód Europy", "Sąsiad Francji i Portugalii"))),
+        MapQuiz(4, "United Kingdom", "Wskaż kraj, którego stolicą jest Londyn", MapRegion.EUROPE,
+            Hint("Londyn to stolica Zjednoczonego Królestwa.",
+                steps = listOf("Wyspy Brytyjskie — północny-zachód Europy", "Oddzielony od Francji Kanałem La Manche"))),
+        MapQuiz(5, "Czechia", "Wskaż kraj, którego stolicą jest Praga", MapRegion.EUROPE,
+            Hint("Praga to stolica Czech.",
+                steps = listOf("Środkowa Europa bez dostępu do morza", "Sąsiad Polski na południu"))),
+        MapQuiz(6, "Hungary", "Wskaż kraj, którego stolicą jest Budapeszt", MapRegion.EUROPE,
+            Hint("Budapeszt to stolica Węgier.",
+                steps = listOf("Środkowa Europa", "Na południe od Czech i Słowacji"))),
+        MapQuiz(7, "Austria", "Wskaż kraj, którego stolicą jest Wiedeń", MapRegion.EUROPE,
+            Hint("Wiedeń to stolica Austrii.",
+                steps = listOf("Środkowa Europa — Alpy", "Sąsiad Niemiec, Czech, Węgier i Włoch"))),
+        MapQuiz(8, "Sweden", "Wskaż kraj, którego stolicą jest Sztokholm", MapRegion.EUROPE,
+            Hint("Sztokholm to stolica Szwecji.",
+                steps = listOf("Półwysep Skandynawski — północna Europa", "Wschodnia część Skandynawii"))),
+        MapQuiz(9, "Greece", "Wskaż kraj, którego stolicą są Ateny", MapRegion.EUROPE,
+            Hint("Ateny to stolica Grecji.",
+                steps = listOf("Południe Bałkanów", "Wiele wysp na Morzu Egejskim")))
+    )
+
     private val banks: Map<String, List<Question>> = mapOf(
         "mat_1_1" to mat_1_1,
         "mat_1_2" to mat_1_2,
@@ -368,6 +497,9 @@ object QuestionBank {
         "chemia_1_1" to genericMath,
         "chemia_1_2" to genericMath,
         "chemia_2_1" to genericMath,
-        "geo_1_1" to genericMath,
+        "geo_1_1" to geo_1_1,
+        "geo_4_1" to geo_4_1,
+        "geo_4_2" to geo_4_2,
+        "geo_4_3" to geo_4_3,
     )
 }
