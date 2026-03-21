@@ -79,33 +79,7 @@ enum class AnswerType {
     YES_NO
 }
 
-// Legacy enum for backwards compatibility
-enum class MathOperator(
-    val symbol: String,
-    val title: String
-) {
-    ADD("+", "Addition"),
-    SUBTRACT("-", "Subtraction"),
-    MULTIPLY("×", "Multiplication"),
-    DIVIDE("÷", "Division")
-}
-
-fun generateMathQuestion(operator: MathOperator): Pair<String, Int> {
-    val a = (1..10).random()
-    val b = (1..10).random()
-
-    return when (operator) {
-        MathOperator.ADD -> "$a + $b = ?" to (a + b)
-        MathOperator.SUBTRACT -> "$a - $b = ?" to (a - b)
-        MathOperator.MULTIPLY -> "$a × $b = ?" to (a * b)
-        MathOperator.DIVIDE -> {
-            val result = a * b
-            "$result ÷ $a = ?" to b
-        }
-    }
-}
-
-// New question generators for each game mode
+// Question generators for each game mode
 fun generateAddSubtractQuestion(): GameQuestion {
     val a = (1..50).random()
     val b = (1..50).random()
@@ -181,28 +155,6 @@ fun generateQuestionForMode(mode: GameMode): GameQuestion {
         GameMode.UNIT_CONVERSION -> generateUnitConversionQuestion()
         GameMode.MULTIPLICATION_TABLE -> generateMultiplicationTableQuestion()
     }
-}
-
-@Composable
-fun SoloGameScreen(
-    navController: NavController,
-    operator: MathOperator,
-    generateQuestion: (MathOperator) -> Pair<String, Int>,
-    database: Database? = null,
-    playerId: Long? = null
-) {
-    // Convert old operator to new game mode
-    val gameMode = when (operator) {
-        MathOperator.ADD, MathOperator.SUBTRACT -> GameMode.ADD_SUBTRACT
-        MathOperator.MULTIPLY, MathOperator.DIVIDE -> GameMode.MULTIPLY_DIVIDE
-    }
-    
-    GameScreen(
-        navController = navController,
-        gameMode = gameMode,
-        database = database,
-        playerId = playerId
-    )
 }
 
 @Composable
@@ -655,17 +607,3 @@ fun FullWidthKeyButton(
 }
 
 // Keep old NumberPad for backwards compatibility
-@Composable
-fun NumberPad(
-    onNumberClick: (String) -> Unit,
-    onDelete: () -> Unit,
-    onClear: () -> Unit
-) {
-    FullScreenNumberPad(
-        onNumberClick = onNumberClick,
-        onDelete = onDelete,
-        onClear = onClear,
-        onSubmit = {},
-        canSubmit = false
-    )
-}

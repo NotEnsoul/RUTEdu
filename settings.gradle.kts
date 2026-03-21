@@ -1,4 +1,4 @@
-rootProject.name = "MyApplication"
+rootProject.name = "RUTEdu"
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
 pluginManagement {

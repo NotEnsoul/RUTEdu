@@ -51,11 +51,9 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 
 sealed class Screen(val route: String) {
     object Home : Screen("home")
-    object Details : Screen("details")
     object Selection : Screen("selection")
     object PlayerSelection : Screen("player-selection")
     object PvP : Screen("pvp")
-    object Leaderboard : Screen("leaderboard")
     object Settings : Screen("settings")
     object Nauka : Screen("nauka")
     object Cwiczenia : Screen("cwiczenia")
