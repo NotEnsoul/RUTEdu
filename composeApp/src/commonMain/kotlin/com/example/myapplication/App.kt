@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
+import androidx.savedstate.read
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -127,7 +128,7 @@ fun App(driver: SqlDriver) {
 
             // Derive active color from current subject (changes nav color per subject)
             val activeNavColor: Color = run {
-                val subjectId = backStackEntry?.arguments?.get("subjectId") as? String
+                val subjectId = backStackEntry?.arguments?.read { getStringOrNull("subjectId") }
                 if (subjectId != null) SubjectRepository.getById(subjectId)?.color ?: Color(0xFFF47B20)
                 else Color(0xFFF47B20)
             }
@@ -200,7 +201,7 @@ fun App(driver: SqlDriver) {
                     }
 
                     composable(Screen.SubjectConfig.route) { backStackEntry ->
-                        val subjectId = backStackEntry.arguments?.get("subjectId") as? String ?: return@composable
+                        val subjectId = backStackEntry.arguments?.read { getStringOrNull("subjectId") } ?: return@composable
                         SubjectConfigScreen(
                             subjectId = subjectId,
                             navController = navController,
@@ -210,7 +211,7 @@ fun App(driver: SqlDriver) {
                     }
 
                     composable(Screen.SubjectDetail.route) { backStackEntry ->
-                        val subjectId = backStackEntry.arguments?.get("subjectId") as? String ?: return@composable
+                        val subjectId = backStackEntry.arguments?.read { getStringOrNull("subjectId") } ?: return@composable
                         LaunchedEffect(subjectId) { lastVisitedSubjectId = subjectId }
                         SubjectDetailScreen(
                             subjectId = subjectId,
@@ -221,8 +222,8 @@ fun App(driver: SqlDriver) {
                     }
 
                     composable(Screen.TopicDetail.route) { backStackEntry ->
-                        val subjectId = backStackEntry.arguments?.get("subjectId") as? String ?: return@composable
-                        val topicId = backStackEntry.arguments?.get("topicId") as? String ?: return@composable
+                        val subjectId = backStackEntry.arguments?.read { getStringOrNull("subjectId") } ?: return@composable
+                        val topicId = backStackEntry.arguments?.read { getStringOrNull("topicId") } ?: return@composable
                         TopicDetailScreen(
                             subjectId = subjectId,
                             topicId = topicId,
@@ -233,9 +234,9 @@ fun App(driver: SqlDriver) {
                     }
 
                     composable(Screen.LessonGame.route) { backStackEntry ->
-                        val subjectId = backStackEntry.arguments?.get("subjectId") as? String ?: return@composable
-                        val topicId = backStackEntry.arguments?.get("topicId") as? String ?: return@composable
-                        val lessonId = backStackEntry.arguments?.get("lessonId") as? String ?: return@composable
+                        val subjectId = backStackEntry.arguments?.read { getStringOrNull("subjectId") } ?: return@composable
+                        val topicId = backStackEntry.arguments?.read { getStringOrNull("topicId") } ?: return@composable
+                        val lessonId = backStackEntry.arguments?.read { getStringOrNull("lessonId") } ?: return@composable
                         LaunchedEffect(subjectId, topicId, lessonId) {
                             lastVisitedLessonRoute = Screen.LessonGame.createRoute(subjectId, topicId, lessonId)
                         }

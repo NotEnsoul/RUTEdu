@@ -1,12 +1,5 @@
 package com.example.myapplication.screens
 
-private fun Float.to3dp(): String {
-    val rounded = kotlin.math.round(this * 1000).toLong()
-    val intPart = rounded / 1000
-    val decPart = kotlin.math.abs(rounded % 1000)
-    return "$intPart.${decPart.toString().padStart(3, '0')}"
-}
-
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -45,6 +38,13 @@ import com.example.myapplication.models.Hint
 import com.example.myapplication.models.Question
 import com.example.myapplication.models.elementByNumber
 import kotlinx.coroutines.delay
+
+private fun Float.to3dp(): String {
+    val rounded = kotlin.math.round(this * 1000).toLong()
+    val intPart = rounded / 1000
+    val decPart = kotlin.math.abs(rounded % 1000)
+    return "$intPart.${decPart.toString().padStart(3, '0')}"
+}
 
 enum class FindCheckState { IDLE, CORRECT, WRONG }
 
