@@ -13,6 +13,9 @@ import com.example.myapplication.models.Question.FindAnswer
 import com.example.myapplication.models.Question.FindOperator
 import com.example.myapplication.models.Question.MapQuiz
 import com.example.myapplication.models.Question.SelectFromList
+import com.example.myapplication.models.Question.PeriodicTableQuiz
+import com.example.myapplication.models.Question.PeriodicTableByShell
+import com.example.myapplication.models.Question.PeriodicTableByName
 import com.example.myapplication.models.Question.TypeAnswer
 
 object QuestionBank {
@@ -486,6 +489,149 @@ object QuestionBank {
                 steps = listOf("Południe Bałkanów", "Wiele wysp na Morzu Egejskim")))
     )
 
+    // ── chemia_1_1  Budowa atomu – konfiguracja powłokowa ────────────────────
+    private val chemia_1_1: List<Question> = listOf(
+        PeriodicTableByShell(0, "2,8,1", 11,
+            Hint("Sód ma 11 elektronów: 2 w K, 8 w L, 1 w M.",
+                steps = listOf("Powłoka K: max 2 → 2", "Powłoka L: max 8 → 8", "Powłoka M: pozostałe → 1", "Razem: 11 → Sód (Na)"))),
+        PeriodicTableByShell(1, "2,8,7", 17,
+            Hint("Chlor ma 17 elektronów: 2+8+7.",
+                steps = listOf("Powłoka K: 2", "Powłoka L: 8", "Powłoka M: 7", "Razem: 17 → Chlor (Cl)"))),
+        PeriodicTableByShell(2, "2,4", 6,
+            Hint("Węgiel ma 6 elektronów: 2+4.",
+                steps = listOf("Powłoka K: 2", "Powłoka L: 4", "Razem: 6 → Węgiel (C)"))),
+        PeriodicTableByShell(3, "2,8,8", 18,
+            Hint("Argon ma 18 elektronów: 2+8+8.",
+                steps = listOf("Powłoka K: 2", "Powłoka L: 8", "Powłoka M: 8", "Razem: 18 → Argon (Ar)"))),
+        PeriodicTableByShell(4, "2,8,18,2", 30,
+            Hint("Cynk ma 30 elektronów: 2+8+18+2.",
+                steps = listOf("K: 2, L: 8, M: 18, N: 2", "Razem: 30 → Cynk (Zn)"))),
+        PeriodicTableByShell(5, "2,6", 8,
+            Hint("Tlen ma 8 elektronów: 2+6.",
+                steps = listOf("Powłoka K: 2", "Powłoka L: 6", "Razem: 8 → Tlen (O)"))),
+        PeriodicTableByShell(6, "2,8,2", 12,
+            Hint("Magnez ma 12 elektronów: 2+8+2.",
+                steps = listOf("K: 2, L: 8, M: 2", "Razem: 12 → Magnez (Mg)"))),
+        PeriodicTableByShell(7, "1", 1,
+            Hint("Wodór ma tylko 1 elektron w pierwszej powłoce K.",
+                steps = listOf("Powłoka K: 1", "Razem: 1 → Wodór (H)"))),
+        PeriodicTableByShell(8, "2,8,18,1", 29,
+            Hint("Miedź ma 29 elektronów — wyjątek: jeden elektron w N.",
+                steps = listOf("K: 2, L: 8, M: 18, N: 1", "Razem: 29 → Miedź (Cu)"))),
+        PeriodicTableByShell(9, "2,8,5", 15,
+            Hint("Fosfor ma 15 elektronów: 2+8+5.",
+                steps = listOf("K: 2, L: 8, M: 5", "Razem: 15 → Fosfor (P)")))
+    )
+
+    // ── chemia_1_2  Budowa atomu – wskaż pierwiastek po nazwie ───────────────
+    private val chemia_1_2: List<Question> = listOf(
+        PeriodicTableByName(0, "Wodór", 1,
+            Hint("Wodór to pierwszy pierwiastek — lewa górna komórka tabeli.")),
+        PeriodicTableByName(1, "Żelazo", 26,
+            Hint("Żelazo (Fe) to metal przejściowy, gr. 8, okres 4.")),
+        PeriodicTableByName(2, "Złoto", 79,
+            Hint("Złoto (Au) leży w gr. 11, okres 6.")),
+        PeriodicTableByName(3, "Hel", 2,
+            Hint("Hel to gaz szlachetny w prawym górnym rogu, gr. 18.")),
+        PeriodicTableByName(4, "Tlen", 8,
+            Hint("Tlen (O) leży w gr. 16, okres 2.")),
+        PeriodicTableByName(5, "Sód", 11,
+            Hint("Sód (Na) to litowiec: gr. 1, okres 3.")),
+        PeriodicTableByName(6, "Chlor", 17,
+            Hint("Chlor (Cl) to halogen: gr. 17, okres 3.")),
+        PeriodicTableByName(7, "Węgiel", 6,
+            Hint("Węgiel (C) leży w gr. 14, okres 2.")),
+        PeriodicTableByName(8, "Wapń", 20,
+            Hint("Wapń (Ca) to berylowiec: gr. 2, okres 4.")),
+        PeriodicTableByName(9, "Srebro", 47,
+            Hint("Srebro (Ag) leży w gr. 11, okres 5."))
+    )
+
+    // ── chemia_2_1  Układ okresowy – umieść brakujące pierwiastki ────────────
+    // Each question removes 5 elements from the table; student places them back.
+    private val chemia_2_1: List<Question> = listOf(
+        PeriodicTableQuiz(
+            id = 0,
+            questionText = "Umieść brakujące pierwiastki w układzie okresowym",
+            missingAtomicNumbers = listOf(6, 7, 8, 11, 17), // C, N, O, Na, Cl
+            hint = Hint(
+                "Patrz na numer grupy i okresu każdego pierwiastka.",
+                sectionTitle = "Wskazówki",
+                items = listOf(
+                    "Węgiel (C) — okres 2, gr. 14",
+                    "Azot (N) — okres 2, gr. 15",
+                    "Tlen (O) — okres 2, gr. 16",
+                    "Sód (Na) — okres 3, gr. 1",
+                    "Chlor (Cl) — okres 3, gr. 17"
+                )
+            )
+        ),
+        PeriodicTableQuiz(
+            id = 1,
+            questionText = "Umieść brakujące metale szlachetne w układzie",
+            missingAtomicNumbers = listOf(26, 28, 29, 47, 79), // Fe, Ni, Cu, Ag, Au
+            hint = Hint(
+                "Metale przejściowe są w grupach 3–12.",
+                sectionTitle = "Wskazówki",
+                items = listOf(
+                    "Żelazo (Fe) — gr. 8",
+                    "Nikiel (Ni) — gr. 10",
+                    "Miedź (Cu) — gr. 11",
+                    "Srebro (Ag) — gr. 11, okres 5",
+                    "Złoto (Au) — gr. 11, okres 6"
+                )
+            )
+        ),
+        PeriodicTableQuiz(
+            id = 2,
+            questionText = "Umieść brakujące gazy szlachetne w układzie",
+            missingAtomicNumbers = listOf(2, 10, 18, 36, 54), // He, Ne, Ar, Kr, Xe
+            hint = Hint(
+                "Gazy szlachetne to grupa 18 — ostatnia kolumna.",
+                sectionTitle = "Wskazówki",
+                items = listOf(
+                    "Hel (He) — okres 1, gr. 18",
+                    "Neon (Ne) — okres 2, gr. 18",
+                    "Argon (Ar) — okres 3, gr. 18",
+                    "Krypton (Kr) — okres 4, gr. 18",
+                    "Ksenon (Xe) — okres 5, gr. 18"
+                )
+            )
+        ),
+        PeriodicTableQuiz(
+            id = 3,
+            questionText = "Uzupełnij halogeny i litowce w układzie",
+            missingAtomicNumbers = listOf(3, 9, 19, 35, 53), // Li, F, K, Br, I
+            hint = Hint(
+                "Litowce to gr. 1, halogeny to gr. 17.",
+                sectionTitle = "Wskazówki",
+                items = listOf(
+                    "Lit (Li) — gr. 1, okres 2",
+                    "Fluor (F) — gr. 17, okres 2",
+                    "Potas (K) — gr. 1, okres 4",
+                    "Brom (Br) — gr. 17, okres 4",
+                    "Jod (I) — gr. 17, okres 5"
+                )
+            )
+        ),
+        PeriodicTableQuiz(
+            id = 4,
+            questionText = "Znajdź miejsca pierwiastków okresu 3",
+            missingAtomicNumbers = listOf(12, 13, 14, 15, 16), // Mg, Al, Si, P, S
+            hint = Hint(
+                "Wszystkie brakujące pierwiastki są w 3. okresie (3. wierszu).",
+                sectionTitle = "Wskazówki",
+                items = listOf(
+                    "Magnez (Mg) — gr. 2",
+                    "Glin (Al) — gr. 13",
+                    "Krzem (Si) — gr. 14",
+                    "Fosfor (P) — gr. 15",
+                    "Siarka (S) — gr. 16"
+                )
+            )
+        )
+    )
+
     private val banks: Map<String, List<Question>> = mapOf(
         "mat_1_1" to mat_1_1,
         "mat_1_2" to mat_1_2,
@@ -494,9 +640,9 @@ object QuestionBank {
         "mat_2_2" to mat_2_2,
         "mat_3_1" to genericMath,
         "mat_5_1" to mat_5_1,
-        "chemia_1_1" to genericMath,
-        "chemia_1_2" to genericMath,
-        "chemia_2_1" to genericMath,
+        "chemia_1_1" to chemia_1_1,
+        "chemia_1_2" to chemia_1_2,
+        "chemia_2_1" to chemia_2_1,
         "geo_1_1" to geo_1_1,
         "geo_4_1" to geo_4_1,
         "geo_4_2" to geo_4_2,

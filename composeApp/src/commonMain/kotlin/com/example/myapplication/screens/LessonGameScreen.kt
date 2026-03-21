@@ -258,6 +258,24 @@ fun LessonGameScreen(
                     bottomPadding = bottomPadding,
                     onCorrect = onAnsweredCorrectly
                 )
+                is Question.PeriodicTableQuiz -> PeriodicTableContent(
+                    question = question,
+                    accentColor = accentColor,
+                    bottomPadding = bottomPadding,
+                    onCorrect = onAnsweredCorrectly
+                )
+                is Question.PeriodicTableByShell -> PeriodicTableByShellContent(
+                    question = question,
+                    accentColor = accentColor,
+                    bottomPadding = bottomPadding,
+                    onCorrect = onAnsweredCorrectly
+                )
+                is Question.PeriodicTableByName -> PeriodicTableByNameContent(
+                    question = question,
+                    accentColor = accentColor,
+                    bottomPadding = bottomPadding,
+                    onCorrect = onAnsweredCorrectly
+                )
             }
         }
     }

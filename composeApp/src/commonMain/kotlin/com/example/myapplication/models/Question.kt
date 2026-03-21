@@ -102,4 +102,38 @@ sealed class Question(open val id: Int) {
         val region: MapRegion = MapRegion.EUROPE,
         val hint: Hint = Hint("")
     ) : Question(id)
+
+    /**
+     * Full zoomable periodic table: user selects an element from the tray and
+     * taps the correct empty slot to place it.
+     * @param missingAtomicNumbers  atomic numbers of the 4–5 elements removed from the table
+     */
+    data class PeriodicTableQuiz(
+        override val id: Int,
+        val questionText: String,
+        val missingAtomicNumbers: List<Int>,
+        val hint: Hint = Hint("")
+    ) : Question(id)
+
+    /**
+     * Zoomable periodic table — user sees a shell config (e.g. "2,8,1") and taps
+     * the matching element cell.
+     */
+    data class PeriodicTableByShell(
+        override val id: Int,
+        val shellConfig: String,        // e.g. "2,8,1"
+        val targetAtomicNumber: Int,
+        val hint: Hint = Hint("")
+    ) : Question(id)
+
+    /**
+     * Zoomable periodic table — user sees an element name (Polish) and taps
+     * the matching element cell.
+     */
+    data class PeriodicTableByName(
+        override val id: Int,
+        val elementNamePL: String,      // e.g. "Sód"
+        val targetAtomicNumber: Int,
+        val hint: Hint = Hint("")
+    ) : Question(id)
 }
