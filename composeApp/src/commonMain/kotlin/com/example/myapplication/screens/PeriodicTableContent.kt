@@ -1,5 +1,12 @@
 package com.example.myapplication.screens
 
+private fun Float.to3dp(): String {
+    val rounded = kotlin.math.round(this * 1000).toLong()
+    val intPart = rounded / 1000
+    val decPart = kotlin.math.abs(rounded % 1000)
+    return "$intPart.${decPart.toString().padStart(3, '0')}"
+}
+
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -445,7 +452,7 @@ private fun ElementCell(
                 lineHeight = 14.sp
             )
             Text(
-                text = "%.3f".format(element.atomicMass),
+                text = element.atomicMass.to3dp(),
                 fontSize = 6.sp,
                 color = Color(0xFF616161),
                 lineHeight = 6.sp,
@@ -590,7 +597,7 @@ private fun TrayElementCard(
                     overflow = TextOverflow.Ellipsis
                 )
                 Text(
-                    text = "%.3f".format(element.atomicMass),
+                    text = element.atomicMass.to3dp(),
                     fontSize = 8.sp,
                     color = Color(0xFF757575).copy(alpha = textAlpha)
                 )

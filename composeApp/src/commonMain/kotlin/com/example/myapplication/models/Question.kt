@@ -136,4 +136,29 @@ sealed class Question(open val id: Int) {
         val targetAtomicNumber: Int,
         val hint: Hint = Hint("")
     ) : Question(id)
+
+    /**
+     * Single term in a chemical equation (e.g. "2 H₂O").
+     * @param formula             chemical formula string with Unicode subscripts
+     * @param fixedCoefficient    shown as a static number; null = user must fill in
+     * @param correctCoefficient  expected answer when fixedCoefficient == null
+     */
+    data class BalanceTerm(
+        val formula: String,
+        val fixedCoefficient: Int? = null,
+        val correctCoefficient: Int? = null
+    )
+
+    /**
+     * User fills in missing stoichiometric coefficients (the ? boxes).
+     * Terms are split into [reactants] and [products] — arrow is drawn between them.
+     */
+    data class EquationBalance(
+        override val id: Int,
+        val instruction: String = "Uzupełnij równanie reakcji",
+        val subInstruction: String = "Dobierz odpowiednie współczynniki stechiometryczne",
+        val reactants: List<BalanceTerm>,
+        val products: List<BalanceTerm>,
+        val hint: Hint = Hint("")
+    ) : Question(id)
 }

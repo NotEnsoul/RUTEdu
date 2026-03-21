@@ -17,6 +17,8 @@ import com.example.myapplication.models.Question.PeriodicTableQuiz
 import com.example.myapplication.models.Question.PeriodicTableByShell
 import com.example.myapplication.models.Question.PeriodicTableByName
 import com.example.myapplication.models.Question.TypeAnswer
+import com.example.myapplication.models.Question.EquationBalance
+import com.example.myapplication.models.Question.BalanceTerm
 
 object QuestionBank {
 
@@ -632,6 +634,272 @@ object QuestionBank {
         )
     )
 
+    // ── chemia_3_1  Wzory kwasów – rozpoznaj wzór kwasu ─────────────────────
+    private val chemia_3_1: List<Question> = listOf(
+        SelectFromList(
+            id = 3101,
+            prompt = "Wzór kwasu chlorowodorowego (solnego)",
+            options = listOf("HCl", "H₂S", "HF", "HBr"),
+            correctIndices = setOf(0),
+            hint = Hint(
+                mainText = "Kwas chlorowodorowy to kwas beztlenowy. Składa się z wodoru i chloru.",
+                boldPart = "HCl",
+                sectionTitle = "Kwasy beztlenowe",
+                items = listOf("HCl – chlorowodorowy", "H₂S – siarkowodorowy", "HF – fluorowodorowy", "HBr – bromowodorowy")
+            )
+        ),
+        SelectFromList(
+            id = 3102,
+            prompt = "Wzór kwasu siarkowodorowego",
+            options = listOf("H₂SO₄", "H₂S", "H₂SO₃", "HCl"),
+            correctIndices = setOf(1),
+            hint = Hint(
+                mainText = "Kwas siarkowodorowy to H₂S – beztlenowy kwas znany z zapachu zgniłych jaj.",
+                boldPart = "H₂S"
+            )
+        ),
+        SelectFromList(
+            id = 3103,
+            prompt = "Wzór kwasu fluorowodorowego",
+            options = listOf("HBr", "HCl", "HF", "H₂S"),
+            correctIndices = setOf(2),
+            hint = Hint(
+                mainText = "Kwas fluorowodorowy (HF) używany jest do trawienia szkła.",
+                boldPart = "HF"
+            )
+        ),
+        SelectFromList(
+            id = 3104,
+            prompt = "Wzór kwasu bromowodorowego",
+            options = listOf("HF", "HCl", "H₂S", "HBr"),
+            correctIndices = setOf(3),
+            hint = Hint(
+                mainText = "Kwas bromowodorowy to HBr – beztlenowy kwas podobny do HCl.",
+                boldPart = "HBr"
+            )
+        ),
+        SelectFromList(
+            id = 3105,
+            prompt = "Wzór kwasu siarkowego(VI)",
+            options = listOf("H₂SO₃", "HNO₃", "H₂SO₄", "H₃PO₄"),
+            correctIndices = setOf(2),
+            hint = Hint(
+                mainText = "Kwas siarkowy(VI) – H₂SO₄ – najważniejszy kwas przemysłowy, silnie żrący.",
+                boldPart = "H₂SO₄",
+                sectionTitle = "Kwasy tlenowe siarki",
+                items = listOf("H₂SO₄ – siarkowy(VI), siarka na +6", "H₂SO₃ – siarkowy(IV), siarka na +4")
+            )
+        ),
+        SelectFromList(
+            id = 3106,
+            prompt = "Wzór kwasu azotowego(V)",
+            options = listOf("H₂SO₄", "HNO₃", "H₃PO₄", "H₂CO₃"),
+            correctIndices = setOf(1),
+            hint = Hint(
+                mainText = "Kwas azotowy(V) to HNO₃. Używany do produkcji nawozów i materiałów wybuchowych.",
+                boldPart = "HNO₃"
+            )
+        ),
+        SelectFromList(
+            id = 3107,
+            prompt = "Wzór kwasu węglowego",
+            options = listOf("H₂SO₄", "H₃PO₄", "HNO₃", "H₂CO₃"),
+            correctIndices = setOf(3),
+            hint = Hint(
+                mainText = "Kwas węglowy H₂CO₃ to słaby kwas, powstaje gdy CO₂ rozpuszcza się w wodzie.",
+                boldPart = "H₂CO₃"
+            )
+        ),
+        SelectFromList(
+            id = 3108,
+            prompt = "Wzór kwasu fosforowego(V) (ortofosforowego)",
+            options = listOf("H₃PO₄", "H₂SO₄", "H₂CO₃", "HNO₃"),
+            correctIndices = setOf(0),
+            hint = Hint(
+                mainText = "Kwas fosforowy(V) to H₃PO₄. Składnik nawozów i napojów cola.",
+                boldPart = "H₃PO₄"
+            )
+        ),
+        SelectFromList(
+            id = 3109,
+            prompt = "Wzór kwasu siarkowego(IV)",
+            options = listOf("H₂SO₄", "H₂SO₃", "HNO₃", "H₃PO₄"),
+            correctIndices = setOf(1),
+            hint = Hint(
+                mainText = "Kwas siarkowy(IV) to H₂SO₃. Powstaje przy spalaniu siarki – przyczyna kwaśnych deszczy.",
+                boldPart = "H₂SO₃",
+                sectionTitle = "Kwasy tlenowe siarki",
+                items = listOf("H₂SO₄ – siarkowy(VI), siarka na +6", "H₂SO₃ – siarkowy(IV), siarka na +4")
+            )
+        ),
+        SelectFromList(
+            id = 3110,
+            prompt = "Kwas o wzorze H₂SO₄ to…",
+            options = listOf("kwas azotowy(V)", "kwas węglowy", "kwas siarkowy(VI)", "kwas fosforowy(V)"),
+            correctIndices = setOf(2),
+            hint = Hint(
+                mainText = "H₂SO₄ to kwas siarkowy(VI). Liczba (VI) oznacza stopień utlenienia siarki.",
+                boldPart = "kwas siarkowy(VI)"
+            )
+        )
+    )
+
+    // ── chemia_3_2  Reakcje otrzymywania kwasów – uzupełnij równania ─────────
+    private val chemia_3_2: List<Question> = listOf(
+        EquationBalance(
+            id = 3201,
+            instruction = "Zbilansuj równanie reakcji",
+            subInstruction = "Dobierz odpowiednie współczynniki stechiometryczne",
+            reactants = listOf(
+                BalanceTerm("H₂", fixedCoefficient = null, correctCoefficient = 1),
+                BalanceTerm("Cl₂", fixedCoefficient = 1)
+            ),
+            products = listOf(
+                BalanceTerm("HCl", fixedCoefficient = null, correctCoefficient = 2)
+            ),
+            hint = Hint(
+                mainText = "H₂ + Cl₂ → 2HCl. Po lewej: 2H i 2Cl. Po prawej: w 2 cząsteczkach HCl też 2H i 2Cl.",
+                boldPart = "2HCl",
+                sectionTitle = "Krok po kroku",
+                steps = listOf(
+                    "Policz atomy H po lewej: 1×H₂ = 2 atomy H",
+                    "Policz atomy Cl po lewej: 1×Cl₂ = 2 atomy Cl",
+                    "Po prawej HCl ma 1H i 1Cl → potrzeba 2×HCl"
+                )
+            )
+        ),
+        EquationBalance(
+            id = 3202,
+            instruction = "Zbilansuj równanie reakcji",
+            subInstruction = "Dobierz odpowiednie współczynniki stechiometryczne",
+            reactants = listOf(
+                BalanceTerm("H₂", fixedCoefficient = null, correctCoefficient = 2),
+                BalanceTerm("O₂", fixedCoefficient = 1)
+            ),
+            products = listOf(
+                BalanceTerm("H₂O", fixedCoefficient = null, correctCoefficient = 2)
+            ),
+            hint = Hint(
+                mainText = "2H₂ + O₂ → 2H₂O. Klasyczna reakcja syntezy wody.",
+                boldPart = "2H₂O",
+                sectionTitle = "Krok po kroku",
+                steps = listOf(
+                    "Po prawej 2 cząsteczki H₂O = 4H i 2O",
+                    "4H po lewej to 2×H₂",
+                    "2O po lewej to 1×O₂"
+                )
+            )
+        ),
+        EquationBalance(
+            id = 3203,
+            instruction = "Uzupełnij równanie otrzymywania kwasu",
+            subInstruction = "Kwas siarkowy(VI) powstaje z SO₃ i wody",
+            reactants = listOf(
+                BalanceTerm("SO₃", fixedCoefficient = null, correctCoefficient = 1),
+                BalanceTerm("H₂O", fixedCoefficient = 1)
+            ),
+            products = listOf(
+                BalanceTerm("H₂SO₄", fixedCoefficient = null, correctCoefficient = 1)
+            ),
+            hint = Hint(
+                mainText = "SO₃ + H₂O → H₂SO₄. Wszystkie współczynniki wynoszą 1.",
+                boldPart = "H₂SO₄"
+            )
+        ),
+        EquationBalance(
+            id = 3204,
+            instruction = "Uzupełnij równanie otrzymywania kwasu",
+            subInstruction = "Kwas siarkowy(IV) powstaje z SO₂ i wody",
+            reactants = listOf(
+                BalanceTerm("SO₂", fixedCoefficient = 1),
+                BalanceTerm("H₂O", fixedCoefficient = null, correctCoefficient = 1)
+            ),
+            products = listOf(
+                BalanceTerm("H₂SO₃", fixedCoefficient = null, correctCoefficient = 1)
+            ),
+            hint = Hint(
+                mainText = "SO₂ + H₂O → H₂SO₃. Kwas siarkowy(IV) odpowiada za kwaśne deszcze.",
+                boldPart = "H₂SO₃"
+            )
+        ),
+        EquationBalance(
+            id = 3205,
+            instruction = "Uzupełnij równanie otrzymywania kwasu",
+            subInstruction = "Kwas węglowy powstaje z CO₂ i wody",
+            reactants = listOf(
+                BalanceTerm("CO₂", fixedCoefficient = null, correctCoefficient = 1),
+                BalanceTerm("H₂O", fixedCoefficient = 1)
+            ),
+            products = listOf(
+                BalanceTerm("H₂CO₃", fixedCoefficient = null, correctCoefficient = 1)
+            ),
+            hint = Hint(
+                mainText = "CO₂ + H₂O → H₂CO₃. Tak powstaje kwas węglowy w napojach gazowanych.",
+                boldPart = "H₂CO₃"
+            )
+        ),
+        EquationBalance(
+            id = 3206,
+            instruction = "Zbilansuj równanie reakcji",
+            subInstruction = "Kwas azotowy(V) z N₂O₅ i wody",
+            reactants = listOf(
+                BalanceTerm("N₂O₅", fixedCoefficient = null, correctCoefficient = 1),
+                BalanceTerm("H₂O", fixedCoefficient = 1)
+            ),
+            products = listOf(
+                BalanceTerm("HNO₃", fixedCoefficient = null, correctCoefficient = 2)
+            ),
+            hint = Hint(
+                mainText = "N₂O₅ + H₂O → 2HNO₃. Jedna cząsteczka N₂O₅ zawiera 2 atomy N → 2 cząsteczki HNO₃.",
+                boldPart = "2HNO₃",
+                sectionTitle = "Krok po kroku",
+                steps = listOf(
+                    "N₂O₅ ma 2 atomy azotu",
+                    "Każda cząsteczka HNO₃ ma 1 atom azotu",
+                    "Potrzeba 2×HNO₃ aby zbilansować azot"
+                )
+            )
+        ),
+        EquationBalance(
+            id = 3207,
+            instruction = "Zbilansuj równanie reakcji",
+            subInstruction = "Kwas fosforowy(V) z P₂O₅ i wody",
+            reactants = listOf(
+                BalanceTerm("P₂O₅", fixedCoefficient = 1),
+                BalanceTerm("H₂O", fixedCoefficient = null, correctCoefficient = 3)
+            ),
+            products = listOf(
+                BalanceTerm("H₃PO₄", fixedCoefficient = null, correctCoefficient = 2)
+            ),
+            hint = Hint(
+                mainText = "P₂O₅ + 3H₂O → 2H₃PO₄. Dwa atomy P → 2 cząsteczki H₃PO₄, a to wymaga 3 cząsteczek wody.",
+                boldPart = "2H₃PO₄",
+                sectionTitle = "Krok po kroku",
+                steps = listOf(
+                    "P₂O₅ ma 2 atomy P → potrzeba 2×H₃PO₄",
+                    "2×H₃PO₄ ma 6 atomów H → potrzeba 3×H₂O",
+                    "Sprawdź O: P₂O₅(5) + 3H₂O(3) = 8 = 2×H₃PO₄(8) ✓"
+                )
+            )
+        ),
+        EquationBalance(
+            id = 3208,
+            instruction = "Zbilansuj równanie reakcji",
+            subInstruction = "Reakcja syntezy kwasu siarkowodorowego",
+            reactants = listOf(
+                BalanceTerm("H₂", fixedCoefficient = null, correctCoefficient = 1),
+                BalanceTerm("S", fixedCoefficient = 1)
+            ),
+            products = listOf(
+                BalanceTerm("H₂S", fixedCoefficient = null, correctCoefficient = 1)
+            ),
+            hint = Hint(
+                mainText = "H₂ + S → H₂S. Wszystkie współczynniki wynoszą 1.",
+                boldPart = "H₂S"
+            )
+        )
+    )
+
     private val banks: Map<String, List<Question>> = mapOf(
         "mat_1_1" to mat_1_1,
         "mat_1_2" to mat_1_2,
@@ -643,6 +911,8 @@ object QuestionBank {
         "chemia_1_1" to chemia_1_1,
         "chemia_1_2" to chemia_1_2,
         "chemia_2_1" to chemia_2_1,
+        "chemia_3_1" to chemia_3_1,
+        "chemia_3_2" to chemia_3_2,
         "geo_1_1" to geo_1_1,
         "geo_4_1" to geo_4_1,
         "geo_4_2" to geo_4_2,

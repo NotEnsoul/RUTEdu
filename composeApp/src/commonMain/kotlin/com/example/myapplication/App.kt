@@ -127,7 +127,7 @@ fun App(driver: SqlDriver) {
 
             // Derive active color from current subject (changes nav color per subject)
             val activeNavColor: Color = run {
-                val subjectId = backStackEntry?.arguments?.getString("subjectId")
+                val subjectId = backStackEntry?.arguments?.get("subjectId") as? String
                 if (subjectId != null) SubjectRepository.getById(subjectId)?.color ?: Color(0xFFF47B20)
                 else Color(0xFFF47B20)
             }
@@ -200,7 +200,7 @@ fun App(driver: SqlDriver) {
                     }
 
                     composable(Screen.SubjectConfig.route) { backStackEntry ->
-                        val subjectId = backStackEntry.arguments?.getString("subjectId") ?: return@composable
+                        val subjectId = backStackEntry.arguments?.get("subjectId") as? String ?: return@composable
                         SubjectConfigScreen(
                             subjectId = subjectId,
                             navController = navController,
@@ -210,7 +210,7 @@ fun App(driver: SqlDriver) {
                     }
 
                     composable(Screen.SubjectDetail.route) { backStackEntry ->
-                        val subjectId = backStackEntry.arguments?.getString("subjectId") ?: return@composable
+                        val subjectId = backStackEntry.arguments?.get("subjectId") as? String ?: return@composable
                         LaunchedEffect(subjectId) { lastVisitedSubjectId = subjectId }
                         SubjectDetailScreen(
                             subjectId = subjectId,
@@ -221,8 +221,8 @@ fun App(driver: SqlDriver) {
                     }
 
                     composable(Screen.TopicDetail.route) { backStackEntry ->
-                        val subjectId = backStackEntry.arguments?.getString("subjectId") ?: return@composable
-                        val topicId = backStackEntry.arguments?.getString("topicId") ?: return@composable
+                        val subjectId = backStackEntry.arguments?.get("subjectId") as? String ?: return@composable
+                        val topicId = backStackEntry.arguments?.get("topicId") as? String ?: return@composable
                         TopicDetailScreen(
                             subjectId = subjectId,
                             topicId = topicId,
@@ -233,9 +233,9 @@ fun App(driver: SqlDriver) {
                     }
 
                     composable(Screen.LessonGame.route) { backStackEntry ->
-                        val subjectId = backStackEntry.arguments?.getString("subjectId") ?: return@composable
-                        val topicId = backStackEntry.arguments?.getString("topicId") ?: return@composable
-                        val lessonId = backStackEntry.arguments?.getString("lessonId") ?: return@composable
+                        val subjectId = backStackEntry.arguments?.get("subjectId") as? String ?: return@composable
+                        val topicId = backStackEntry.arguments?.get("topicId") as? String ?: return@composable
+                        val lessonId = backStackEntry.arguments?.get("lessonId") as? String ?: return@composable
                         LaunchedEffect(subjectId, topicId, lessonId) {
                             lastVisitedLessonRoute = Screen.LessonGame.createRoute(subjectId, topicId, lessonId)
                         }

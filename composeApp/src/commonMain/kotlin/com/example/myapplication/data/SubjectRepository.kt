@@ -283,12 +283,32 @@ object SubjectRepository {
                 ),
                 Topic(
                     id = "chemia_3",
-                    name = "Reakcje chemiczne",
-                    description = "Typy reakcji i równania",
-                    progress = 0.10f,
+                    name = "Kwasy",
+                    description = "Wzory kwasów i reakcje otrzymywania",
+                    progress = 0.0f,
                     isLocked = false,
                     color = Color(0xFF3DBD7D),
-                    icon = Icons.Default.Bolt
+                    icon = Icons.Default.Science,
+                    lessons = listOf(
+                        Lesson(
+                            id = "chemia_3_1",
+                            name = "Wzory kwasów",
+                            description = "Rozpoznaj wzory kwasów beztlenowych i tlenowych",
+                            progress = 0.0f,
+                            isLocked = false,
+                            color = Color(0xFF3DBD7D),
+                            icon = Icons.Default.Science
+                        ),
+                        Lesson(
+                            id = "chemia_3_2",
+                            name = "Reakcje otrzymywania kwasów",
+                            description = "Uzupełnij równania stechiometryczne",
+                            progress = 0.0f,
+                            isLocked = false,
+                            color = Color(0xFF3DBD7D),
+                            icon = Icons.Default.Bolt
+                        )
+                    )
                 ),
                 Topic(
                     id = "chemia_4",
