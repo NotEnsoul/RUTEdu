@@ -54,14 +54,6 @@ kotlin {
         iosMain.dependencies {
             implementation("app.cash.sqldelight:native-driver:2.2.1")
         }
-
-        iosArm64Main.dependencies {
-            implementation("app.cash.sqldelight:native-driver:2.2.1")
-        }
-
-        iosSimulatorArm64Main.dependencies {
-            implementation("app.cash.sqldelight:native-driver:2.2.1")
-        }
     }
 }
 
@@ -96,11 +88,6 @@ dependencies {
     debugImplementation(compose.uiTooling)
 }
 
-configurations.all {
-    resolutionStrategy {
-        force("androidx.savedstate:savedstate:1.2.1")
-    }
-}
 
 sqldelight {
     databases {
