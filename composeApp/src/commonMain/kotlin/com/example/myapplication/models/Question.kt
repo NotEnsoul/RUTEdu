@@ -1,5 +1,8 @@
 package com.example.myapplication.models
 
+import com.example.myapplication.math.MathShape
+import com.example.myapplication.math.MathViewport
+
 enum class MathOperator(val symbol: String) {
     ADD("+"), SUBTRACT("−"), MULTIPLY("×"), DIVIDE("÷"), POWER("^")
 }
@@ -148,6 +151,35 @@ sealed class Question(open val id: Int) {
         val fixedCoefficient: Int? = null,
         val correctCoefficient: Int? = null
     )
+
+    /**
+     * Shows a [MathCanvas] visual and asks the user to type a numeric answer.
+     * Designed for function evaluation (f(x)=…) and geometric calculations.
+     */
+    data class GraphTypeAnswer(
+        override val id: Int,
+        val prompt: String,
+        val shapes: List<MathShape>,
+        val viewport: MathViewport = MathViewport(),
+        val correctAnswer: Int,
+        val unit: String = "",
+        val inlineHint: String? = null,
+        val hint: Hint = Hint("")
+    ) : Question(id)
+
+    /**
+     * Shows a [MathCanvas] visual and asks the user to pick from a list of options.
+     * Designed for "which function is this?" and "what is the maximum?" style questions.
+     */
+    data class GraphSelectFromList(
+        override val id: Int,
+        val prompt: String,
+        val shapes: List<MathShape>,
+        val viewport: MathViewport = MathViewport(),
+        val options: List<String>,
+        val correctIndices: Set<Int>,
+        val hint: Hint = Hint("")
+    ) : Question(id)
 
     /**
      * User fills in missing stoichiometric coefficients (the ? boxes).

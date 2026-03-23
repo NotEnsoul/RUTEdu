@@ -177,9 +177,20 @@ object SubjectRepository {
                     name = "Funkcje",
                     description = "Wykresy i własności",
                     progress = 0.0f,
-                    isLocked = true,
-                    color = Color(0xFF9E9E9E),
-                    icon = Icons.Default.Lock
+                    isLocked = false,
+                    color = Color(0xFF7C4DFF),
+                    icon = Icons.Default.TrendingUp,
+                    lessons = listOf(
+                        Lesson(
+                            id = "mat_4_1",
+                            name = "Funkcja kwadratowa",
+                            description = "Parabola — wykres i obliczanie wartości",
+                            progress = 0.0f,
+                            isLocked = false,
+                            color = Color(0xFF7C4DFF),
+                            icon = Icons.Default.TrendingUp
+                        )
+                    )
                 ),
                 Topic(
                     id = "mat_5",

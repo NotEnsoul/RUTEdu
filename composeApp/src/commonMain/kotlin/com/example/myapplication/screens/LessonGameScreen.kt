@@ -245,6 +245,18 @@ fun LessonGameScreen(
                     bottomPadding = bottomPadding,
                     onCorrect = onAnsweredCorrectly
                 )
+                is Question.GraphTypeAnswer -> GraphTypeAnswerContent(
+                    question = question,
+                    accentColor = accentColor,
+                    bottomPadding = bottomPadding,
+                    onCorrect = onAnsweredCorrectly
+                )
+                is Question.GraphSelectFromList -> GraphSelectFromListContent(
+                    question = question,
+                    accentColor = accentColor,
+                    bottomPadding = bottomPadding,
+                    onCorrect = onAnsweredCorrectly
+                )
             }
         }
     }

@@ -19,6 +19,11 @@ import com.example.myapplication.models.Question.PeriodicTableByName
 import com.example.myapplication.models.Question.TypeAnswer
 import com.example.myapplication.models.Question.EquationBalance
 import com.example.myapplication.models.Question.BalanceTerm
+import com.example.myapplication.models.Question.GraphTypeAnswer
+import com.example.myapplication.models.Question.GraphSelectFromList
+import com.example.myapplication.math.MathShape
+import com.example.myapplication.math.MathViewport
+import com.example.myapplication.math.TriangleBuilder
 
 object QuestionBank {
 
@@ -277,67 +282,151 @@ object QuestionBank {
     )
 
     // ── mat_5_1  Kąty w trójkącie ──────────────────────────────────────────────
-    private val mat_5_1: List<Question> = listOf(
-        TypeAnswer(0,
-            "Oblicz miarę trzeciego kąta w przedstawionym trójkącie",
-            50, "°", triangleAngles = Pair(60, 70),
-            inlineHint = "Pamiętaj, że suma kątów w każdym trójkącie wynosi zawsze 180°.",
-            hint = Hint("Suma kątów wewnętrznych trójkąta = 180°.",
-                steps = listOf("180° − 60° − 70° = 50°"))),
-        TypeAnswer(1,
-            "Oblicz miarę trzeciego kąta w przedstawionym trójkącie",
-            45, "°", triangleAngles = Pair(45, 90),
-            inlineHint = "Suma kątów w trójkącie wynosi 180°.",
-            hint = Hint("Suma kątów wewnętrznych trójkąta = 180°.",
-                steps = listOf("180° − 45° − 90° = 45°"))),
-        TypeAnswer(2,
-            "Oblicz miarę trzeciego kąta w przedstawionym trójkącie",
-            90, "°", triangleAngles = Pair(30, 60),
-            inlineHint = "Suma kątów w trójkącie wynosi 180°.",
-            hint = Hint("Suma kątów wewnętrznych trójkąta = 180°.",
-                steps = listOf("180° − 30° − 60° = 90°"))),
-        TypeAnswer(3,
-            "Oblicz miarę trzeciego kąta w przedstawionym trójkącie",
-            60, "°", triangleAngles = Pair(55, 65),
-            inlineHint = "Suma kątów w trójkącie wynosi 180°.",
-            hint = Hint("Suma kątów wewnętrznych trójkąta = 180°.",
-                steps = listOf("180° − 55° − 65° = 60°"))),
-        TypeAnswer(4,
-            "Oblicz miarę trzeciego kąta w przedstawionym trójkącie",
-            60, "°", triangleAngles = Pair(80, 40),
-            inlineHint = "Suma kątów w trójkącie wynosi 180°.",
-            hint = Hint("Suma kątów wewnętrznych trójkąta = 180°.",
-                steps = listOf("180° − 80° − 40° = 60°"))),
-        TypeAnswer(5,
-            "Oblicz miarę trzeciego kąta w przedstawionym trójkącie",
-            75, "°", triangleAngles = Pair(50, 55),
-            inlineHint = "Suma kątów w trójkącie wynosi 180°.",
-            hint = Hint("Suma kątów wewnętrznych trójkąta = 180°.",
-                steps = listOf("180° − 50° − 55° = 75°"))),
-        TypeAnswer(6,
-            "Oblicz miarę trzeciego kąta w przedstawionym trójkącie",
-            60, "°", triangleAngles = Pair(60, 60),
-            inlineHint = "Trójkąt równoboczny ma wszystkie kąty równe.",
-            hint = Hint("Suma kątów wewnętrznych trójkąta = 180°.",
-                steps = listOf("180° − 60° − 60° = 60°"))),
-        TypeAnswer(7,
-            "Oblicz miarę trzeciego kąta w przedstawionym trójkącie",
-            35, "°", triangleAngles = Pair(110, 35),
-            inlineHint = "Suma kątów w trójkącie wynosi 180°.",
-            hint = Hint("Suma kątów wewnętrznych trójkąta = 180°.",
-                steps = listOf("180° − 110° − 35° = 35°"))),
-        TypeAnswer(8,
-            "Oblicz miarę trzeciego kąta w przedstawionym trójkącie",
-            20, "°", triangleAngles = Pair(130, 30),
-            inlineHint = "Suma kątów w trójkącie wynosi 180°.",
-            hint = Hint("Suma kątów wewnętrznych trójkąta = 180°.",
-                steps = listOf("180° − 130° − 30° = 20°"))),
-        TypeAnswer(9,
-            "Oblicz miarę trzeciego kąta w przedstawionym trójkącie",
-            40, "°", triangleAngles = Pair(70, 70),
-            inlineHint = "Suma kątów w trójkącie wynosi 180°.",
-            hint = Hint("Suma kątów wewnętrznych trójkąta = 180°.",
-                steps = listOf("180° − 70° − 70° = 40°")))
+    private val mat_5_1: List<Question> = run {
+        fun tri(aA: Double, aB: Double, id: Int, answer: Int, hint: Hint): GraphTypeAnswer {
+            val (verts, vp) = TriangleBuilder.fromAnglesWithViewport(aA, aB)
+            val (a, b, c) = verts
+            return GraphTypeAnswer(
+                id = id,
+                prompt = "Oblicz miarę brakującego kąta trójkąta oznaczonego znakiem '?'.",
+                shapes = listOf(
+                    MathShape.Triangle(a, b, c,
+                        labelA = "${aA.toInt()}°",
+                        labelB = "${aB.toInt()}°",
+                        labelC = "?")
+                ),
+                viewport = vp,
+                correctAnswer = answer,
+                unit = "°",
+                inlineHint = "Suma kątów wewnętrznych trójkąta wynosi zawsze 180°.",
+                hint = hint
+            )
+        }
+        listOf(
+            tri(60.0, 70.0, 0, 50,
+                Hint("Suma kątów = 180°.", boldPart = "180°", steps = listOf("180° − 60° − 70° = 50°"))),
+            tri(45.0, 90.0, 1, 45,
+                Hint("Trójkąt prostokątny ma jeden kąt 90°.", boldPart = "90°",
+                    steps = listOf("180° − 45° − 90° = 45°"))),
+            tri(30.0, 60.0, 2, 90,
+                Hint("Jeśli wynik to 90°, trójkąt jest prostokątny.", boldPart = "90°",
+                    steps = listOf("180° − 30° − 60° = 90°"))),
+            tri(55.0, 65.0, 3, 60,
+                Hint("Suma kątów = 180°.", boldPart = "180°", steps = listOf("180° − 55° − 65° = 60°"))),
+            tri(80.0, 40.0, 4, 60,
+                Hint("Suma kątów = 180°.", boldPart = "180°", steps = listOf("180° − 80° − 40° = 60°"))),
+            tri(50.0, 55.0, 5, 75,
+                Hint("Suma kątów = 180°.", boldPart = "180°", steps = listOf("180° − 50° − 55° = 75°"))),
+            tri(60.0, 60.0, 6, 60,
+                Hint("Trójkąt równoboczny — wszystkie kąty równe 60°.", boldPart = "60°",
+                    steps = listOf("180° ÷ 3 = 60°"))),
+            tri(110.0, 35.0, 7, 35,
+                Hint("Kąt rozwarty (>90°) też należy do trójkąta.", boldPart = "180°",
+                    steps = listOf("180° − 110° − 35° = 35°"))),
+            tri(130.0, 30.0, 8, 20,
+                Hint("Suma kątów = 180°.", boldPart = "180°", steps = listOf("180° − 130° − 30° = 20°"))),
+            tri(70.0, 70.0, 9, 40,
+                Hint("Trójkąt równoramienny — dwa kąty równe.", boldPart = "180°",
+                    steps = listOf("180° − 70° − 70° = 40°")))
+        )
+    }
+
+    // ── mat_4_1  Funkcja kwadratowa ────────────────────────────────────────────
+    private val mat_4_1: List<Question> = listOf(
+
+        // --- wartości funkcji ---
+
+        GraphSelectFromList(0,
+            prompt = "Dana jest funkcja f(x) = x².\nIle wynosi f(3)?",
+            shapes = listOf(
+                MathShape.FunctionPlot(f = { x -> x * x }),
+                MathShape.PointMark(com.example.myapplication.math.Pt(3.0, 9.0), label = "f(3) = ?")
+            ),
+            viewport = MathViewport(xMin = -4.0, xMax = 4.0, yMin = -1.0, yMax = 10.0),
+            options = listOf("6", "7", "8", "9"),
+            correctIndices = setOf(3),
+            hint = Hint("f(3) = 3² = 3 × 3.", boldPart = "3²", steps = listOf("f(3) = 3² = 9"))),
+
+        GraphSelectFromList(1,
+            prompt = "Dana jest funkcja f(x) = x² − 2.\nIle wynosi f(0)?",
+            shapes = listOf(
+                MathShape.FunctionPlot(f = { x -> x * x - 2 }),
+                MathShape.PointMark(com.example.myapplication.math.Pt(0.0, -2.0), label = "f(0) = ?")
+            ),
+            viewport = MathViewport(xMin = -4.0, xMax = 4.0, yMin = -3.0, yMax = 8.0),
+            options = listOf("−3", "−2", "−1", "0"),
+            correctIndices = setOf(1),
+            hint = Hint("f(0) = 0² − 2.", boldPart = "0²", steps = listOf("f(0) = 0 − 2 = −2"))),
+
+        GraphSelectFromList(2,
+            prompt = "Dana jest funkcja f(x) = −x².\nDla jakiej wartości x funkcja osiąga wartość maksymalną?",
+            shapes = listOf(MathShape.FunctionPlot(f = { x -> -x * x })),
+            viewport = MathViewport(xMin = -4.0, xMax = 4.0, yMin = -10.0, yMax = 2.0),
+            options = listOf("x = −1", "x = 0", "x = 1", "brak maksimum"),
+            correctIndices = setOf(1),
+            hint = Hint("Parabola skierowana w dół — wierzchołek to maksimum.", boldPart = "wierzchołek",
+                steps = listOf("Wierzchołek f(x) = −x² jest w (0, 0)", "Maksimum dla x = 0, f(0) = 0"))),
+
+        GraphSelectFromList(3,
+            prompt = "Dana jest funkcja f(x) = x² + 1.\nJaka jest minimalna wartość tej funkcji?",
+            shapes = listOf(MathShape.FunctionPlot(f = { x -> x * x + 1 })),
+            viewport = MathViewport(xMin = -4.0, xMax = 4.0, yMin = -1.0, yMax = 9.0),
+            options = listOf("0", "1", "2", "−1"),
+            correctIndices = setOf(1),
+            hint = Hint("Wierzchołek paraboli y = x² + 1 jest podniesiony o 1.", boldPart = "+1",
+                steps = listOf("Minimum w wierzchołku (0, 1)", "f(0) = 0² + 1 = 1"))),
+
+        GraphSelectFromList(4,
+            prompt = "Dana jest funkcja f(x) = (x − 2)².\nIle wynosi f(2)?",
+            shapes = listOf(
+                MathShape.FunctionPlot(f = { x -> (x - 2) * (x - 2) }),
+                MathShape.PointMark(com.example.myapplication.math.Pt(2.0, 0.0), label = "f(2) = ?")
+            ),
+            viewport = MathViewport(xMin = -1.0, xMax = 5.0, yMin = -1.0, yMax = 8.0),
+            options = listOf("0", "1", "2", "4"),
+            correctIndices = setOf(0),
+            hint = Hint("f(2) = (2 − 2)² = 0² = 0.", boldPart = "(x−2)²",
+                steps = listOf("f(2) = (2 − 2)²", "= 0² = 0"))),
+
+        // --- pisemne odpowiedzi ---
+
+        GraphTypeAnswer(5,
+            prompt = "Dana jest funkcja f(x) = x².\nIle wynosi f(4)?",
+            shapes = listOf(
+                MathShape.FunctionPlot(f = { x -> x * x }),
+                MathShape.Segment(
+                    from = com.example.myapplication.math.Pt(4.0, 0.0),
+                    to   = com.example.myapplication.math.Pt(4.0, 16.0),
+                    dashed = true, color = androidx.compose.ui.graphics.Color(0xFF9E9E9E)
+                ),
+                MathShape.PointMark(com.example.myapplication.math.Pt(4.0, 16.0), label = "f(4)=?")
+            ),
+            viewport = MathViewport(xMin = -1.0, xMax = 5.0, yMin = -1.0, yMax = 18.0),
+            correctAnswer = 16,
+            inlineHint = "f(x) = x²  →  f(4) = 4²",
+            hint = Hint("f(4) = 4² = 4 × 4.", boldPart = "4²", steps = listOf("f(4) = 4 × 4 = 16"))),
+
+        GraphTypeAnswer(6,
+            prompt = "Dana jest funkcja f(x) = x² − 3.\nIle wynosi f(2)?",
+            shapes = listOf(
+                MathShape.FunctionPlot(f = { x -> x * x - 3 }),
+                MathShape.PointMark(com.example.myapplication.math.Pt(2.0, 1.0), label = "f(2)=?")
+            ),
+            viewport = MathViewport(xMin = -4.0, xMax = 4.0, yMin = -4.0, yMax = 6.0),
+            correctAnswer = 1,
+            inlineHint = "f(2) = 2² − 3",
+            hint = Hint("f(2) = 2² − 3.", boldPart = "2²", steps = listOf("2² = 4", "4 − 3 = 1"))),
+
+        GraphTypeAnswer(7,
+            prompt = "Dana jest funkcja f(x) = 2x².\nIle wynosi f(2)?",
+            shapes = listOf(
+                MathShape.FunctionPlot(f = { x -> 2 * x * x }),
+                MathShape.PointMark(com.example.myapplication.math.Pt(2.0, 8.0), label = "f(2)=?")
+            ),
+            viewport = MathViewport(xMin = -3.0, xMax = 3.0, yMin = -1.0, yMax = 10.0),
+            correctAnswer = 8,
+            inlineHint = "f(2) = 2 · 2²",
+            hint = Hint("f(2) = 2 · 2² = 2 · 4.", boldPart = "2·2²", steps = listOf("2² = 4", "2 × 4 = 8")))
     )
 
     // ── generic (chemia, geo) ─────────────────────────────────────────────────
@@ -907,6 +996,7 @@ object QuestionBank {
         "mat_2_1" to mat_2_1,
         "mat_2_2" to mat_2_2,
         "mat_3_1" to genericMath,
+        "mat_4_1" to mat_4_1,
         "mat_5_1" to mat_5_1,
         "chemia_1_1" to chemia_1_1,
         "chemia_1_2" to chemia_1_2,

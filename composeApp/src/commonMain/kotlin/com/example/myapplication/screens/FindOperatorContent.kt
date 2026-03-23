@@ -1,18 +1,24 @@
 package com.example.myapplication.screens
 
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInRoot
@@ -40,7 +46,6 @@ internal fun FindOperatorContent(
     var isWrong by remember(question.id) { mutableStateOf(false) }
     var showHint by remember(question.id) { mutableStateOf(false) }
 
-    // 4 chips: correct + 3 random others, shuffled once per question
     val displayOperators = remember(question.id) {
         val others = MathOperator.entries
             .filter { it != question.correctOperator }
@@ -55,6 +60,26 @@ internal fun FindOperatorContent(
     val chipRootPositions = remember { mutableMapOf<MathOperator, Offset>() }
     var targetRootPos by remember { mutableStateOf(Offset.Zero) }
     var targetSizePx by remember { mutableStateOf(Offset.Zero) }
+
+    // Ghost hint: flies from tapped chip toward the target, then fades out
+    var ghostOp by remember { mutableStateOf<MathOperator?>(null) }
+    val ghostProgress = remember { Animatable(0f) }
+    val ghostAlpha = remember { Animatable(0f) }
+
+    val animScope = rememberCoroutineScope()
+
+    fun playTapHint(op: MathOperator) {
+        animScope.launch {
+            ghostOp = op
+            ghostProgress.snapTo(0f)
+            ghostAlpha.snapTo(1f)
+            launch {
+                ghostProgress.animateTo(1f, tween(480, easing = FastOutSlowInEasing))
+            }
+            ghostAlpha.animateTo(0f, tween(480, easing = FastOutSlowInEasing))
+            ghostOp = null
+        }
+    }
 
     val targetBorderColor by animateColorAsState(
         when {
@@ -168,6 +193,11 @@ internal fun FindOperatorContent(
                                 chipRootPositions[op] = coords.positionInRoot()
                             }
                             .pointerInput(op) {
+                                detectTapGestures {
+                                    if (draggingOperator == null) playTapHint(op)
+                                }
+                            }
+                            .pointerInput(op) {
                                 coroutineScope {
                                     launch {
                                         detectDragGestures(
@@ -220,12 +250,13 @@ internal fun FindOperatorContent(
             Spacer(modifier = Modifier.height(16.dp))
         }
 
+        // Floating ghost during drag
         if (draggingOperator != null) {
             Box(
                 modifier = Modifier
                     .offset {
                         val localX = fingerRootPos.x - containerRootPos.x - 32.dp.toPx()
-                        val localY = fingerRootPos.y - containerRootPos.y - 32.dp.toPx()
+                        val localY = fingerRootPos.y - containerRootPos.y - 88.dp.toPx()
                         IntOffset(localX.roundToInt(), localY.roundToInt())
                     }
                     .size(64.dp)
@@ -235,6 +266,37 @@ internal fun FindOperatorContent(
             ) {
                 Text(
                     text = draggingOperator!!.symbol,
+                    fontSize = 26.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+            }
+        }
+
+        // Tap-hint ghost: flies from chip toward the target slot and fades out
+        val currentGhostOp = ghostOp
+        val chipSizePx = with(LocalDensity.current) { 64.dp.toPx() }
+        if (currentGhostOp != null) {
+            val chipPos = chipRootPositions[currentGhostOp] ?: Offset.Zero
+            val startX = chipPos.x - containerRootPos.x
+            val startY = chipPos.y - containerRootPos.y
+            val endX = targetRootPos.x - containerRootPos.x + (targetSizePx.x - chipSizePx) / 2f
+            val endY = targetRootPos.y - containerRootPos.y + (targetSizePx.y - chipSizePx) / 2f
+            val t = ghostProgress.value
+            val currentX = startX + (endX - startX) * t
+            val currentY = startY + (endY - startY) * t
+
+            Box(
+                modifier = Modifier
+                    .offset { IntOffset(currentX.roundToInt(), currentY.roundToInt()) }
+                    .size(64.dp)
+                    .alpha(ghostAlpha.value)
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(accentColor),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = currentGhostOp.symbol,
                     fontSize = 26.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color.White
