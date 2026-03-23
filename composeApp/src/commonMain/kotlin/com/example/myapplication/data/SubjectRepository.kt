@@ -148,7 +148,7 @@ object SubjectRepository {
                     name = "Równania i nierówności",
                     description = "Metody rozwiązywania układów",
                     progress = 0.10f,
-                    isLocked = false,
+                    isLocked = true,
                     color = Color(0xFF3DBD7D),
                     icon = Icons.Default.BarChart,
                     lessons = listOf(
@@ -245,7 +245,7 @@ object SubjectRepository {
                         ),
                         Lesson(
                             id = "chemia_1_2",
-                            name = "Wiązania chemiczne",
+                            name = "Wskazywanie atomów w układzie okresowym",
                             description = "Kowalencyjne i jonowe",
                             progress = 0.60f,
                             isLocked = false,
@@ -386,7 +386,7 @@ object SubjectRepository {
                     name = "Klimat i pogoda",
                     description = "Strefy klimatyczne",
                     progress = 0.30f,
-                    isLocked = false,
+                    isLocked = true,
                     color = Color(0xFF4A80F0),
                     icon = Icons.Default.Cloud
                 ),
