@@ -54,6 +54,12 @@ internal fun FindOperatorContent(
         (others + question.correctOperator).shuffled()
     }
 
+    // Chip is displayed (88dp - 32dp) = 56dp above the finger.
+    // Hit detection must follow the chip center, not the raw finger position.
+    val density = LocalDensity.current
+    val dragLiftYPx = with(density) { (88.dp - 32.dp).toPx() }  // 56dp
+    val hitMarginPx = with(density) { 20.dp.toPx() }
+
     var draggingOperator by remember { mutableStateOf<MathOperator?>(null) }
     var fingerRootPos by remember { mutableStateOf(Offset.Zero) }
     var containerRootPos by remember { mutableStateOf(Offset.Zero) }
@@ -210,9 +216,12 @@ internal fun FindOperatorContent(
                                                 fingerRootPos += dragDelta
                                             },
                                             onDragEnd = {
+                                                // Check chip visual position (centre is dragLiftYPx above finger)
+                                                // with extra margin on all sides for comfort
+                                                val chipCenterY = fingerRootPos.y - dragLiftYPx
                                                 val overTarget =
-                                                    fingerRootPos.x in targetRootPos.x..(targetRootPos.x + targetSizePx.x) &&
-                                                        fingerRootPos.y in targetRootPos.y..(targetRootPos.y + targetSizePx.y)
+                                                    fingerRootPos.x in (targetRootPos.x - hitMarginPx)..(targetRootPos.x + targetSizePx.x + hitMarginPx) &&
+                                                        chipCenterY in (targetRootPos.y - hitMarginPx)..(targetRootPos.y + targetSizePx.y + hitMarginPx)
                                                 if (overTarget) {
                                                     selectedOperator = draggingOperator
                                                     isWrong = false
