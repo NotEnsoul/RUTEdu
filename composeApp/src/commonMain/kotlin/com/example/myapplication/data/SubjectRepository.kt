@@ -266,9 +266,9 @@ object SubjectRepository {
                             name = "Cząsteczki i wzory",
                             description = "Wzory sumaryczne i strukturalne",
                             progress = 0.0f,
-                            isLocked = true,
-                            color = Color(0xFF9E9E9E),
-                            icon = Icons.Default.Lock
+                            isLocked = false,
+                            color = Color(0xFFF47B20),
+                            icon = Icons.Default.Science
                         )
                     )
                 ),
@@ -295,9 +295,9 @@ object SubjectRepository {
                             name = "Właściwości pierwiastków",
                             description = "Metale i niemetale",
                             progress = 0.0f,
-                            isLocked = true,
-                            color = Color(0xFF9E9E9E),
-                            icon = Icons.Default.Lock
+                            isLocked = false,
+                            color = Color(0xFF4A80F0),
+                            icon = Icons.Default.TableChart
                         )
                     )
                 ),
