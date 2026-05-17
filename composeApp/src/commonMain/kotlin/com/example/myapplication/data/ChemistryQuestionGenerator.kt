@@ -17,6 +17,10 @@ object ChemistryQuestionGenerator {
             "chemia_1_4" -> chemia_1_4(seed)
             "chemia_2_1" -> chemia_2_1(seed)
             "chemia_2_2" -> chemia_2_2(seed)
+            "chemia_4_1" -> chemia_4_1(seed)
+            "chemia_4_2" -> chemia_4_2(seed)
+            "chemia_5_1" -> chemia_5_1(seed)
+            "chemia_5_2" -> chemia_5_2(seed)
             else -> emptyList()
         }
     }
@@ -28,7 +32,6 @@ object ChemistryQuestionGenerator {
         return shellConfigByNumber.entries
             .filter { it.key in 1..54 }
             .shuffled(rng)
-            .take(15)
             .mapIndexed { i, (z, shell) ->
                 val el = elementByNumber[z]!!
                 PeriodicTableByShell(
@@ -49,7 +52,6 @@ object ChemistryQuestionGenerator {
         return ELEMENTS
             .filter { it.atomicNumber <= 86 && it.category !in listOf(LANTHANIDE, ACTINIDE) }
             .shuffled(rng)
-            .take(15)
             .mapIndexed { i, el ->
                 PeriodicTableByName(
                     id = 1200 + i,
@@ -65,7 +67,7 @@ object ChemistryQuestionGenerator {
 
     private fun chemia_1_3(seed: Long): List<Question> {
         val rng = Random(seed)
-        return moleculeQuestions(rng).take(15)
+        return moleculeQuestions(rng)
     }
 
     private fun chemia_1_4(seed: Long): List<Question> {
@@ -76,20 +78,338 @@ object ChemistryQuestionGenerator {
                 listOf(electronQ(el, rng), protonQ(el, rng), massQ(el, rng), periodQ(el, rng))
             }
             .shuffled(rng)
-            .take(15)
             .mapIndexed { i, q -> q.copy(id = 1400 + i) }
     }
 
     private fun chemia_2_1(seed: Long): List<Question> {
         val rng = Random(seed)
-        return periodicTableSets().shuffled(rng).take(10).mapIndexed { i, (title, nums, hint) ->
+        return periodicTableSets().shuffled(rng).mapIndexed { i, (title, nums, hint) ->
             PeriodicTableQuiz(id = 2100 + i, questionText = title, missingAtomicNumbers = nums, hint = hint)
         }
     }
 
     private fun chemia_2_2(seed: Long): List<Question> {
         val rng = Random(seed)
-        return propertyQuestions(rng).take(15)
+        return propertyQuestions(rng)
+    }
+
+    // ── chemia_4_1  Skala pH ──────────────────────────────────────────────────
+
+    private val phRealWorld = listOf(
+        Triple("Sok cytrynowy (pH ≈ 2)", 2, "kwasowy"),
+        Triple("Ocet (pH ≈ 3)", 3, "kwasowy"),
+        Triple("Kawa (pH ≈ 5)", 5, "kwasowy"),
+        Triple("Mleko (pH ≈ 6)", 6, "kwasowy"),
+        Triple("Woda destylowana (pH = 7)", 7, "obojętny"),
+        Triple("Krew ludzka (pH ≈ 7)", 7, "obojętny"),
+        Triple("Woda morska (pH ≈ 8)", 8, "zasadowy"),
+        Triple("Soda oczyszczona w wodzie (pH ≈ 9)", 9, "zasadowy"),
+        Triple("Mydło (pH ≈ 10)", 10, "zasadowy"),
+        Triple("Mleko wapienne (pH ≈ 12)", 12, "zasadowy"),
+    )
+
+    private fun chemia_4_1(seed: Long): List<Question> {
+        val rng = Random(seed)
+        val qs = mutableListOf<SelectFromList>()
+        val phSteps = listOf("pH < 7 → odczyn kwasowy", "pH = 7 → odczyn obojętny", "pH > 7 → odczyn zasadowy")
+
+        // 15 questions: classify each pH 0–14
+        (0..14).forEach { ph ->
+            val type = when {
+                ph < 7  -> "kwasowy"
+                ph == 7 -> "obojętny"
+                else    -> "zasadowy"
+            }
+            val opts = listOf("kwasowy", "obojętny", "zasadowy")
+            qs += SelectFromList(
+                id = 0,
+                prompt = "Roztwór o pH = $ph ma odczyn:",
+                options = opts,
+                correctIndices = setOf(opts.indexOf(type)),
+                hint = Hint(
+                    mainText = when {
+                        ph < 7  -> "pH $ph jest mniejsze od 7 — odczyn kwasowy."
+                        ph == 7 -> "pH = 7 — odczyn obojętny."
+                        else    -> "pH $ph jest większe od 7 — odczyn zasadowy."
+                    },
+                    boldPart = type,
+                    steps = phSteps
+                )
+            )
+        }
+
+        // 10 real-world examples
+        phRealWorld.forEach { (desc, _, type) ->
+            val opts = listOf("kwasowy", "obojętny", "zasadowy")
+            qs += SelectFromList(
+                id = 0,
+                prompt = "$desc ma odczyn:",
+                options = opts,
+                correctIndices = setOf(opts.indexOf(type)),
+                hint = Hint(mainText = "$desc → $type.", boldPart = type, steps = phSteps)
+            )
+        }
+
+        // 6 "pick acidic pH" questions — each with unique set of options
+        val acidPHs = (1..6).toList().shuffled(rng)
+        val basePHs = (8..13).toList()
+        acidPHs.forEach { ph ->
+            val wrongs = (listOf(7) + basePHs.shuffled(rng).take(2)).map { it.toString() }
+            val opts = (wrongs + ph.toString()).shuffled(rng)
+            qs += SelectFromList(
+                id = 0,
+                prompt = "Które z poniższych pH odpowiada odczynowi kwasowemu?",
+                options = opts,
+                correctIndices = setOf(opts.indexOf(ph.toString())),
+                hint = Hint("Odczyn kwasowy → pH < 7.", boldPart = "pH < 7", steps = phSteps)
+            )
+        }
+
+        // 6 "pick basic pH" questions
+        basePHs.shuffled(rng).take(6).forEach { ph ->
+            val wrongs = (listOf(7) + acidPHs.take(2)).map { it.toString() }
+            val opts = (wrongs + ph.toString()).shuffled(rng)
+            qs += SelectFromList(
+                id = 0,
+                prompt = "Które z poniższych pH odpowiada odczynowi zasadowemu?",
+                options = opts,
+                correctIndices = setOf(opts.indexOf(ph.toString())),
+                hint = Hint("Odczyn zasadowy → pH > 7.", boldPart = "pH > 7", steps = phSteps)
+            )
+        }
+
+        return qs.shuffled(rng).mapIndexed { i, q -> q.copy(id = 4100 + i) }
+    }
+
+    // ── chemia_4_2  Dysocjacja elektrolityczna ────────────────────────────────
+
+    private data class DissocEntry(
+        val formula: String,
+        val namePL: String,
+        val ions: String,
+        val type: String  // kwas / zasada / sól
+    )
+
+    private val dissocData = listOf(
+        DissocEntry("HCl",       "kwas solny",               "H⁺ i Cl⁻",        "kwas"),
+        DissocEntry("HBr",       "kwas bromowodorowy",       "H⁺ i Br⁻",        "kwas"),
+        DissocEntry("HI",        "kwas jodowodorowy",        "H⁺ i I⁻",         "kwas"),
+        DissocEntry("HNO₃",     "kwas azotowy(V)",          "H⁺ i NO₃⁻",       "kwas"),
+        DissocEntry("H₂SO₄",    "kwas siarkowy(VI)",        "2H⁺ i SO₄²⁻",     "kwas"),
+        DissocEntry("HClO₄",    "kwas chlorowy(VII)",       "H⁺ i ClO₄⁻",      "kwas"),
+        DissocEntry("NaOH",      "wodorotlenek sodu",        "Na⁺ i OH⁻",        "zasada"),
+        DissocEntry("KOH",       "wodorotlenek potasu",      "K⁺ i OH⁻",         "zasada"),
+        DissocEntry("Ca(OH)₂",  "wodorotlenek wapnia",     "Ca²⁺ i 2OH⁻",      "zasada"),
+        DissocEntry("Ba(OH)₂",  "wodorotlenek baru",       "Ba²⁺ i 2OH⁻",      "zasada"),
+        DissocEntry("NaCl",      "chlorek sodu",             "Na⁺ i Cl⁻",        "sól"),
+        DissocEntry("KCl",       "chlorek potasu",           "K⁺ i Cl⁻",         "sól"),
+        DissocEntry("CaCl₂",    "chlorek wapnia",           "Ca²⁺ i 2Cl⁻",      "sól"),
+        DissocEntry("K₂SO₄",    "siarczan(VI) potasu",     "2K⁺ i SO₄²⁻",      "sól"),
+        DissocEntry("Na₂CO₃",   "węglan sodu",              "2Na⁺ i CO₃²⁻",     "sól"),
+    )
+
+    private fun chemia_4_2(seed: Long): List<Question> {
+        val rng = Random(seed)
+        val qs = mutableListOf<SelectFromList>()
+        val allIons     = dissocData.map { it.ions }
+        val allFormulas = dissocData.map { it.formula }
+        val typeOpts    = listOf("kwas", "zasada", "sól")
+        val typeHints   = mapOf(
+            "kwas"   to "Kwasy dysocjują oddając jon H⁺.",
+            "zasada" to "Zasady dysocjują oddając jon OH⁻.",
+            "sól"    to "Sole to produkty reakcji kwasu z zasadą — dysocjują na kationy metalu i aniony reszty kwasowej."
+        )
+
+        dissocData.forEach { entry ->
+            val wrongIons = allIons.filter { it != entry.ions }.shuffled(rng).take(3)
+            val opts1 = (wrongIons + entry.ions).shuffled(rng)
+            qs += SelectFromList(
+                id = 0,
+                prompt = "Podczas dysocjacji ${entry.formula} (${entry.namePL}) powstają jony:",
+                options = opts1,
+                correctIndices = setOf(opts1.indexOf(entry.ions)),
+                hint = Hint("${entry.formula} → ${entry.ions}.", boldPart = entry.ions)
+            )
+
+            val wrongForms = allFormulas.filter { it != entry.formula }.shuffled(rng).take(3)
+            val opts2 = (wrongForms + entry.formula).shuffled(rng)
+            qs += SelectFromList(
+                id = 0,
+                prompt = "Który związek chemiczny dysocjuje dając jony ${entry.ions}?",
+                options = opts2,
+                correctIndices = setOf(opts2.indexOf(entry.formula)),
+                hint = Hint("${entry.ions} to jony z ${entry.formula}.", boldPart = entry.formula)
+            )
+
+            qs += SelectFromList(
+                id = 0,
+                prompt = "${entry.formula} (${entry.namePL}) jest:",
+                options = typeOpts,
+                correctIndices = setOf(typeOpts.indexOf(entry.type)),
+                hint = Hint(typeHints[entry.type]!!, boldPart = entry.type)
+            )
+        }
+
+        return qs.shuffled(rng).mapIndexed { i, q -> q.copy(id = 4200 + i) }
+    }
+
+    // ── chemia_5_1  Węglowodory ───────────────────────────────────────────────
+
+    private data class Hydrocarbon(
+        val formula: String,
+        val namePL: String,
+        val cCount: Int,
+        val type: String  // alkan / alken / alkyn
+    )
+
+    private val hydrocarbons = listOf(
+        Hydrocarbon("CH₄",    "metan",   1, "alkan"),
+        Hydrocarbon("C₂H₆",  "etan",    2, "alkan"),
+        Hydrocarbon("C₃H₈",  "propan",  3, "alkan"),
+        Hydrocarbon("C₄H₁₀", "butan",   4, "alkan"),
+        Hydrocarbon("C₅H₁₂", "pentan",  5, "alkan"),
+        Hydrocarbon("C₆H₁₄", "heksan",  6, "alkan"),
+        Hydrocarbon("C₂H₄",  "eten",    2, "alken"),
+        Hydrocarbon("C₃H₆",  "propen",  3, "alken"),
+        Hydrocarbon("C₄H₈",  "buten",   4, "alken"),
+        Hydrocarbon("C₅H₁₀", "penten",  5, "alken"),
+        Hydrocarbon("C₂H₂",  "etyn",    2, "alkyn"),
+        Hydrocarbon("C₃H₄",  "propyn",  3, "alkyn"),
+        Hydrocarbon("C₄H₆",  "butyn",   4, "alkyn"),
+    )
+
+    private val hcTypeHints = mapOf(
+        "alkan" to "Alkany — CₙH₂ₙ₊₂. Tylko wiązania pojedyncze C−C.",
+        "alken" to "Alkeny — CₙH₂ₙ. Zawierają jedno wiązanie podwójne C=C.",
+        "alkyn" to "Alkiny — CₙH₂ₙ₋₂. Zawierają jedno wiązanie potrójne C≡C."
+    )
+
+    private fun chemia_5_1(seed: Long): List<Question> {
+        val rng = Random(seed)
+        val qs = mutableListOf<SelectFromList>()
+        val allNames    = hydrocarbons.map { it.namePL }
+        val allFormulas = hydrocarbons.map { it.formula }
+        val typeOpts    = listOf("alkan", "alken", "alkyn")
+
+        hydrocarbons.forEach { hc ->
+            val wNames = allNames.filter { it != hc.namePL }.shuffled(rng).take(3)
+            val opts1 = (wNames + hc.namePL).shuffled(rng)
+            qs += SelectFromList(
+                id = 0,
+                prompt = "Jak nazywa się związek o wzorze ${hc.formula}?",
+                options = opts1,
+                correctIndices = setOf(opts1.indexOf(hc.namePL)),
+                hint = Hint("${hc.formula} to ${hc.namePL}.", boldPart = hc.namePL)
+            )
+
+            val wForms = allFormulas.filter { it != hc.formula }.shuffled(rng).take(3)
+            val opts2 = (wForms + hc.formula).shuffled(rng)
+            qs += SelectFromList(
+                id = 0,
+                prompt = "Jaki jest wzór sumaryczny ${hc.namePL}?",
+                options = opts2,
+                correctIndices = setOf(opts2.indexOf(hc.formula)),
+                hint = Hint("Wzór ${hc.namePL} to ${hc.formula}.", boldPart = hc.formula)
+            )
+
+            qs += SelectFromList(
+                id = 0,
+                prompt = "${hc.namePL} (${hc.formula}) należy do szeregu:",
+                options = typeOpts,
+                correctIndices = setOf(typeOpts.indexOf(hc.type)),
+                hint = Hint(hcTypeHints[hc.type]!!, boldPart = hc.type)
+            )
+
+            val wC = (1..8).filter { it != hc.cCount }.shuffled(rng).take(3).map { it.toString() }
+            val opts4 = (wC + hc.cCount.toString()).shuffled(rng)
+            qs += SelectFromList(
+                id = 0,
+                prompt = "Ile atomów węgla zawiera ${hc.namePL} (${hc.formula})?",
+                options = opts4,
+                correctIndices = setOf(opts4.indexOf(hc.cCount.toString())),
+                hint = Hint("${hc.formula}: ${hc.cCount} atomy C.", boldPart = "${hc.cCount}")
+            )
+        }
+
+        return qs.shuffled(rng).mapIndexed { i, q -> q.copy(id = 5100 + i) }
+    }
+
+    // ── chemia_5_2  Pochodne węglowodorów ────────────────────────────────────
+
+    private data class OrgCompound(
+        val formula: String,
+        val namePL: String,
+        val group: String,     // -OH / -COOH / -NH₂ / ester
+        val groupName: String  // alkohol / kwas karboksylowy / amina / ester
+    )
+
+    private val orgCompounds = listOf(
+        OrgCompound("CH₃OH",         "metanol",           "-OH",   "alkohol"),
+        OrgCompound("C₂H₅OH",        "etanol",            "-OH",   "alkohol"),
+        OrgCompound("C₃H₇OH",        "propanol",          "-OH",   "alkohol"),
+        OrgCompound("C₄H₉OH",        "butanol",           "-OH",   "alkohol"),
+        OrgCompound("HCOOH",          "kwas metanowy",     "-COOH", "kwas karboksylowy"),
+        OrgCompound("CH₃COOH",       "kwas etanowy",      "-COOH", "kwas karboksylowy"),
+        OrgCompound("C₂H₅COOH",     "kwas propanowy",    "-COOH", "kwas karboksylowy"),
+        OrgCompound("C₃H₇COOH",     "kwas butanowy",     "-COOH", "kwas karboksylowy"),
+        OrgCompound("CH₃NH₂",        "metyloamina",       "-NH₂",  "amina"),
+        OrgCompound("C₂H₅NH₂",      "etyloamina",        "-NH₂",  "amina"),
+        OrgCompound("HCOOCH₃",       "mrówczan metylu",   "ester", "ester"),
+        OrgCompound("CH₃COOC₂H₅",  "octan etylu",       "ester", "ester"),
+    )
+
+    private val orgGroupHints = mapOf(
+        "alkohol"           to "Alkohole zawierają grupę hydroksylową -OH.",
+        "kwas karboksylowy" to "Kwasy karboksylowe zawierają grupę karboksylową -COOH.",
+        "amina"             to "Aminy zawierają grupę aminową -NH₂.",
+        "ester"             to "Estry powstają z reakcji kwasu karboksylowego z alkoholem."
+    )
+
+    private fun chemia_5_2(seed: Long): List<Question> {
+        val rng = Random(seed)
+        val qs = mutableListOf<SelectFromList>()
+        val allNames   = orgCompounds.map { it.namePL }
+        val typeOpts   = listOf("alkohol", "kwas karboksylowy", "amina", "ester")
+        val groupOpts  = listOf("-OH", "-COOH", "-NH₂", "ester")
+
+        orgCompounds.forEach { oc ->
+            val wNames = allNames.filter { it != oc.namePL }.shuffled(rng).take(3)
+            val opts1 = (wNames + oc.namePL).shuffled(rng)
+            qs += SelectFromList(
+                id = 0,
+                prompt = "Jak nazywa się związek o wzorze ${oc.formula}?",
+                options = opts1,
+                correctIndices = setOf(opts1.indexOf(oc.namePL)),
+                hint = Hint("${oc.formula} to ${oc.namePL}.", boldPart = oc.namePL)
+            )
+
+            qs += SelectFromList(
+                id = 0,
+                prompt = "${oc.namePL} (${oc.formula}) należy do grupy:",
+                options = typeOpts,
+                correctIndices = setOf(typeOpts.indexOf(oc.groupName)),
+                hint = Hint(
+                    orgGroupHints[oc.groupName]!!,
+                    boldPart = oc.groupName,
+                    items = listOf(
+                        "Alkohole — gr. -OH",
+                        "Kwasy karboksylowe — gr. -COOH",
+                        "Aminy — gr. -NH₂",
+                        "Estry — z kwasu + alkoholu"
+                    )
+                )
+            )
+
+            qs += SelectFromList(
+                id = 0,
+                prompt = "Jaką grupę funkcyjną zawiera ${oc.namePL} (${oc.formula})?",
+                options = groupOpts,
+                correctIndices = setOf(groupOpts.indexOf(oc.group)),
+                hint = Hint("Grupa ${oc.group} → ${oc.groupName}.", boldPart = oc.group)
+            )
+        }
+
+        return qs.shuffled(rng).mapIndexed { i, q -> q.copy(id = 5200 + i) }
     }
 
     // ── ElementCardQuiz builders ──────────────────────────────────────────────
@@ -332,12 +652,13 @@ object ChemistryQuestionGenerator {
     private fun propertyQuestions(rng: Random): List<Question> {
         val qs = mutableListOf<SelectFromList>()
 
+        // One question per element: "Do jakiej grupy zaliczamy X?"
         ELEMENTS.filter { it.atomicNumber in 1..54 }.forEach { el ->
             val type = when (el.category) {
-                NOBLE_GAS  -> "gaz szlachetny"
-                in metalCats -> "metal"
-                in nonMetalCats -> "niemetal"
-                METALLOID  -> "metaloid"
+                NOBLE_GAS        -> "gaz szlachetny"
+                in metalCats     -> "metal"
+                in nonMetalCats  -> "niemetal"
+                METALLOID        -> "metaloid"
                 else -> return@forEach
             }
             val opts = listOf("metal", "niemetal", "metaloid", "gaz szlachetny")
@@ -350,6 +671,7 @@ object ChemistryQuestionGenerator {
             )
         }
 
+        // "Which element is a metal/non-metal/noble-gas?" — each correct element used at most once
         listOf(
             Triple("metalem",          metalCats,    nonMetalCats + setOf(METALLOID, NOBLE_GAS)),
             Triple("niemetalem",        nonMetalCats, metalCats    + setOf(METALLOID, NOBLE_GAS)),
@@ -358,9 +680,8 @@ object ChemistryQuestionGenerator {
             val correctPool = ELEMENTS.filter { it.category in correctCats && it.atomicNumber in 1..54 }
             val wrongPool   = ELEMENTS.filter { it.category in wrongCats   && it.atomicNumber in 1..54 }
             if (correctPool.isNotEmpty() && wrongPool.size >= 3) {
-                repeat(5) {
-                    val c  = correctPool.random(rng)
-                    val ws = wrongPool.shuffled(rng).take(3)
+                correctPool.shuffled(rng).forEach { c ->
+                    val ws   = wrongPool.shuffled(rng).take(3)
                     val opts = (ws.map { it.namePL } + c.namePL).shuffled(rng)
                     qs += SelectFromList(
                         id = 0,

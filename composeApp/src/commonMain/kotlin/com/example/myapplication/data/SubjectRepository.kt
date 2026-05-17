@@ -335,18 +335,58 @@ object SubjectRepository {
                     name = "Kwasy i zasady",
                     description = "pH i dysocjacja",
                     progress = 0.0f,
-                    isLocked = true,
-                    color = Color(0xFF9E9E9E),
-                    icon = Icons.Default.Lock
+                    isLocked = false,
+                    color = Color(0xFF3DBD7D),
+                    icon = Icons.Default.Science,
+                    lessons = listOf(
+                        Lesson(
+                            id = "chemia_4_1",
+                            name = "Skala pH",
+                            description = "Odczyn kwasowy, zasadowy i obojętny",
+                            progress = 0.0f,
+                            isLocked = false,
+                            color = Color(0xFF3DBD7D),
+                            icon = Icons.Default.BarChart
+                        ),
+                        Lesson(
+                            id = "chemia_4_2",
+                            name = "Dysocjacja elektrolityczna",
+                            description = "Jony kwasów, zasad i soli",
+                            progress = 0.0f,
+                            isLocked = false,
+                            color = Color(0xFF4A80F0),
+                            icon = Icons.Default.Bolt
+                        )
+                    )
                 ),
                 Topic(
                     id = "chemia_5",
                     name = "Chemia organiczna",
                     description = "Węglowodory i pochodne",
                     progress = 0.0f,
-                    isLocked = true,
-                    color = Color(0xFF9E9E9E),
-                    icon = Icons.Default.Lock
+                    isLocked = false,
+                    color = Color(0xFFF47B20),
+                    icon = Icons.Default.Science,
+                    lessons = listOf(
+                        Lesson(
+                            id = "chemia_5_1",
+                            name = "Węglowodory",
+                            description = "Alkany, alkeny i alkiny",
+                            progress = 0.0f,
+                            isLocked = false,
+                            color = Color(0xFFF47B20),
+                            icon = Icons.Default.Science
+                        ),
+                        Lesson(
+                            id = "chemia_5_2",
+                            name = "Pochodne węglowodorów",
+                            description = "Alkohole, kwasy karboksylowe i estry",
+                            progress = 0.0f,
+                            isLocked = false,
+                            color = Color(0xFF7C4DFF),
+                            icon = Icons.Default.Science
+                        )
+                    )
                 )
             )
         ),
