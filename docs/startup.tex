@@ -1,0 +1,212 @@
+\documentclass[a4paper,11pt]{article}
+\usepackage[T1]{fontenc}
+\usepackage[polish]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage{geometry}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{parskip}
+\usepackage{titlesec}
+\usepackage{hyperref}
+
+\geometry{margin=2.5cm}
+
+\definecolor{codebg}{RGB}{245,245,245}
+\definecolor{kw}{RGB}{0,100,180}
+\definecolor{str}{RGB}{160,32,32}
+\definecolor{comment}{RGB}{100,120,100}
+
+\lstdefinelanguage{Kotlin}{
+  keywords={fun, val, listOf, data, class, object, null, true, false, override, private},
+  keywordstyle=\color{kw}\bfseries,
+  stringstyle=\color{str},
+  commentstyle=\color{comment}\itshape,
+  morestring=[b]",
+  morecomment=[l]{//},
+  basicstyle=\ttfamily\small,
+  backgroundcolor=\color{codebg},
+  frame=single,
+  framerule=0.4pt,
+  rulecolor=\color{gray!40},
+  xleftmargin=8pt,
+  xrightmargin=8pt,
+  breaklines=true,
+  showstringspaces=false,
+}
+
+\lstset{language=Kotlin}
+
+\titleformat{\section}{\large\bfseries}{}{0em}{}[\titlerule]
+\titleformat{\subsection}{\normalsize\bfseries}{}{0em}{}
+
+\title{\textbf{RUTEdu}}
+\author{}
+\date{}
+
+\begin{document}
+\maketitle
+\tableofcontents
+\vspace{1em}
+
+% ─────────────────────────────────────────────────────────────
+\section{Struktura projektu}
+
+Projekt to \textbf{Kotlin Multiplatform} (Android + iOS) z Jetpack Compose.
+Cały wspólny kod leży w \texttt{composeApp/src/commonMain/kotlin/}.
+
+\begin{center}
+\begin{tabular}{ll}
+\texttt{data/SubjectRepository.kt} & lista przedmiotów, tematów i lekcji \\
+\texttt{data/QuestionBank.kt}      & statyczne pytania (mat, geo, chemia\_3) \\
+\texttt{data/ChemistryQuestionGenerator.kt} & generowane pytania chemiczne \\
+\texttt{models/Question.kt}        & typy pytań (sealed class) \\
+\texttt{screens/}                  & komponenty UI dla każdego typu pytania \\
+\end{tabular}
+\end{center}
+
+% ─────────────────────────────────────────────────────────────
+\section{Jak dodawać nowe zadania}
+
+\subsection{Krok 1 - zarejestruj lekcję w SubjectRepository.kt}
+
+Otwórz \texttt{SubjectRepository.kt} i znajdź właściwy temat (\texttt{Topic}).
+Dodaj nowy wpis \texttt{Lesson} do jego listy \texttt{lessons}:
+
+\begin{lstlisting}
+Lesson(
+    id          = "mat_2_4",          // unikalny string, uzywany jako klucz
+    name        = "Ulamki dziesietne",
+    description = "Dodawanie i odejmowanie",
+    progress    = 0f,
+    isLocked    = false,
+    icon        = Icons.Default.Calculate,
+    lessonType  = LessonType.DEFAULT
+)
+\end{lstlisting}
+
+\textbf{Zasady ID:} format \texttt{<przedmiot>\_<temat>\_<numer>}, np.\ \texttt{mat\_2\_4}, \texttt{geo\_3\_1}, \texttt{chemia\_2\_3}.
+
+\subsection{Krok 2a - dodaj pytania statyczne (QuestionBank.kt)}
+
+Dla matematyki, geografii i \texttt{chemia\_3\_x} pytania trafiają do \texttt{QuestionBank.kt}.
+
+\begin{enumerate}
+  \item Stwórz prywatną listę pytań:
+\begin{lstlisting}
+private val mat_2_4: List<Question> = listOf(
+    TypeAnswer(
+        id            = 0,
+        prompt        = "Oblicz: 1.5 + 2.3 = ?",
+        correctAnswer = 38,   // wynik * 10 jesli jednostka "dziesiete"
+        unit          = "",
+        hint          = Hint("Dodaj oddzielnie czesci cale i dziesietne.")
+    ),
+    SelectFromList(
+        id             = 1,
+        prompt         = "Ktory ulamek jest wiekszy?",
+        options        = listOf("0.7", "0.3", "0.5"),
+        correctIndices = setOf(0),
+        hint           = Hint("Porownaj pierwsza cyfre po przecinku.")
+    ),
+    // ... minimum 8-10 pytan
+)
+\end{lstlisting}
+
+  \item Zarejestruj liste w mapie \texttt{banks} (na dole pliku):
+\begin{lstlisting}
+private val banks: Map<String, List<Question>> = mapOf(
+    // ... istniejace lekcje ...
+    "mat_2_4" to mat_2_4,
+)
+\end{lstlisting}
+\end{enumerate}
+
+\subsection{Krok 2b - wygenerowane pytania chemiczne (ChemistryQuestionGenerator.kt)}
+
+Jesli ID lekcji zaczyna sie od \texttt{chemia\_} (i nie jest \texttt{chemia\_3\_x}),
+\texttt{QuestionBank} automatycznie przekierowuje do generatora.
+
+\begin{enumerate}
+  \item Dodaj case w funkcji \texttt{generateFor()}:
+\begin{lstlisting}
+fun generateFor(lessonId: String, seed: Long = ...): List<Question> =
+    when (lessonId) {
+        // istniejace przypadki...
+        "chemia_2_3" -> chemia_2_3(seed)
+        else         -> emptyList()
+    }
+\end{lstlisting}
+
+  \item Zaimplementuj funkcje generujaca:
+\begin{lstlisting}
+private fun chemia_2_3(seed: Long): List<Question> {
+    val rng = Random(seed)
+    val wybrane = ELEMENTS.shuffled(rng).take(10)
+    return wybrane.mapIndexed { i, el ->
+        ElementCardQuiz(
+            id           = i,
+            prompt       = "Jaka jest masa atomowa tego pierwiastka?",
+            atomicNumber = el.atomicNumber,
+            options      = generateMassOptions(el, rng),
+            correctIndex = 0,
+            hint         = Hint("Masa atomowa to srednia wazonych izotopow.")
+        )
+    }
+}
+\end{lstlisting}
+
+  Dostepne dane: \texttt{ELEMENTS} (lista wszystkich 118), \texttt{elementByNumber}, \texttt{shellConfigByNumber}.
+\end{enumerate}
+
+% ─────────────────────────────────────────────────────────────
+\section{Dostepne typy pytan}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.25}
+\begin{tabular}{lp{8cm}}
+\textbf{Typ} & \textbf{Opis} \\
+\hline
+\texttt{FindAnswer}         & Uzytkownik wpisuje wynik dzialania liczbowego \\
+\texttt{FindOperator}       & Uzytkownik przeciaga operator (+, -, ×, ÷) \\
+\texttt{SelectFromList}     & Wybor jednej lub kilku opcji z listy (radio/checkbox) \\
+\texttt{TypeAnswer}         & Wpisanie liczby; opcjonalny diagram trojkata \\
+\texttt{MapQuiz}            & Klikniecie kraju na mapie (MapLibre) \\
+\texttt{PeriodicTableQuiz}  & Umiesc brakujacy pierwiastek w tablicy \\
+\texttt{PeriodicTableByShell} & Znajdz pierwiastek po konfiguracji powlokowej \\
+\texttt{PeriodicTableByName}  & Znajdz pierwiastek po nazwie polskiej \\
+\texttt{ElementCardQuiz}    & Karta pierwiastka, wybor 1 z 4 odpowiedzi \\
+\texttt{EquationBalance}    & Uzupelnienie wspolczynnikow stechiometrycznych \\
+\texttt{GraphTypeAnswer}    & Wykres + wpisanie wyniku liczbowego \\
+\texttt{GraphSelectFromList}& Wykres + wybor z listy \\
+\end{tabular}
+\end{center}
+
+\subsection{Przyklad: Hint}
+
+Kazde pytanie przyjmuje opcjonalny \texttt{Hint} wyswietlany w dolnym panelu:
+
+\begin{lstlisting}
+Hint(
+    mainText     = "Wzor: V = a * b * h",
+    boldPart     = "V = a * b * h",         // fragment pogrubiany
+    sectionTitle = "Zapamietaj",
+    items        = listOf("a, b, h to krawedzie"),
+    steps        = listOf("Zmierz a", "Zmierz b", "Zmierz h", "Pomnoz")
+)
+\end{lstlisting}
+
+% ─────────────────────────────────────────────────────────────
+\section{Przydatne komendy}
+
+\begin{lstlisting}[language={}]
+# Build Android
+./gradlew :composeApp:assembleDebug
+
+# Uruchom na podlaczonym urzadzeniu
+./gradlew :composeApp:installDebug
+
+# Sprawdz bledy kompilacji
+./gradlew :composeApp:compileKotlinAndroid
+\end{lstlisting}
+
+\end{document}
