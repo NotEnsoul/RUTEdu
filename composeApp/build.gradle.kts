@@ -58,11 +58,11 @@ kotlin {
 }
 
 android {
-    namespace = "com.example.myapplication"
+    namespace = "prz.rutedu.app"
     compileSdk = libs.versions.android.compileSdk.get().toInt()
 
     defaultConfig {
-        applicationId = "com.example.myapplication"
+        applicationId = "prz.rutedu.app"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
         versionCode = 1
@@ -92,7 +92,7 @@ dependencies {
 sqldelight {
     databases {
         create("Database") {
-            packageName.set("com.example.myapplication")
+            packageName.set("prz.rutedu.app")
             generateAsync.set(true)
         }
     }
