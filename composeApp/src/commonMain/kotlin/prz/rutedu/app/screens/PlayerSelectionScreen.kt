@@ -40,7 +40,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import prz.rutedu.app.Database
 import prz.rutedu.app.Screen
-import prz.rutedu.app.Player
+import przruteduapp.Player
 import kotlinx.coroutines.launch
 import rutedu.composeapp.generated.resources.Res
 import rutedu.composeapp.generated.resources.ic_add_black_24dp
