@@ -63,6 +63,12 @@ object QuestionBank {
         else
             banks[lessonId] ?: emptyList()
 
+    /**
+     * Static questions for Lesson 1-1: "Dodawanie i odejmowanie" (Addition & Subtraction).
+     *
+     * Focuses on basic operations on real numbers, including using number lines,
+     * carrying/borrowing, and identifying operators.
+     */
     private val mat_1_1: List<Question> = listOf(
         FindAnswer(0, 3, 5, ADD,
             Hint("Dodawanie to liczenie do przodu.",
@@ -102,6 +108,12 @@ object QuestionBank {
                 steps = listOf("4 + 6 = 10 (jedności)", "40 + 50 = 90 (dziesiątki)", "90 + 10 = 100 ✓")))
     )
 
+    /**
+     * Static questions for Lesson 1-2: "Mnożenie i dzielenie" (Multiplication & Division).
+     *
+     * Covers multiplication tables, division as inverse of multiplication, sign rules,
+     * and the order of operations.
+     */
     private val mat_1_2: List<Question> = listOf(
         FindAnswer(0, 7, 8, MULTIPLY,
             Hint("7 × 8 to wynik, który warto zapamiętać.",
@@ -141,7 +153,11 @@ object QuestionBank {
                 steps = listOf("72 ÷ 8 = 9 ✓", "8 × 9 = 72 ✓")))
     )
 
-    // ── mat_1_3  Potęgowanie ──────────────────────────────────────────────────
+    /**
+     * Static questions for Lesson 1-3: "Potęgowanie" (Exponentiation).
+     *
+     * Covers powers with integer exponents, their definitions, properties, and base calculations.
+     */
     private val mat_1_3: List<Question> = listOf(
         FindAnswer(0, 2, 2, POWER,
             Hint("2 do potęgi 2 to 2 × 2.",
@@ -177,6 +193,12 @@ object QuestionBank {
                 steps = listOf("3 × 3 = 9", "9 × 3 = 27", "27 × 3 = 81")))
     )
 
+    /**
+     * Static questions for Lesson 2-1: "Jednomiany i wielomiany" (Monomials & Polynomials).
+     *
+     * Focuses on defining polynomials, identifying degrees, combining like terms,
+     * and basic algebraic simplification.
+     */
     private val mat_2_1: List<Question> = listOf(
         SelectFromList(0,
             "Który z poniższych wyrażeń jest jednomianem?",
@@ -244,6 +266,11 @@ object QuestionBank {
                 steps = listOf("3·4 = 12", "x·x = x²", "Wynik: 12x²")))
     )
 
+    /**
+     * Static questions for Lesson 2-2: "Wzory skróconego mnożenia" (Short Multiplication Formulas).
+     *
+     * Focuses on expansion and calculation using formulas like (a+b)², (a-b)², and (a-b)(a+b).
+     */
     private val mat_2_2: List<Question> = listOf(
         SelectFromList(0,
             "Co jest rozwinięciem  (a + b)²?",
@@ -310,6 +337,12 @@ object QuestionBank {
                 steps = listOf("10² = 100", "2·10·1 = 20", "1² = 1", "Razem: 121")))
     )
 
+    /**
+     * Static questions for Lesson 5-1: "Kąty w trójkącie" (Angles in a Triangle).
+     *
+     * Generates triangle geometries dynamically using [TriangleBuilder] to quiz students
+     * on finding the missing interior angle (summing to 180°).
+     */
     private val mat_5_1: List<Question> = run {
         fun tri(aA: Double, aB: Double, id: Int, answer: Int, hint: Hint): GraphTypeAnswer {
             val (verts, vp) = TriangleBuilder.fromAnglesWithViewport(aA, aB)
@@ -359,6 +392,12 @@ object QuestionBank {
         )
     }
 
+    /**
+     * Static questions for Lesson 4-1: "Funkcja kwadratowa" (Quadratic Function).
+     *
+     * Presents quadratic plots on a coordinate system and quizzes students on evaluating
+     * the function or finding properties of the parabola.
+     */
     private val mat_4_1: List<Question> = listOf(
         GraphSelectFromList(0,
             prompt = "Dana jest funkcja f(x) = x².\nIle wynosi f(3)?",
@@ -451,6 +490,11 @@ object QuestionBank {
             hint = Hint("f(2) = 2 · 2² = 2 · 4.", boldPart = "2·2²", steps = listOf("2² = 4", "2 × 4 = 8")))
     )
 
+    /**
+     * Static questions for Lesson 3-1: "Równania liniowe" (Linear Equations).
+     *
+     * Generates simple linear equations to solve for variable x using elementary arithmetic.
+     */
     private val genericMath: List<Question> = listOf(
         FindAnswer(0, 5, 3, ADD,
             Hint("Dodaj obie liczby.", steps = listOf("5 + 3 = 8"))),
@@ -474,6 +518,11 @@ object QuestionBank {
             Hint("20 ÷ 4 = 5.", steps = listOf("4 × 5 = 20", "Więc 20 ÷ 4 = 5")))
     )
 
+    /**
+     * Static questions for Lesson 1-1: "Lądy i oceany świata" (Lands & Oceans).
+     *
+     * Presents interactive world map quizzes where students locate various European countries.
+     */
     private val geo_1_1: List<Question> = listOf(
         MapQuiz(0, "Poland", "Gdzie leży Polska?", MapRegion.EUROPE,
             Hint("Polska leży w środkowej Europie, nad Morzem Bałtyckim.",
@@ -507,6 +556,11 @@ object QuestionBank {
                 steps = listOf("Południe Europy", "Dużo wysp na Morzu Egejskim")))
     )
 
+    /**
+     * Static questions for Lesson 4-1: "Sąsiedzi Polski" (Poland's Neighbors).
+     *
+     * Quizzes students on pinpointing the 7 neighboring countries of Poland on a regional map.
+     */
     private val geo_4_1: List<Question> = listOf(
         MapQuiz(0, "Germany", "Zaznacz Niemcy — sąsiada Polski", MapRegion.CENTRAL_EUROPE,
             Hint("Niemcy graniczą z Polską na zachodzie.",
@@ -531,6 +585,11 @@ object QuestionBank {
                 steps = listOf("Szukaj enklawy nad Morzem Bałtyckim", "Rosyjski obwód odcięty od Rosji, między Polską a Litwą")))
     )
 
+    /**
+     * Static questions for Lesson 4-2: "Kraje Azji" (Asian Countries).
+     *
+     * Presents map locations for major Asian countries such as China, India, Japan, etc.
+     */
     private val geo_4_2: List<Question> = listOf(
         MapQuiz(0, "China", "Gdzie leżą Chiny?", MapRegion.ASIA,
             Hint("Chiny to największy kraj Azji pod względem populacji.",
@@ -564,6 +623,11 @@ object QuestionBank {
                 steps = listOf("Azja Południowo-Wschodnia", "Na południe od Laosu, na zachód od Wietnamu")))
     )
 
+    /**
+     * Static questions for Lesson 4-3: "Stolice Europy" (European Capitals).
+     *
+     * Asks students to identify European countries on the map based on their capital cities.
+     */
     private val geo_4_3: List<Question> = listOf(
         MapQuiz(0, "France", "Wskaż kraj, którego stolicą jest Paryż", MapRegion.EUROPE,
             Hint("Paryż to stolica Francji.",
@@ -597,6 +661,11 @@ object QuestionBank {
                 steps = listOf("Południe Bałkanów", "Wiele wysp na Morzu Egejskim")))
     )
     
+    /**
+     * Static questions for Lesson 3-1: "Wzory kwasów" (Acid Formulas).
+     *
+     * Covers identifying names and chemical formulas for binary and oxyacids.
+     */
     private val chemia_3_1: List<Question> = listOf(
         SelectFromList(
             id = 3101,
@@ -706,7 +775,11 @@ object QuestionBank {
         )
     )
 
-    // ── chemia_3_2  Reakcje otrzymywania kwasów – uzupełnij równania ─────────
+    /**
+     * Static questions for Lesson 3-2: "Równania reakcji" (Chemical Equations Balancing).
+     *
+     * Focuses on balancing chemical equations for synthesis, acid production, and neutralizations.
+     */
     private val chemia_3_2: List<Question> = listOf(
         EquationBalance(
             id = 3201,

@@ -1400,8 +1400,6 @@ object ChemistryQuestionGenerator {
     private fun buildOptions(correct: String, wrongs: List<String>, rng: Random): List<String> =
         (wrongs.take(3) + correct).shuffled(rng)
 
-    // -- Periodic table sets ----------------------------------------------------------------------
-
     /**
      * Returns a collection of element groups/sets (e.g. noble gases, alkali metals) used
      * to populate the interactive periodic table quiz in lesson 2-1.
@@ -1501,8 +1499,6 @@ object ChemistryQuestionGenerator {
         ),
     )
 
-    // -- Molecule questions -----------------------------------------------------------------------
-
     private val molecules: List<Pair<String, String>> = listOf(
         "H₂O"      to "woda",
         "CO₂"      to "dwutlenek węgla",
@@ -1561,8 +1557,6 @@ object ChemistryQuestionGenerator {
         return qs.shuffled(rng).mapIndexed { i, q -> q.copy(id = 1300 + i) }
     }
 
-    // -- Property questions -----------------------------------------------------------------------
-
     private val metalCats = setOf(ALKALI_METAL, ALKALINE_EARTH, TRANSITION_METAL, POST_TRANSITION)
     private val nonMetalCats = setOf(REACTIVE_NONMETAL, HALOGEN)
 
@@ -1619,8 +1613,6 @@ object ChemistryQuestionGenerator {
 
         return qs.shuffled(rng).mapIndexed { i, q -> q.copy(id = 2200 + i) }
     }
-
-    // -- Shared utilities -------------------------------------------------------------------------
 
     /**
      * Generates the step-by-step breakdown text of an element's electron shell configuration.
