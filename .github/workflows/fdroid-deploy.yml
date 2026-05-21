@@ -85,6 +85,7 @@ jobs:
         working-directory: fdroid-repo
         env:
           FDROID_KEY_PASSWORD: ${{ secrets.FDROID_KEY_PASSWORD }}
+          FDROID_KEY_STORE_PASS: ${{ secrets.FDROID_KEY_PASSWORD }}
         run: |
           find repo -name '.gitkeep' -delete
           fdroid update --create-metadata --verbose
