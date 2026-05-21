@@ -3,7 +3,7 @@ package prz.rutedu.app.database
 import app.cash.sqldelight.db.SqlDriver
 
 /**
- * Platform-specific factory for creating the SQLite driver used by [com.example.myapplication.Database].
+ * Platform-specific factory for creating the SQLite driver used by [prz.rutedu.app.Database].
  *
  * This is an `expect` class - each target platform provides its own `actual` implementation:
  * - **Android:** `DriverFactory.android.kt` - uses `AndroidSqliteDriver` backed by the system SQLite.

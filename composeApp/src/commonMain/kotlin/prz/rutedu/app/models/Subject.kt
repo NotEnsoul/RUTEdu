@@ -8,7 +8,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
  *
  * A [Subject] owns an ordered list of [Topic]s. Topics are displayed as cards on the
  * subject-detail screen. Progress tracking is stored separately at runtime via
- * [com.example.myapplication.data.LessonProgressStore]; the [progress] field here is a
+ * [prz.rutedu.app.data.LessonProgressStore]; the [progress] field here is a
  * static default used until real progress data is loaded.
  *
  * **How to add a new subject:**
@@ -24,7 +24,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
  *                           of [Lesson] entries in [topics].
  * @property progress        Overall completion fraction in the range `0f..1f`.
  *                           This is a static placeholder; actual progress is computed
- *                           from [com.example.myapplication.data.LessonProgressStore] at runtime.
+ *                           from [prz.rutedu.app.data.LessonProgressStore] at runtime.
  * @property color           Primary accent colour for this subject (progress bars, icons).
  * @property backgroundColor Lighter tint used as the card background. Should be derived
  *                           from [color] with high lightness.

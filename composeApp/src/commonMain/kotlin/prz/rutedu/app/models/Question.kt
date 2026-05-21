@@ -17,7 +17,7 @@ enum class MathOperator(val symbol: String) {
 }
 
 /**
- * Structured hint shown in the [com.example.myapplication.screens.HintBottomSheet].
+ * Structured hint shown in the [prz.rutedu.app.screens.HintBottomSheet].
  *
  * A hint can have up to four visual sections, all optional:
  * 1. **Main text block** - a short rule or explanation with one optional bold excerpt.
@@ -67,7 +67,7 @@ enum class MapRegion(
  * Sealed hierarchy of all question types that the app can present during a lesson.
  *
  * Every subclass carries an [id] that is unique **within its lesson**. The id is used by
- * [com.example.myapplication.data.ChemistrySessionStore] to track which questions have
+ * [prz.rutedu.app.data.ChemistrySessionStore] to track which questions have
  * already been answered so they are excluded from future sessions.
  *
  * `LessonGameScreen` dispatches each [Question] to the appropriate `*Content` composable
@@ -347,7 +347,7 @@ sealed class Question(open val id: Int) {
     ) : Question(id)
 
     /**
-     * A mathematical function or geometric figure is rendered on a [com.example.myapplication.math.MathCanvas]
+     * A mathematical function or geometric figure is rendered on a [prz.rutedu.app.math.MathCanvas]
      * and the student types a numeric answer to [prompt].
      *
      * Use this type for questions like "calculate the missing angle" or "evaluate f(4)".
@@ -375,7 +375,7 @@ sealed class Question(open val id: Int) {
     ) : Question(id)
 
     /**
-     * A mathematical function or geometric figure is rendered on a [com.example.myapplication.math.MathCanvas]
+     * A mathematical function or geometric figure is rendered on a [prz.rutedu.app.math.MathCanvas]
      * and the student selects the correct answer(s) from a list of options.
      *
      * Use this type for questions like "which function is plotted?" or "what is the maximum value?".

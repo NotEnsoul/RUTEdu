@@ -17,7 +17,7 @@ import org.jetbrains.compose.resources.ExperimentalResourceApi
  * and hit-test surface.
  *
  * @property name  English country name as stored in the GeoJSON `"name"` property.
- *                 This is the value compared against [com.example.myapplication.models.Question.MapQuiz.countryKey].
+ *                 This is the value compared against [prz.rutedu.app.models.Question.MapQuiz.countryKey].
  * @property iso2  ISO 3166-1 alpha-2 country code (e.g. `"PL"` for Poland). Not used
  *                 in the current quiz logic but kept for potential future features.
  * @property rings Outer contour rings in geographic coordinates (longitude, latitude pairs).

@@ -72,7 +72,7 @@ object ChemistrySessionStore {
      *
      * @param driver     Platform SQLite driver.
      * @param lessonId   Chemistry lesson identifier.
-     * @param questionId The [com.example.myapplication.models.Question.id] of the answered question.
+     * @param questionId The [prz.rutedu.app.models.Question.id] of the answered question.
      */
     fun markAnswered(driver: SqlDriver, lessonId: String, questionId: Int) {
         val current = getAnsweredIds(driver, lessonId)

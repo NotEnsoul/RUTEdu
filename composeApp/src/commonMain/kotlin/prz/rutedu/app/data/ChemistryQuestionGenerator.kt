@@ -11,7 +11,7 @@ import kotlin.random.Random
  *
  * Unlike the static [QuestionBank], chemistry lessons require a large and varied question
  * pool (covering all elements, all acids, all reaction types, etc.). Generating them at
- * runtime from [com.example.myapplication.models.ELEMENTS] and similar data tables avoids
+ * runtime from [prz.rutedu.app.models.ELEMENTS] and similar data tables avoids
  * duplicating hundreds of questions by hand while still allowing reproducible session order
  * (same `seed` = same shuffled list).
  *

@@ -20,7 +20,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
  * @property name        Display name shown on topic cards (Polish).
  * @property description One-line subtitle shown below the topic name.
  * @property progress    Completion fraction `0f..1f`. Static placeholder - actual value
- *                       is computed from [com.example.myapplication.data.LessonProgressStore].
+ *                       is computed from [prz.rutedu.app.data.LessonProgressStore].
  * @property isLocked    When `true` the card is rendered with a lock icon and cannot be tapped.
  * @property color       Accent colour used for the topic's icon background and decorative elements.
  * @property icon        Icon shown inside the coloured icon box on the topic card.

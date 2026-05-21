@@ -44,7 +44,7 @@ expect object LocalAppLocale {
  * Wraps [content] in a [CompositionLocalProvider] that injects [customAppLocale] into
  * the composition and forces a full recomposition of [content] whenever the locale changes.
  *
- * This composable must wrap the entire UI (placed around [com.example.myapplication.App]'s
+ * This composable must wrap the entire UI (placed around [prz.rutedu.app.App]'s
  * `MaterialTheme`) so that all locale-dependent composables react to language switches.
  *
  * The `key(customAppLocale)` block ensures every composable in the subtree is recreated -
