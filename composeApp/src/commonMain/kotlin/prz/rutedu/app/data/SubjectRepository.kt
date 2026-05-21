@@ -20,23 +20,44 @@ import prz.rutedu.app.models.Subject
 import prz.rutedu.app.models.Topic
 
 /**
- * ════════════════════════════════════════════════════════
- *  HOW TO ADD DATA
- * ════════════════════════════════════════════════════════
+ * In-memory, hardcoded source of truth for the entire curriculum tree.
  *
- *  ▸ New SUBJECT  → add Subject(...) to [subjects] list
- *  ▸ New TOPIC    → add Topic(...) to its Subject's `topics` list
- *  ▸ New LESSON   → add Lesson(...) to its Topic's `lessons` list
+ * The hierarchy is: **Subject -> Topic -> Lesson**.
+ * Every [Subject] has a list of [Topic]s; every [Topic] has a list of [Lesson]s.
+ * The ordering of entries in each list controls the display order on screen.
  *
- *  All IDs must be unique (used for navigation).
- *  Icons: Icons.Default.<Name> from materialIconsExtended.
- *  Colors: Color(0xFFRRGGBB) — full opacity hex.
- *  progress: Float from 0f (not started) to 1f (100% done).
- *  isLocked: true → grayed-out card, not clickable.
- * ════════════════════════════════════════════════════════
+ * ## How to add content
+ *
+ * | What to add     | Where to add it                                                |
+ * |-----------------|----------------------------------------------------------------|
+ * | New **Subject** | Append a `Subject(...)` to [subjects].                         |
+ * | New **Topic**   | Append a `Topic(...)` to its parent [Subject]'s `topics` list. |
+ * | New **Lesson**  | Append a `Lesson(...)` to its parent [Topic]'s `lessons` list. |
+ *
+ * After adding a lesson, also register its questions:
+ * - **Static questions** (math, geography): add a private `val` list in `QuestionBank.kt`
+ *   and register it in the `banks` map at the bottom of that file.
+ * - **Generated questions** (chemistry): add a private generator function in
+ *   `ChemistryQuestionGenerator.kt` and register it in the `when` block of `generateFor()`.
+ *
+ * ## Locking / unlocking
+ *
+ * Set `isLocked = true` on a [Topic] or [Lesson] to render it as a greyed-out card that
+ * the student cannot tap. Change to `false` when the content is ready.
+ *
+ * ## Colours and icons
+ *
+ * Use `Color(0xFFRRGGBB)` for full-opacity hex colours.
+ * Use `Icons.Default.<Name>` from the `materialIconsExtended` dependency.
  */
 object SubjectRepository {
 
+    /**
+     * The complete, ordered list of subjects displayed on the home screen.
+     *
+     * Currently contains: **Matematyka**, **Chemia**, **Geografia**.
+     * Append new [Subject] entries here to add more school subjects.
+     */
     val subjects: List<Subject> = listOf(
 
         // ── MATEMATYKA ────────────────────────────────────
@@ -528,9 +549,22 @@ object SubjectRepository {
         )
     )
 
+    /**
+     * Finds a [Subject] by its unique string [id].
+     *
+     * @param id The subject identifier (e.g. `"matematyka"`).
+     * @return The matching [Subject], or `null` if no subject has that id.
+     */
     fun getById(id: String): Subject? =
         subjects.find { it.id == id }
 
+    /**
+     * Finds a [Topic] by its parent subject id and topic id.
+     *
+     * @param subjectId The subject identifier (e.g. `"chemia"`).
+     * @param topicId   The topic identifier (e.g. `"chemia_3"`).
+     * @return The matching [Topic], or `null` if not found.
+     */
     fun getTopicById(subjectId: String, topicId: String): Topic? =
         getById(subjectId)?.topics?.find { it.id == topicId }
 }

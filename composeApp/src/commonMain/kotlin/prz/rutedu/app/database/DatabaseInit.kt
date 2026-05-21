@@ -3,11 +3,22 @@ package prz.rutedu.app.database
 import app.cash.sqldelight.db.SqlDriver
 
 /**
- * Ensures all required tables exist in the database.
- * This is a workaround for when migrations don't run properly.
+ * Idempotent database initialisation that guarantees all required tables exist.
+ *
+ * SQLDelight generates migration code for schema changes, but some edge cases -
+ * such as a fresh install on a device that previously had a different schema version,
+ * or a corrupted migration run - can leave the database in a partial state. This
+ * function creates all tables with `CREATE TABLE IF NOT EXISTS` so it is safe to
+ * call on every app launch without risk of data loss or duplicate errors.
+ *
+ * **Call site:** `MainActivity.onCreate` (Android) / `MainViewController` (iOS), before
+ * passing the driver to `App()`.
+ *
+ * @param driver The platform-specific SQLite driver obtained from [DriverFactory].
  */
 fun ensureTablesExist(driver: SqlDriver) {
-    // Create appSettings table if it doesn't exist
+    // Key-value store for settings and all progress/config data encoded by the app's
+    // data layer (LessonProgressStore, ChemistrySessionStore, SubjectConfigStore, ...)
     driver.execute(
         identifier = null,
         sql = """
@@ -18,8 +29,8 @@ fun ensureTablesExist(driver: SqlDriver) {
         """.trimIndent(),
         parameters = 0
     )
-    
-    // Insert default language if not exists
+
+    // Default language setting - inserted only when missing, never overwritten
     driver.execute(
         identifier = null,
         sql = """
@@ -28,8 +39,8 @@ fun ensureTablesExist(driver: SqlDriver) {
         """.trimIndent(),
         parameters = 0
     )
-    
-    // Create player table if it doesn't exist
+
+    // Player profiles used by the arcade/PvP game modes
     driver.execute(
         identifier = null,
         sql = """

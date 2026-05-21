@@ -34,6 +34,40 @@ import kotlin.math.roundToInt
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 
+/**
+ * Question content for [Question.FindOperator] - the student drags the correct math operator
+ * (e.g. `+`, `-`, `*`, `/`) into an empty slot in an equation like `12 ? 5 = 7`.
+ *
+ * ## Interaction model
+ * Four operator chips are presented (the correct one plus 3 randomly chosen distractors, shuffled).
+ * The student places the correct operator by one of two gestures:
+ * 1. **Tap:** plays an animated "ghost" chip that flies from the tapped chip toward the target
+ *    slot and fades out (`playTapHint`). This teaches the expected drag gesture but does not
+ *    commit the selection - the student must drag to actually fill the slot.
+ * 2. **Drag:** a floating 64 dp chip follows the finger (offset 88 dp upward so the finger
+ *    doesn't obscure it). On release, the chip center (56 dp above the finger) is tested against
+ *    the target slot's bounding box with a 20 dp margin for comfortable drop.
+ *
+ * ## Coordinate system
+ * All positions are tracked in root-window coordinates (via `onGloballyPositioned { positionInRoot() }`)
+ * so the hit test works correctly regardless of scroll position or nesting depth.
+ * The floating drag ghost uses offsets relative to the composable container to avoid
+ * layout shifts.
+ *
+ * ## State
+ * - `selectedOperator` - the operator currently in the slot (null = empty).
+ * - `draggingOperator` - the operator being dragged (null = idle).
+ * - `ghostOp` / `ghostProgress` / `ghostAlpha` - the tap-hint animation.
+ *
+ * All state is keyed on `question.id` so it resets automatically between questions.
+ *
+ * @param question    The question: operands, result, correct operator, and hint.
+ * @param accentColor Subject accent color for the target slot border and selected chip.
+ * @param bottomPadding System navigation bar height padding.
+ * @param onCorrect   Called when the submitted operator matches [Question.FindOperator.correctOperator].
+ * @param onWrong     Called when the submitted operator is incorrect.
+ * @param onSkip      Reserved for future skip affordance; not currently rendered as a button.
+ */
 @Composable
 internal fun FindOperatorContent(
     question: Question.FindOperator,
@@ -55,10 +89,11 @@ internal fun FindOperatorContent(
         (others + question.correctOperator).shuffled()
     }
 
-    // Chip is displayed (88dp - 32dp) = 56dp above the finger.
-    // Hit detection must follow the chip center, not the raw finger position.
+    // The floating drag chip is rendered 88 dp above the finger baseline (so the finger does
+    // not obscure the chip). The chip itself is 64 dp tall, so its visual center is 56 dp above
+    // the finger. Hit detection uses this chip center, not the raw finger position.
     val density = LocalDensity.current
-    val dragLiftYPx = with(density) { (88.dp - 32.dp).toPx() }  // 56dp
+    val dragLiftYPx = with(density) { (88.dp - 32.dp).toPx() }  // 56dp = 88dp lift − half chip
     val hitMarginPx = with(density) { 20.dp.toPx() }
 
     var draggingOperator by remember { mutableStateOf<MathOperator?>(null) }
@@ -260,7 +295,8 @@ internal fun FindOperatorContent(
             Spacer(modifier = Modifier.height(16.dp))
         }
 
-        // Floating ghost during drag
+        // Floating drag chip: drawn outside the scrollable column so it renders above all other UI.
+        // Positioned in container-local coordinates by subtracting containerRootPos.
         if (draggingOperator != null) {
             Box(
                 modifier = Modifier

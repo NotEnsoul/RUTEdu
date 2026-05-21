@@ -21,19 +21,41 @@ import androidx.compose.ui.unit.sp
 import kotlin.math.*
 
 /**
- * A general-purpose mathematical canvas that draws a coordinate system and a
- * list of [MathShape] objects on top of it.
+ * A general-purpose mathematical canvas composable that renders a coordinate system
+ * and a list of [MathShape] objects on top of it.
  *
- * Usage:
+ * The canvas occupies whatever size its [modifier] allocates. All drawing uses the
+ * mathematical coordinate convention (y-up), with a linear mapping to canvas pixels
+ * defined by [viewport]. The y-axis is **inverted** during the mapping: a world point
+ * with a larger y value is drawn higher on screen.
+ *
+ * ## Coordinate transform
+ *
+ * ```
+ * canvasX = (worldX - xMin) / (xMax - xMin) * canvasWidth
+ * canvasY = (1 - (worldY - yMin) / (yMax - yMin)) * canvasHeight
+ * ```
+ *
+ * ## Draw order
+ *
+ * 1. Grid lines (if [MathViewport.showGrid])
+ * 2. Axes with tick labels (if [MathViewport.showAxes])
+ * 3. All [shapes], in list order (later shapes paint over earlier ones)
+ *
+ * ## Example
  * ```
  * MathCanvas(
  *     shapes = listOf(
  *         MathShape.FunctionPlot(f = { x -> x * x }),
- *         MathShape.PointMark(Pt(2.0, 4.0), label = "(2, 4)")
+ *         MathShape.PointMark(Pt(2.0, 4.0), label = "f(2) = 4")
  *     ),
  *     viewport = MathViewport(xMin = -4.0, xMax = 4.0, yMin = -1.0, yMax = 10.0)
  * )
  * ```
+ *
+ * @param shapes   Ordered list of [MathShape]s to draw.
+ * @param modifier Standard Compose modifier - controls size, padding, etc.
+ * @param viewport Defines which region of the coordinate plane is visible.
  */
 @Composable
 fun MathCanvas(
@@ -59,19 +81,27 @@ fun MathCanvas(
     }
 }
 
-// ── coordinate transform ──────────────────────────────────────────────────────
-
+/** Maps a world x-coordinate to a canvas x-coordinate (pixels from the left edge). */
 private fun DrawScope.toCanvasX(wx: Double, vp: MathViewport): Float =
     ((wx - vp.xMin) / (vp.xMax - vp.xMin) * size.width).toFloat()
 
+/**
+ * Maps a world y-coordinate to a canvas y-coordinate (pixels from the top edge).
+ * The inversion `1 - normalised` flips the axis so that larger world-y values appear higher.
+ */
 private fun DrawScope.toCanvasY(wy: Double, vp: MathViewport): Float =
     ((1.0 - (wy - vp.yMin) / (vp.yMax - vp.yMin)) * size.height).toFloat()
 
+/** Converts a world [Pt] to a canvas [Offset] in one call. */
 private fun DrawScope.toCanvas(pt: Pt, vp: MathViewport): Offset =
     Offset(toCanvasX(pt.x, vp), toCanvasY(pt.y, vp))
 
-// ── grid ──────────────────────────────────────────────────────────────────────
-
+/**
+ * Draws light grid lines at every [MathViewport.gridStep] interval.
+ * The zero lines are skipped here because the axes (drawn separately) cover them.
+ * A small epsilon (`1e-9`) is added to the loop bounds to avoid missing the last
+ * grid line due to floating-point rounding.
+ */
 private fun DrawScope.drawGrid(vp: MathViewport) {
     val color = Color(0xFFE8EAF0)
     var wx = ceil(vp.xMin / vp.gridStep) * vp.gridStep
@@ -92,13 +122,16 @@ private fun DrawScope.drawGrid(vp: MathViewport) {
     }
 }
 
-// ── axes ──────────────────────────────────────────────────────────────────────
-
+/**
+ * Draws x and y axes with tick marks and numeric labels.
+ * Each axis is only drawn when world-coordinate zero falls inside the viewport
+ * (e.g. the x-axis is skipped if the entire visible range is above y = 0).
+ */
 private fun DrawScope.drawAxes(vp: MathViewport, tm: TextMeasurer) {
     val axisColor = Color(0xFFBBC1CA)
     val labelStyle = TextStyle(fontSize = 10.sp, color = Color(0xFF9E9E9E))
 
-    // x-axis
+    // x-axis - only visible when y = 0 is within the viewport
     if (vp.yMin <= 0.0 && vp.yMax >= 0.0) {
         val y0 = toCanvasY(0.0, vp)
         drawLine(axisColor, Offset(0f, y0), Offset(size.width, y0), strokeWidth = 1.5f)
@@ -114,7 +147,7 @@ private fun DrawScope.drawAxes(vp: MathViewport, tm: TextMeasurer) {
         }
     }
 
-    // y-axis
+    // y-axis - only visible when x = 0 is within the viewport
     if (vp.xMin <= 0.0 && vp.xMax >= 0.0) {
         val x0 = toCanvasX(0.0, vp)
         drawLine(axisColor, Offset(x0, 0f), Offset(x0, size.height), strokeWidth = 1.5f)
@@ -131,13 +164,18 @@ private fun DrawScope.drawAxes(vp: MathViewport, tm: TextMeasurer) {
     }
 }
 
+/** Formats a Double tick label: shows it as a Long if it has no fractional part. */
 private fun formatNum(v: Double): String {
     val l = v.toLong()
     return if (v == l.toDouble()) l.toString() else v.toString()
 }
 
-// ── function plot ─────────────────────────────────────────────────────────────
-
+/**
+ * Samples [shape].f at [MathShape.FunctionPlot.samples] evenly-spaced x values and
+ * draws the resulting curve as a connected path. The "pen" is lifted whenever
+ * a sample returns a non-finite value (NaN, +-Infinity), creating a visual gap at
+ * discontinuities (e.g. asymptotes of rational functions).
+ */
 private fun DrawScope.drawFunctionPlot(shape: MathShape.FunctionPlot, vp: MathViewport) {
     val path = Path()
     val dx = (vp.xMax - vp.xMin) / shape.samples
@@ -153,8 +191,7 @@ private fun DrawScope.drawFunctionPlot(shape: MathShape.FunctionPlot, vp: MathVi
     drawPath(path, shape.color, style = Stroke(width = shape.strokeWidth.dp.toPx()))
 }
 
-// ── circle ────────────────────────────────────────────────────────────────────
-
+/** Draws a circle. Radius is converted from world units to canvas pixels proportionally. */
 private fun DrawScope.drawCircleShape(shape: MathShape.Circle, vp: MathViewport) {
     val center = toCanvas(Pt(shape.cx, shape.cy), vp)
     val radiusPx = (shape.r * size.width / (vp.xMax - vp.xMin)).toFloat()
@@ -162,30 +199,35 @@ private fun DrawScope.drawCircleShape(shape: MathShape.Circle, vp: MathViewport)
     drawCircle(shape.color, radiusPx, center, style = Stroke(width = shape.strokeWidth.dp.toPx()))
 }
 
-// ── triangle ──────────────────────────────────────────────────────────────────
-
+/**
+ * Draws a triangle with optional angle arcs, vertex labels, and side labels.
+ *
+ * Labels are pushed outward from the centroid by a fixed pixel distance so they
+ * remain outside the triangle regardless of its shape. The unknown-angle marker
+ * `"?"` is rendered in red and at a larger size to draw the student's attention.
+ */
 private fun DrawScope.drawTriangleShape(shape: MathShape.Triangle, vp: MathViewport, tm: TextMeasurer) {
     val pa = toCanvas(shape.a, vp)
     val pb = toCanvas(shape.b, vp)
     val pc = toCanvas(shape.c, vp)
 
-    // Sides
+    // Triangle outline
     drawPath(Path().apply {
         moveTo(pa.x, pa.y); lineTo(pb.x, pb.y); lineTo(pc.x, pc.y); close()
     }, shape.color, style = Stroke(width = 2.5.dp.toPx()))
 
-    // Angle arcs
+    // Interior angle arcs at each vertex
     if (shape.showAngleArcs) {
         drawAngleArc(pa, pb, pc, shape.color)
         drawAngleArc(pb, pa, pc, shape.color)
         drawAngleArc(pc, pa, pb, shape.color)
     }
 
-    // Vertex labels — placed outward from the centroid
-    // "?" gets a distinct red colour and larger size to stand out against the triangle lines
+    // Vertex labels - pushed outward from the centroid
+    // "?" gets distinct red colour and larger size to stand out against triangle lines
     val gx = (pa.x + pb.x + pc.x) / 3f
     val gy = (pa.y + pb.y + pc.y) / 3f
-    val vertexLabelOffsetPx = 40.dp.toPx()   // well clear of the 18dp angle arc
+    val vertexLabelOffsetPx = 40.dp.toPx() // must clear the 18dp angle arc radius
 
     listOf(pa to shape.labelA, pb to shape.labelB, pc to shape.labelC)
         .forEach { (v, lbl) ->
@@ -205,7 +247,7 @@ private fun DrawScope.drawTriangleShape(shape: MathShape.Triangle, vp: MathViewp
             ))
         }
 
-    // Side labels — placed outward from the centroid at midpoints
+    // Side labels - pushed outward from the centroid at each side's midpoint
     val midStyle = TextStyle(fontSize = 12.sp, color = Color(0xFF555555))
     val midLabelOffsetPx = 14.dp.toPx()
     listOf(
@@ -225,15 +267,24 @@ private fun DrawScope.drawTriangleShape(shape: MathShape.Triangle, vp: MathViewp
 }
 
 /**
- * Draws a small arc at [vertex] sweeping between the directions to [arm1] and [arm2].
- * Always picks the shorter (interior) arc — valid for any triangle angle < 180°.
+ * Draws a small arc at [vertex] that sweeps from the direction of [arm1] to [arm2].
+ *
+ * The sweep angle is normalised so we always draw the **shorter** (interior) arc,
+ * which correctly represents the angle for any triangle where all angles are < 180°.
+ * If `sweep > 180°` after the initial `% 360`, subtracting 360° flips it to the
+ * shorter equivalent negative sweep.
+ *
+ * @param vertex The corner where the arc is drawn.
+ * @param arm1   A point on one of the two sides meeting at [vertex].
+ * @param arm2   A point on the other side.
+ * @param color  Colour of the arc stroke (rendered at 65 % opacity).
  */
 private fun DrawScope.drawAngleArc(vertex: Offset, arm1: Offset, arm2: Offset, color: Color) {
     val arcR = 18.dp.toPx()
     val d1 = (atan2((arm1.y - vertex.y).toDouble(), (arm1.x - vertex.x).toDouble()) * 180.0 / PI).toFloat()
     val d2 = (atan2((arm2.y - vertex.y).toDouble(), (arm2.x - vertex.x).toDouble()) * 180.0 / PI).toFloat()
     var sweep = (d2 - d1 + 360f) % 360f
-    if (sweep > 180f) sweep -= 360f   // always take the shorter (interior) arc
+    if (sweep > 180f) sweep -= 360f  // always take the interior (shorter) arc
     drawPath(
         Path().apply { addArc(Rect(center = vertex, radius = arcR), d1, sweep) },
         color.copy(alpha = 0.65f),
@@ -241,10 +292,15 @@ private fun DrawScope.drawAngleArc(vertex: Offset, arm1: Offset, arm2: Offset, c
     )
 }
 
-// ── rectangle ─────────────────────────────────────────────────────────────────
-
+/**
+ * Draws an axis-aligned rectangle.
+ *
+ * [MathShape.Rectangle] specifies the **bottom-left** corner in world coordinates
+ * (mathematical convention), but canvas y is inverted, so the bottom-left world point
+ * maps to the **top-left** canvas point. The top-left canvas position is therefore
+ * computed from `(x, y + h)` in world space.
+ */
 private fun DrawScope.drawRectangleShape(shape: MathShape.Rectangle, vp: MathViewport) {
-    // World (x, y) is the bottom-left corner; canvas y is inverted
     val tl = toCanvas(Pt(shape.x, shape.y + shape.h), vp)
     val br = toCanvas(Pt(shape.x + shape.w, shape.y), vp)
     val s = Size(br.x - tl.x, br.y - tl.y)
@@ -252,8 +308,7 @@ private fun DrawScope.drawRectangleShape(shape: MathShape.Rectangle, vp: MathVie
     drawRect(shape.color, tl, s, style = Stroke(width = shape.strokeWidth.dp.toPx()))
 }
 
-// ── point mark ────────────────────────────────────────────────────────────────
-
+/** Draws a filled dot and an optional text label 8px to its right. */
 private fun DrawScope.drawPointMark(shape: MathShape.PointMark, vp: MathViewport, tm: TextMeasurer) {
     val cp = toCanvas(shape.pt, vp)
     drawCircle(shape.color, shape.radiusDp.dp.toPx(), cp)
@@ -263,8 +318,7 @@ private fun DrawScope.drawPointMark(shape: MathShape.PointMark, vp: MathViewport
     }
 }
 
-// ── segment ───────────────────────────────────────────────────────────────────
-
+/** Draws a straight line segment, optionally with an 8px-on / 4px-off dash pattern. */
 private fun DrawScope.drawSegmentShape(shape: MathShape.Segment, vp: MathViewport) {
     val from = toCanvas(shape.from, vp)
     val to   = toCanvas(shape.to,   vp)
@@ -276,8 +330,7 @@ private fun DrawScope.drawSegmentShape(shape: MathShape.Segment, vp: MathViewpor
     )
 }
 
-// ── text label ────────────────────────────────────────────────────────────────
-
+/** Draws text centred on the world-space point [shape].pt. */
 private fun DrawScope.drawTextLabel(shape: MathShape.TextLabel, vp: MathViewport, tm: TextMeasurer) {
     val cp = toCanvas(shape.pt, vp)
     val m = tm.measure(shape.text, TextStyle(fontSize = shape.sizeSp.sp, color = shape.color))

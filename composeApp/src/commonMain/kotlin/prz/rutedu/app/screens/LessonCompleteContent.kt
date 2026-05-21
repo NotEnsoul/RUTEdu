@@ -20,6 +20,27 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
+/**
+ * Celebration screen shown by [LessonGameScreen] when the student answers all questions correctly.
+ *
+ * Renders a vertically centered layout with:
+ * - A large accent-colored check-mark circle.
+ * - "Świetna robota!" headline and the lesson name as subtitle.
+ * - A "100% ukończone" pill badge.
+ * - Two action buttons:
+ *   - **Resetuj i zagraj ponownie** (outline) - calls [onReset] which zeroes the progress and
+ *     restarts the question loop without leaving the screen.
+ *   - **Wróć do lekcji** (filled) - calls [onBack] which pops the back stack.
+ *
+ * This composable has no internal state - all actions are delegated to [LessonGameScreen].
+ *
+ * @param subjectName  Subject name displayed in the top header bar.
+ * @param lessonName   Lesson name shown as a subtitle below the headline.
+ * @param accentColor  Subject accent color applied to the icon circle and buttons.
+ * @param bottomPadding System navigation bar height padding from `App`.
+ * @param onReset      Called when the student wants to replay the lesson from the beginning.
+ * @param onBack       Called when the student wants to return to the topic detail screen.
+ */
 @Composable
 internal fun LessonCompleteContent(
     subjectName: String,

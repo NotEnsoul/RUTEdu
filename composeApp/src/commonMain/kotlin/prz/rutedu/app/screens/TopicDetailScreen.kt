@@ -38,6 +38,23 @@ import prz.rutedu.app.data.LessonProgressStore
 import prz.rutedu.app.data.QuestionBank
 import prz.rutedu.app.data.SubjectRepository
 
+/**
+ * Lesson list for a given topic.
+ *
+ * Displays all lessons belonging to [topicId] as [LessonCard]s in a scrollable list.
+ * Progress is read from [LessonProgressStore] and refreshed on every back-navigation, mirroring
+ * the same pattern used in [SubjectDetailScreen].
+ *
+ * Before navigating to [LessonGameScreen], the click handler verifies that the lesson is not
+ * locked **and** that [QuestionBank.questionsFor] returns at least one question. This prevents
+ * navigating to a lesson whose content hasn't been written yet.
+ *
+ * @param subjectId   Parent subject ID (passed through to [Screen.LessonGame.createRoute]).
+ * @param topicId     ID of the topic whose lessons are shown. Returns early if not found.
+ * @param navController Navigation controller for back-press and forward navigation to lessons.
+ * @param driver       SQLite driver for [LessonProgressStore] reads.
+ * @param bottomPadding System navigation bar height padding from `App`.
+ */
 @Composable
 fun TopicDetailScreen(
     subjectId: String,
@@ -87,7 +104,7 @@ fun TopicDetailScreen(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             items(topic.lessons) { lesson ->
-                // Use real progress from DB, keep hardcoded isLocked
+                // Inject live DB progress while preserving the static isLocked value from the data model.
                 val realProgress = lessonProgresses[lesson.id] ?: lesson.progress
                 LessonCard(
                     lesson = lesson.copy(progress = realProgress),

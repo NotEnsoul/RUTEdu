@@ -33,10 +33,18 @@ import prz.rutedu.app.models.Lesson
 import prz.rutedu.app.models.Topic
 import kotlin.math.roundToInt
 
-// ─────────────────────────────────────────────
-// TopicCard  –  used in SubjectDetailScreen
-// Status label: "X% Ukończono"
-// ─────────────────────────────────────────────
+/**
+ * Card that represents a single [Topic] inside the subject detail screen.
+ *
+ * Delegates all rendering to the private [ItemCard] / [CardContent] helpers. The only
+ * responsibility of this wrapper is computing the human-readable status text:
+ * - **Locked** -> "Zablokowane" (grey-out visual, no click handler).
+ * - **Unlocked** -> "X% Ukończono" where X is `topic.progress * 100` rounded to the nearest integer.
+ *
+ * @param topic    The topic to display. Locking, progress, color, and icon are all read from here.
+ * @param onClick  Navigation callback; ignored when the topic is locked (the card is not clickable).
+ * @param modifier Optional [Modifier] forwarded to the card root.
+ */
 @Composable
 fun TopicCard(
     topic: Topic,
@@ -59,10 +67,19 @@ fun TopicCard(
     )
 }
 
-// ─────────────────────────────────────────────
-// LessonCard  –  used in TopicDetailScreen
-// Status label: "Kontynuuj – X%" / "Rozpocznij – 0%"
-// ─────────────────────────────────────────────
+/**
+ * Card that represents a single [Lesson] inside the topic detail screen.
+ *
+ * Shares the private [ItemCard] / [CardContent] rendering pipeline with [TopicCard].
+ * The status text logic differs to communicate lesson-specific progress state:
+ * - **Locked** -> "Zablokowane".
+ * - **In progress** (`progress > 0`) -> "Kontynuuj – X%" (resume prompt).
+ * - **Not started** -> "Rozpocznij – 0%" (start prompt).
+ *
+ * @param lesson   The lesson to display. Locking, progress, color, and icon come from here.
+ * @param onClick  Navigation callback leading to `LessonGameScreen`; ignored when locked.
+ * @param modifier Optional [Modifier] forwarded to the card root.
+ */
 @Composable
 fun LessonCard(
     lesson: Lesson,
@@ -88,9 +105,18 @@ fun LessonCard(
     )
 }
 
-// ─────────────────────────────────────────────
-// Shared internal card – single source of truth
-// ─────────────────────────────────────────────
+/**
+ * Shared card shell used by both [TopicCard] and [LessonCard].
+ *
+ * Handles two distinct visual states:
+ * - **Locked:** flat grey card (no elevation, dashed border at `0xFFDDE1E9`) with a lock icon,
+ *   muted colors, and `Modifier.clickable` **omitted** - the card cannot be tapped.
+ * - **Unlocked:** white elevated card (2 dp shadow) with the subject accent color, subject icon,
+ *   and a color-matched progress bar. Tapping fires [onClick].
+ *
+ * The split into [ItemCard] (shell) + [CardContent] (interior) keeps the locked/unlocked
+ * branch minimal - only the `Card` wrapper arguments differ between the two states.
+ */
 @Composable
 private fun ItemCard(
     name: String,
@@ -142,6 +168,23 @@ private fun ItemCard(
     }
 }
 
+/**
+ * Renders the internal layout content of the topic or lesson card.
+ *
+ * Lays out the icon, text descriptions, progress indicator, and completion status.
+ *
+ * @param name Title of the topic or lesson.
+ * @param description Description of what the topic/lesson contains.
+ * @param progress Float percentage (0.0 to 1.0) representing completion progress.
+ * @param isLocked Whether the card is currently locked/inactive.
+ * @param displayIcon Graphic icon showing the subject category.
+ * @param iconBg Background color of the icon container.
+ * @param iconTint Tint color applied to the icon.
+ * @param titleColor Text color for the title name.
+ * @param subtitleColor Text color for the description text.
+ * @param statusText Human-readable completion status string (e.g. `"Ukończono"`).
+ * @param statusColor Text color for the status label.
+ */
 @Composable
 private fun CardContent(
     name: String,

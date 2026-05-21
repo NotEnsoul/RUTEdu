@@ -26,6 +26,25 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import prz.rutedu.app.models.Hint
 
+/**
+ * Modal bottom sheet that displays a structured [Hint] when the user taps the "Podpowiedź" button.
+ *
+ * The sheet is scrollable and renders up to four distinct visual sections derived from the [Hint]
+ * model, each rendered only when its data is non-empty:
+ *
+ * 1. **Main text block** (`hint.mainText`) - a bordered card with a colored left stripe.
+ *    If `hint.boldPart` is set, that substring is rendered in `FontWeight.Bold` using
+ *    `AnnotatedString` so no raw HTML or markup is needed in question data.
+ * 2. **Section header** (`hint.sectionTitle`) - a small-caps label above the item list.
+ * 3. **Item list** (`hint.items`) - pill-shaped rows; the second item (index 1) gets a light
+ *    accent background to highlight the "key" answer. Dot colors cycle through three shades.
+ * 4. **Step list** (`hint.steps`) - a grey rounded box with a "Krok po kroku:" header and
+ *    bullet-separated step lines.
+ *
+ * @param hint        The hint data object from the `Question` being answered.
+ * @param accentColor Subject accent color applied to the left border stripe, header icon, and button.
+ * @param onDismiss   Called when the user taps "Rozumiem, wracam do zadania" or the x close button.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun HintBottomSheet(
@@ -204,11 +223,36 @@ internal fun HintBottomSheet(
     }
 }
 
+/**
+ * Renders a single large equation token (a number, operator symbol, or `"?"`) at [fontSize].
+ *
+ * Shared across [FindAnswerContent], [FindOperatorContent], and [EquationBalanceContent] so that
+ * all equation-style questions use a consistent extra-bold monospace-like style.
+ *
+ * @param text     The token string to display (e.g. `"12"`, `"+"`, `"?"`).
+ * @param color    Text color - typically the subject accent color for the answer slot, or
+ *                 `Color(0xFF1A1A1A)` for known values.
+ * @param fontSize Token size; defaults to 48 sp for primary equation display.
+ */
 @Composable
 internal fun EquationText(text: String, color: Color, fontSize: TextUnit = 48.sp) {
     Text(text = text, fontSize = fontSize, fontWeight = FontWeight.ExtraBold, color = color)
 }
 
+/**
+ * The standard two-button action row used at the bottom of most question content composables.
+ *
+ * Layout: `[Podpowiedź (outline)] [Sprawdź (filled, accent)]`
+ *
+ * - The hint button is always enabled and opens [HintBottomSheet].
+ * - The check button is enabled only when [checkEnabled] is `true` (e.g. the user has
+ *   selected an answer or entered non-empty text).
+ *
+ * @param accentColor  Subject accent color for button borders and the filled check button.
+ * @param onHint       Called when "Podpowiedź" is tapped - should show [HintBottomSheet].
+ * @param onCheck      Called when "Sprawdź" is tapped - should validate the current answer.
+ * @param checkEnabled Whether the check button is interactive.
+ */
 @Composable
 internal fun BottomButtons(
     accentColor: Color,

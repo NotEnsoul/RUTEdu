@@ -6,8 +6,42 @@ import prz.rutedu.app.models.Question.*
 import kotlin.math.roundToInt
 import kotlin.random.Random
 
+/**
+ * Procedurally generates chemistry quiz questions from a random seed.
+ *
+ * Unlike the static [QuestionBank], chemistry lessons require a large and varied question
+ * pool (covering all elements, all acids, all reaction types, etc.). Generating them at
+ * runtime from [prz.rutedu.app.models.ELEMENTS] and similar data tables avoids
+ * duplicating hundreds of questions by hand while still allowing reproducible session order
+ * (same `seed` = same shuffled list).
+ *
+ * ## Session flow
+ *
+ * 1. `LessonGameScreen` retrieves (or creates) a seed via [ChemistrySessionStore.getOrCreateSeed].
+ * 2. It fetches the set of already-answered question IDs via [ChemistrySessionStore.getAnsweredIds].
+ * 3. It calls [generateFor] which shuffles the full pool with the seed, then removes answered IDs.
+ * 4. Each correctly answered question is added to the answered set so it won't reappear
+ *    in the next session.
+ *
+ * ## Adding a new chemistry lesson
+ *
+ * 1. Add the lesson to [SubjectRepository] with an id starting with `"chemia_"`.
+ * 2. Implement a private `fun chemia_X_Y(seed: Long): List<Question>` here.
+ * 3. Register it in the `when` block inside [generateFor].
+ */
 object ChemistryQuestionGenerator {
 
+    /**
+     * Generates the question list for a chemistry lesson, filtered by [excludeIds].
+     *
+     * The full pool is produced by the lesson-specific generator function, shuffled
+     * deterministically using `seed`, then filtered to remove already-answered questions.
+     *
+     * @param lessonId   Chemistry lesson identifier (must start with `"chemia_"`).
+     * @param seed       Random seed for shuffling - stable within a session via [ChemistrySessionStore].
+     * @param excludeIds Question IDs answered in previous sessions; these are removed from the result.
+     * @return Filtered, ordered list of questions ready for presentation.
+     */
     fun generateFor(lessonId: String, seed: Long, excludeIds: Set<Int> = emptySet()): List<Question> {
         val all = when (lessonId) {
             "chemia_1_1" -> chemia_1_1(seed)
@@ -30,10 +64,23 @@ object ChemistryQuestionGenerator {
         return if (excludeIds.isEmpty()) all else all.filter { it.id !in excludeIds }
     }
 
+    /**
+     * Returns the total number of questions available for [lessonId] before any filtering.
+     * Useful for capping the configurable question count in [SubjectConfigStore].
+     *
+     * @param lessonId Chemistry lesson identifier.
+     */
     fun totalFor(lessonId: String): Int = generateFor(lessonId, seed = 0L).size
 
-    // ── lesson generators ─────────────────────────────────────────────────────
-
+    /**
+     * Generates questions for Lesson 1-1: "Budowa atomu" (Atomic Structure).
+     *
+     * Prompts the student to identify the correct electron shell configuration (2, 8, 18...)
+     * of chemical elements up to atomic number 54 (Xenon).
+     *
+     * @param seed Random seed for shuffling elements and generating stable options.
+     * @return A list of [PeriodicTableByShell] question objects.
+     */
     private fun chemia_1_1(seed: Long): List<Question> {
         val rng = Random(seed)
         return shellConfigByNumber.entries
@@ -54,6 +101,15 @@ object ChemistryQuestionGenerator {
             }
     }
 
+    /**
+     * Generates questions for Lesson 1-2: "Wskazywanie atomów w układzie okresowym".
+     *
+     * Taps into the interactive periodic table view, asking students to tap on the correct
+     * location of a given element (up to Radon, excluding lanthanides/actinides).
+     *
+     * @param seed Random seed for element sequence randomization.
+     * @return A list of [PeriodicTableQuiz] question objects.
+     */
     private fun chemia_1_2(seed: Long): List<Question> {
         val rng = Random(seed)
         return ELEMENTS
@@ -72,11 +128,28 @@ object ChemistryQuestionGenerator {
             }
     }
 
+    /**
+     * Generates questions for Lesson 1-3: "Cząsteczki i wzory" (Molecules and Formulas).
+     *
+     * Asks students to match a chemical molecule name to its molecular formula or vice versa.
+     *
+     * @param seed Random seed for shuffling questions and distractors.
+     * @return A list of formula-matching [SelectFromList] question objects.
+     */
     private fun chemia_1_3(seed: Long): List<Question> {
         val rng = Random(seed)
         return moleculeQuestions(rng)
     }
 
+    /**
+     * Generates questions for Lesson 1-4: "Elektrony w atomach" (Electrons in Atoms).
+     *
+     * Prompts students to find the counts of electrons, protons, atomic mass, or period number
+     * for chemical elements up to Krypton (Z <= 36).
+     *
+     * @param seed Random seed for question selection and option generation.
+     * @return A shuffled list of [ElementCardQuiz] question objects.
+     */
     private fun chemia_1_4(seed: Long): List<Question> {
         val rng = Random(seed)
         return ELEMENTS
@@ -88,6 +161,15 @@ object ChemistryQuestionGenerator {
             .mapIndexed { i, q -> q.copy(id = 1400 + i) }
     }
 
+    /**
+     * Generates questions for Lesson 2-1: "Układ okresowy - grupy i okresy".
+     *
+     * Requires students to correctly place elements belonging to specific sets (e.g. halogens,
+     * noble gases, alkali metals) onto the periodic table grid.
+     *
+     * @param seed Random seed for element selection order.
+     * @return A list of [PeriodicTableQuiz] question objects.
+     */
     private fun chemia_2_1(seed: Long): List<Question> {
         val rng = Random(seed)
         return periodicTableSets().shuffled(rng).mapIndexed { i, (title, nums, hint) ->
@@ -95,17 +177,32 @@ object ChemistryQuestionGenerator {
         }
     }
 
+    /**
+     * Generates questions for Lesson 2-2: "Właściwości pierwiastków" (Properties of Elements).
+     *
+     * Quizzes students on element groups, metallic/non-metallic nature, state of matter,
+     * and physical/chemical properties.
+     *
+     * @param seed Random seed for shufflers.
+     * @return A list of [SelectFromList] question objects.
+     */
     private fun chemia_2_2(seed: Long): List<Question> {
         val rng = Random(seed)
         return propertyQuestions(rng)
     }
 
-    // ── chemia_3_1  Wzory kwasów ─────────────────────────────────────────────
-
+    /**
+     * Lookup record for a single acid used in chemia_3_1 question generation.
+     *
+     * @property formula Chemical formula (e.g. `"H₂SO₄"`).
+     * @property namePL  Polish name (e.g. `"kwas siarkowy(VI)"`).
+     * @property type    Acid class: `"beztlenowy"` (oxyacid-free) or `"tlenowy"` (oxyacid).
+     * @property hint    Hint sentence shown to the student after a wrong answer.
+     */
     private data class AcidEntry(
         val formula: String,
         val namePL: String,
-        val type: String,           // "beztlenowy" / "tlenowy"
+        val type: String,
         val hint: String
     )
 
@@ -128,6 +225,15 @@ object ChemistryQuestionGenerator {
         AcidEntry("H₃BO₃",  "kwas borowy",            "tlenowy",    "H₃BO₃ – borowy. Stosowany w okulistyce jako środek dezynfekcyjny."),
     )
 
+    /**
+     * Generates questions for Lesson 3-1: "Kwasy" (Acids).
+     *
+     * Quizzes students on acid names, formulas, and classification into oxyacids (tlenowe)
+     * and oxyacid-free (beztlenowe) acids.
+     *
+     * @param seed Random seed for question and option randomization.
+     * @return A list of [SelectFromList] question objects.
+     */
     private fun chemia_3_1(seed: Long): List<Question> {
         val rng = Random(seed)
         val qs = mutableListOf<SelectFromList>()
@@ -137,7 +243,7 @@ object ChemistryQuestionGenerator {
         val typeHint    = "Kwasy beztlenowe nie zawierają tlenu (HX, H₂X). Kwasy tlenowe zawierają tlen (np. HNO₃, H₂SO₄)."
 
         acids.forEach { acid ->
-            // formula → name
+            // formula -> name
             val wNames = allNames.filter { it != acid.namePL }.shuffled(rng).take(3)
             val opts1 = (wNames + acid.namePL).shuffled(rng)
             qs += SelectFromList(
@@ -148,7 +254,7 @@ object ChemistryQuestionGenerator {
                 hint = Hint(acid.hint, boldPart = acid.namePL)
             )
 
-            // name → formula
+            // name -> formula
             val wForms = allFormulas.filter { it != acid.formula }.shuffled(rng).take(3)
             val opts2 = (wForms + acid.formula).shuffled(rng)
             qs += SelectFromList(
@@ -172,10 +278,7 @@ object ChemistryQuestionGenerator {
         return qs.shuffled(rng).mapIndexed { i, q -> q.copy(id = 3100 + i) }
     }
 
-    // ── chemia_3_2  Reakcje otrzymywania kwasów ───────────────────────────────
-
     private val acidReactions: List<EquationBalance> = listOf(
-        // ── Direct synthesis (H₂ + non-metal) ────────────────────────────────
         EquationBalance(
             id = 0,
             instruction = "Zbilansuj reakcję syntezy kwasu",
@@ -215,7 +318,6 @@ object ChemistryQuestionGenerator {
             products = listOf(BalanceTerm("H₂S", fixedCoefficient = null, correctCoefficient = 1)),
             hint = Hint("H₂ + S → H₂S. Wszystkie współczynniki = 1.", boldPart = "H₂S")
         ),
-        // ── Oxide + water ─────────────────────────────────────────────────────
         EquationBalance(
             id = 0,
             instruction = "Uzupełnij reakcję otrzymywania kwasu",
@@ -277,7 +379,6 @@ object ChemistryQuestionGenerator {
             hint = Hint("Cl₂O + H₂O → 2HClO. Kwas chlorowy(I).", boldPart = "2HClO",
                 steps = listOf("Cl₂O ma 2Cl → 2×HClO", "2×HClO ma 2H → 1×H₂O"))
         ),
-        // ── Synthesis of water (context reaction) ────────────────────────────
         EquationBalance(
             id = 0,
             instruction = "Zbilansuj reakcję syntezy wody",
@@ -454,13 +555,20 @@ object ChemistryQuestionGenerator {
         ),
     )
 
+    /**
+     * Generates questions for Lesson 3-2: "Reakcje kwasów i bilansowanie".
+     *
+     * Asks students to fill in coefficients to balance equations for combustion,
+     * neutralization, and metal-acid chemical reactions.
+     *
+     * @param seed Random seed for selection order.
+     * @return A list of [EquationBalance] question objects.
+     */
     private fun chemia_3_2(seed: Long): List<Question> {
         val rng = Random(seed)
         val all = acidReactions + metalAcidReactions + neutralizationReactions + combustionReactions + decompositionReactions
         return all.shuffled(rng).mapIndexed { i, q -> q.copy(id = 3200 + i) }
     }
-
-    // ── chemia_4_1  Skala pH ──────────────────────────────────────────────────
 
     private val phRealWorld = listOf(
         Triple("Sok cytrynowy (pH ≈ 2)", 2, "kwasowy"),
@@ -475,6 +583,15 @@ object ChemistryQuestionGenerator {
         Triple("Mleko wapienne (pH ≈ 12)", 12, "zasadowy"),
     )
 
+    /**
+     * Generates questions for Lesson 4-1: "Skala pH i wskaźniki" (pH Scale and Indicators).
+     *
+     * Quizzes students on pH values (0-14), classification of solutions as acidic, neutral,
+     * or basic, and real-world examples (like coffee, milk, vinegar).
+     *
+     * @param seed Random seed for shuffling.
+     * @return A list of pH classification [SelectFromList] question objects.
+     */
     private fun chemia_4_1(seed: Long): List<Question> {
         val rng = Random(seed)
         val qs = mutableListOf<SelectFromList>()
@@ -517,7 +634,7 @@ object ChemistryQuestionGenerator {
             )
         }
 
-        // 6 "pick acidic pH" questions — each with unique set of options
+        // 6 "pick acidic pH" questions - each with unique set of options
         val acidPHs = (1..6).toList().shuffled(rng)
         val basePHs = (8..13).toList()
         acidPHs.forEach { ph ->
@@ -548,13 +665,19 @@ object ChemistryQuestionGenerator {
         return qs.shuffled(rng).mapIndexed { i, q -> q.copy(id = 4100 + i) }
     }
 
-    // ── chemia_4_2  Dysocjacja elektrolityczna ────────────────────────────────
-
+    /**
+     * Lookup record for a single electrolyte used in chemia_4_2 dissociation question generation.
+     *
+     * @property formula Chemical formula (e.g. `"HCl"`).
+     * @property namePL  Polish name (e.g. `"kwas solny"`).
+     * @property ions    Ion pair produced on dissociation (e.g. `"H⁺ i Cl⁻"`).
+     * @property type    Compound class: `"kwas"`, `"zasada"`, or `"sól"`.
+     */
     private data class DissocEntry(
         val formula: String,
         val namePL: String,
         val ions: String,
-        val type: String  // kwas / zasada / sól
+        val type: String
     )
 
     private val dissocData = listOf(
@@ -575,6 +698,15 @@ object ChemistryQuestionGenerator {
         DissocEntry("Na₂CO₃",   "węglan sodu",              "2Na⁺ i CO₃²⁻",     "sól"),
     )
 
+    /**
+     * Generates questions for Lesson 4-2: "Dysocjacja elektrolityczna" (Electrolytic Dissociation).
+     *
+     * Evaluates knowledge of dissociation formulas, resulting cations and anions, and the
+     * classification of electrolytes (acids, bases, salts).
+     *
+     * @param seed Random seed for options shuffling.
+     * @return A list of dissociation [SelectFromList] question objects.
+     */
     private fun chemia_4_2(seed: Long): List<Question> {
         val rng = Random(seed)
         val qs = mutableListOf<SelectFromList>()
@@ -620,13 +752,19 @@ object ChemistryQuestionGenerator {
         return qs.shuffled(rng).mapIndexed { i, q -> q.copy(id = 4200 + i) }
     }
 
-    // ── chemia_5_1  Węglowodory ───────────────────────────────────────────────
-
+    /**
+     * Lookup record for a single hydrocarbon used in chemia_5_1 question generation.
+     *
+     * @property formula Chemical formula (e.g. `"CH₄"`).
+     * @property namePL  Polish name (e.g. `"metan"`).
+     * @property cCount  Number of carbon atoms in the molecule.
+     * @property type    Homologous series: `"alkan"`, `"alken"`, or `"alkyn"`.
+     */
     private data class Hydrocarbon(
         val formula: String,
         val namePL: String,
         val cCount: Int,
-        val type: String  // alkan / alken / alkyn
+        val type: String
     )
 
     private val hydrocarbons = listOf(
@@ -651,6 +789,14 @@ object ChemistryQuestionGenerator {
         "alkyn" to "Alkiny — CₙH₂ₙ₋₂. Zawierają jedno wiązanie potrójne C≡C."
     )
 
+    /**
+     * Generates questions for Lesson 5-1: "Węglowodory" (Hydrocarbons).
+     *
+     * Quizzes students on names, formulas, and classifications of alkanes, alkenes, and alkynes.
+     *
+     * @param seed Random seed for options shuffling.
+     * @return A list of hydrocarbon [SelectFromList] question objects.
+     */
     private fun chemia_5_1(seed: Long): List<Question> {
         val rng = Random(seed)
         val qs = mutableListOf<SelectFromList>()
@@ -701,13 +847,19 @@ object ChemistryQuestionGenerator {
         return qs.shuffled(rng).mapIndexed { i, q -> q.copy(id = 5100 + i) }
     }
 
-    // ── chemia_5_2  Pochodne węglowodorów ────────────────────────────────────
-
+    /**
+     * Lookup record for a single organic compound used in chemia_5_2 question generation.
+     *
+     * @property formula    Chemical formula (e.g. `"CH₃OH"`).
+     * @property namePL     Polish name (e.g. `"metanol"`).
+     * @property group      Functional group notation: `"-OH"`, `"-COOH"`, `"-NH₂"`, or `"ester"`.
+     * @property groupName  Compound class name: `"alkohol"`, `"kwas karboksylowy"`, `"amina"`, or `"ester"`.
+     */
     private data class OrgCompound(
         val formula: String,
         val namePL: String,
-        val group: String,     // -OH / -COOH / -NH₂ / ester
-        val groupName: String  // alkohol / kwas karboksylowy / amina / ester
+        val group: String,
+        val groupName: String
     )
 
     private val orgCompounds = listOf(
@@ -732,6 +884,15 @@ object ChemistryQuestionGenerator {
         "ester"             to "Estry powstają z reakcji kwasu karboksylowego z alkoholem."
     )
 
+    /**
+     * Generates questions for Lesson 5-2: "Pochodne węglowodorów" (Organic Compounds).
+     *
+     * Prompts students to classify and identify functional groups for organic compounds
+     * (alcohols, carboxylic acids, amines, esters).
+     *
+     * @param seed Random seed for options shuffling.
+     * @return A list of organic compound [SelectFromList] question objects.
+     */
     private fun chemia_5_2(seed: Long): List<Question> {
         val rng = Random(seed)
         val qs = mutableListOf<SelectFromList>()
@@ -779,8 +940,13 @@ object ChemistryQuestionGenerator {
         return qs.shuffled(rng).mapIndexed { i, q -> q.copy(id = 5200 + i) }
     }
 
-    // ── chemia_3_3  Wodorotlenki ─────────────────────────────────────────────
-
+    /**
+     * Lookup record for a single hydroxide used in chemia_3_3 question generation.
+     *
+     * @property formula  Chemical formula (e.g. `"NaOH"`).
+     * @property namePL   Polish name (e.g. `"wodorotlenek sodu"`).
+     * @property soluble  `true` if the hydroxide dissolves readily in water.
+     */
     private data class BaseEntry(val formula: String, val namePL: String, val soluble: Boolean)
 
     private val hydroxides = listOf(
@@ -835,6 +1001,15 @@ object ChemistryQuestionGenerator {
         ),
     )
 
+    /**
+     * Generates questions for Lesson 3-3: "Wodorotlenki i zasady" (Hydroxides and Bases).
+     *
+     * Prompts students to match hydroxide formulas with names, identify their solubility,
+     * and balance base preparation reactions.
+     *
+     * @param seed Random seed for shuffling.
+     * @return A list of base-themed question objects.
+     */
     private fun chemia_3_3(seed: Long): List<Question> {
         val rng = Random(seed)
         val qs = mutableListOf<Question>()
@@ -876,8 +1051,13 @@ object ChemistryQuestionGenerator {
         }
     }
 
-    // ── chemia_3_4  Sole ─────────────────────────────────────────────────────
-
+    /**
+     * Lookup record for a single salt used in chemia_3_4 question generation.
+     *
+     * @property formula   Chemical formula (e.g. `"NaCl"`).
+     * @property namePL    Polish name (e.g. `"chlorek sodu"`).
+     * @property acidName  Polish name of the parent acid (e.g. `"kwas chlorowodorowy"`).
+     */
     private data class SaltEntry(val formula: String, val namePL: String, val acidName: String)
 
     private val salts = listOf(
@@ -906,6 +1086,15 @@ object ChemistryQuestionGenerator {
         SaltEntry("Ca₃(PO₄)₂",    "fosforan(V) wapnia",         "kwas fosforowy(V)"),
     )
 
+    /**
+     * Generates questions for Lesson 3-4: "Sole" (Salts).
+     *
+     * Tests students on salt naming, formulas, and identifying the parent acid
+     * from which a salt is derived.
+     *
+     * @param seed Random seed for shuffling.
+     * @return A list of salt-themed [SelectFromList] question objects.
+     */
     private fun chemia_3_4(seed: Long): List<Question> {
         val rng  = Random(seed)
         val qs   = mutableListOf<SelectFromList>()
@@ -947,8 +1136,13 @@ object ChemistryQuestionGenerator {
         return qs.shuffled(rng).mapIndexed { i, q -> q.copy(id = 3400 + i) }
     }
 
-    // ── chemia_6_1  Tlenki ───────────────────────────────────────────────────
-
+    /**
+     * Lookup record for a single oxide used in chemia_6_1 question generation.
+     *
+     * @property formula Chemical formula (e.g. `"Na₂O"`).
+     * @property namePL  Polish name (e.g. `"tlenek sodu"`).
+     * @property type    Oxide class: `"zasadowy"` (basic), `"kwasowy"` (acidic), or `"amfoteryczny"` (amphoteric).
+     */
     private data class OxideEntry(val formula: String, val namePL: String, val type: String)
 
     private val oxides = listOf(
@@ -1028,6 +1222,15 @@ object ChemistryQuestionGenerator {
         ),
     )
 
+    /**
+     * Generates questions for Lesson 6-1: "Tlenki" (Oxides).
+     *
+     * Quizzes students on naming, chemical formulas, and the classification of oxides into
+     * acidic, basic, amphoteric, or neutral categories.
+     *
+     * @param seed Random seed for shuffling.
+     * @return A list of oxide-themed question objects.
+     */
     private fun chemia_6_1(seed: Long): List<Question> {
         val rng = Random(seed)
         val qs  = mutableListOf<Question>()
@@ -1073,8 +1276,13 @@ object ChemistryQuestionGenerator {
         }
     }
 
-    // ── ElementCardQuiz builders ──────────────────────────────────────────────
-
+    /**
+     * Generates a question prompting the student to identify the number of electrons for an element.
+     *
+     * @param el The [Element] to query.
+     * @param rng Random instance used to shuffle options and select distractors.
+     * @return An [ElementCardQuiz] question.
+     */
     private fun electronQ(el: Element, rng: Random): ElementCardQuiz {
         val z = el.atomicNumber
         val opts = buildOptions(z.toString(), distractors(z, 1, 120, rng), rng)
@@ -1091,6 +1299,13 @@ object ChemistryQuestionGenerator {
         )
     }
 
+    /**
+     * Generates a question prompting the student to identify the number of protons for an element.
+     *
+     * @param el The [Element] to query.
+     * @param rng Random instance used to shuffle options and select distractors.
+     * @return An [ElementCardQuiz] question.
+     */
     private fun protonQ(el: Element, rng: Random): ElementCardQuiz {
         val z = el.atomicNumber
         val opts = buildOptions(z.toString(), distractors(z, 1, 120, rng), rng)
@@ -1107,6 +1322,13 @@ object ChemistryQuestionGenerator {
         )
     }
 
+    /**
+     * Generates a question prompting the student to identify the rounded atomic mass of an element.
+     *
+     * @param el The [Element] to query.
+     * @param rng Random instance used to shuffle options and select distractors.
+     * @return An [ElementCardQuiz] question.
+     */
     private fun massQ(el: Element, rng: Random): ElementCardQuiz {
         val m = el.atomicMass.roundToInt()
         val opts = buildOptions(m.toString(), distractors(m, 1, 300, rng), rng)
@@ -1123,6 +1345,13 @@ object ChemistryQuestionGenerator {
         )
     }
 
+    /**
+     * Generates a question prompting the student to identify the period number of an element.
+     *
+     * @param el The [Element] to query.
+     * @param rng Random instance used to shuffle options and select distractors.
+     * @return An [ElementCardQuiz] question.
+     */
     private fun periodQ(el: Element, rng: Random): ElementCardQuiz {
         val p = el.tableRow.coerceIn(1, 7)
         val dists = (1..7).filter { it != p }.shuffled(rng).take(3).map { it.toString() }
@@ -1140,8 +1369,15 @@ object ChemistryQuestionGenerator {
         )
     }
 
-    // ── distractor & option helpers ───────────────────────────────────────────
-
+    /**
+     * Generates a list of random incorrect numerical options (distractors) near the correct answer.
+     *
+     * @param correct The correct numerical answer.
+     * @param min The minimum allowed value for a distractor.
+     * @param max The maximum allowed value for a distractor.
+     * @param rng Random instance.
+     * @return A list of three distinct incorrect option strings.
+     */
     private fun distractors(correct: Int, min: Int, max: Int, rng: Random): List<String> {
         val step = (correct / 5).coerceAtLeast(1)
         return (1..step * 10)
@@ -1153,11 +1389,23 @@ object ChemistryQuestionGenerator {
             .map { it.toString() }
     }
 
+    /**
+     * Combines the correct answer and a list of wrong answers into a single shuffled list of options.
+     *
+     * @param correct The correct answer string.
+     * @param wrongs The list of incorrect answer strings.
+     * @param rng Random instance.
+     * @return A shuffled list of four option strings.
+     */
     private fun buildOptions(correct: String, wrongs: List<String>, rng: Random): List<String> =
         (wrongs.take(3) + correct).shuffled(rng)
 
-    // ── periodic table sets ───────────────────────────────────────────────────
-
+    /**
+     * Returns a collection of element groups/sets (e.g. noble gases, alkali metals) used
+     * to populate the interactive periodic table quiz in lesson 2-1.
+     *
+     * @return A list of Triples containing the prompt text, target atomic numbers, and the lesson hint.
+     */
     private fun periodicTableSets(): List<Triple<String, List<Int>, Hint>> = listOf(
         Triple(
             "Umieść brakujące gazy szlachetne w układzie",
@@ -1251,8 +1499,6 @@ object ChemistryQuestionGenerator {
         ),
     )
 
-    // ── molecule questions ────────────────────────────────────────────────────
-
     private val molecules: List<Pair<String, String>> = listOf(
         "H₂O"      to "woda",
         "CO₂"      to "dwutlenek węgla",
@@ -1276,6 +1522,12 @@ object ChemistryQuestionGenerator {
         "HBr"      to "kwas bromowodorowy"
     )
 
+    /**
+     * Generates a list of questions mapping molecule names to formulas and vice versa.
+     *
+     * @param rng Random instance.
+     * @return Shuffled list of name-to-formula and formula-to-name questions.
+     */
     private fun moleculeQuestions(rng: Random): List<Question> {
         val allNames = molecules.map { it.second }
         val allFormulas = molecules.map { it.first }
@@ -1305,11 +1557,15 @@ object ChemistryQuestionGenerator {
         return qs.shuffled(rng).mapIndexed { i, q -> q.copy(id = 1300 + i) }
     }
 
-    // ── property questions ────────────────────────────────────────────────────
-
     private val metalCats = setOf(ALKALI_METAL, ALKALINE_EARTH, TRANSITION_METAL, POST_TRANSITION)
     private val nonMetalCats = setOf(REACTIVE_NONMETAL, HALOGEN)
 
+    /**
+     * Generates chemical and physical property classification questions for elements.
+     *
+     * @param rng Random instance.
+     * @return Shuffled list of property matching questions.
+     */
     private fun propertyQuestions(rng: Random): List<Question> {
         val qs = mutableListOf<SelectFromList>()
 
@@ -1332,7 +1588,7 @@ object ChemistryQuestionGenerator {
             )
         }
 
-        // "Which element is a metal/non-metal/noble-gas?" — each correct element used at most once
+        // "Which element is a metal/non-metal/noble-gas?" - each correct element used at most once
         listOf(
             Triple("metalem",          metalCats,    nonMetalCats + setOf(METALLOID, NOBLE_GAS)),
             Triple("niemetalem",        nonMetalCats, metalCats    + setOf(METALLOID, NOBLE_GAS)),
@@ -1358,8 +1614,15 @@ object ChemistryQuestionGenerator {
         return qs.shuffled(rng).mapIndexed { i, q -> q.copy(id = 2200 + i) }
     }
 
-    // ── shared utils ──────────────────────────────────────────────────────────
-
+    /**
+     * Generates the step-by-step breakdown text of an element's electron shell configuration.
+     *
+     * Used to populate hints for shell-configuration questions.
+     *
+     * @param z The atomic number of the element.
+     * @param config The comma-separated shell configuration string (e.g. `"2,8,1"`).
+     * @return A list of strings showing the count of electrons per shell level.
+     */
     private fun shellSteps(z: Int, config: String): List<String> {
         val shellNames = listOf("K", "L", "M", "N", "O", "P")
         return config.split(",").mapIndexed { i, n ->

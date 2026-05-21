@@ -25,6 +25,15 @@ import prz.rutedu.app.data.QuestionBank
 import prz.rutedu.app.data.SubjectRepository
 import androidx.compose.runtime.remember
 
+/**
+ * Subject list screen for per-lesson question-count configuration.
+ *
+ * Shows every unlocked subject as a tappable card with its lesson count and total question count.
+ * Tapping a card navigates to [SubjectConfigScreen] for that subject.
+ *
+ * @param navController Navigation controller for the back-stack pop and navigation to [Screen.SubjectConfig].
+ * @param bottomPadding System navigation bar height; applied as list content padding.
+ */
 @Composable
 fun ConfigListScreen(
     navController: NavController,

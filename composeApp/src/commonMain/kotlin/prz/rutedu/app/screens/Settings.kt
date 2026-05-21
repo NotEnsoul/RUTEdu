@@ -41,11 +41,27 @@ import rutedu.composeapp.generated.resources.fragment_settings_select_language
 import rutedu.composeapp.generated.resources.back
 import org.jetbrains.compose.resources.stringResource
 
+/**
+ * A selectable locale in the language picker on the [Settings] screen.
+ *
+ * @property code        BCP-47 language code stored in the database (e.g. `"pl"`, `"en"`).
+ * @property displayName Human-readable name shown in the dropdown (e.g. `"Polski"`, `"English"`).
+ */
 data class LanguageOption(
     val code: String,
     val displayName: String
 )
 
+/**
+ * Language and app settings screen.
+ *
+ * Displays a dropdown listing all supported [LanguageOption]s. Selecting a language immediately
+ * updates `customAppLocale` (triggering a UI re-render) and persists the choice to the database.
+ * The current language is restored from the database on first composition.
+ *
+ * @param navController Navigation controller for the back-stack pop on "Back".
+ * @param database      [Database] instance used to read/write the persisted language preference.
+ */
 @Composable
 fun Settings(navController: NavController, database: Database) {
     val coroutineScope = rememberCoroutineScope()
@@ -89,7 +105,7 @@ fun Settings(navController: NavController, database: Database) {
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.surface)
-            .safeContentPadding()       // ensure not under iOS status bar / notch
+            .safeContentPadding() // ensure not under iOS status bar / notch
             .padding(16.dp),
 
         horizontalAlignment = Alignment.CenterHorizontally,

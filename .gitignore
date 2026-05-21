@@ -18,7 +18,3 @@ captures
 !*.xcworkspace/contents.xcworkspacedata
 **/xcshareddata/WorkspaceSettings.xcsettings
 node_modules/
-docs/startup.aux
-docs/startup.out
-docs/startup.toc
-docs/startup.log

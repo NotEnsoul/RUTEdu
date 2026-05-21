@@ -39,6 +39,10 @@ import prz.rutedu.app.models.Question
 import prz.rutedu.app.models.elementByNumber
 import kotlinx.coroutines.delay
 
+/**
+ * KMP-safe atomic mass formatter - see [ElementCardContent] for the full explanation.
+ * Produces exactly 3 decimal places (e.g. `"12.011"`, `"107.868"`).
+ */
 private fun Float.to3dp(): String {
     val rounded = kotlin.math.round(this * 1000).toLong()
     val intPart = rounded / 1000
@@ -46,21 +50,69 @@ private fun Float.to3dp(): String {
     return "$intPart.${decPart.toString().padStart(3, '0')}"
 }
 
+/**
+ * Verification state for the periodic table placement interaction.
+ *
+ * - [IDLE] - the student has not yet tapped "Sprawdź".
+ * - [CORRECT] - all placements are correct; a green success indicator is shown briefly.
+ * - [WRONG] - one or more placements are incorrect; incorrect slots flash red before resetting.
+ */
 enum class FindCheckState { IDLE, CORRECT, WRONG }
 
-// ── Layout constants ─────────────────────────────────────────────────────────
+/** Width and height of each periodic-table cell in dp. */
 private val CELL_SIZE = 44.dp
+/** Gap between adjacent cells. */
 private val CELL_PADDING = 1.dp
+/** Standard IUPAC periodic table column count. */
 private const val TABLE_COLS = 18
-// Visual rows: 1-7 normal, gap at 8, lanthanides at 9, actinides at 10
+/**
+ * Visual row count including the lanthanide/actinide separator gap:
+ * rows 1-7 = periods 1–7, row 8 = visual gap, rows 9–10 = lanthanides + actinides.
+ */
 private const val TABLE_ROWS = 10
 
-// Category colors
+/**
+ * Maps a chemical element category to its designated UI highlight color.
+ *
+ * @param cat The category classification of the element (e.g. noble gas, alkali metal).
+ * @return Compose [Color] matching the category's hex value configuration.
+ */
 private fun elementColor(cat: ElementCategory): Color = Color(cat.colorHex)
+
 private val COLOR_EMPTY_SLOT = Color(0xFFE0E0E0)
 private val COLOR_EMPTY_BORDER = Color(0xFFBDBDBD)
 
-// ─────────────────────────────────────────────────────────────────────────────
+/**
+ * Question content for [Question.PeriodicTableQuiz] - the student places missing elements back
+ * into their correct positions on a pinch-zoomable full periodic table.
+ *
+ * ## Layout
+ * The table is rendered as an 18-column x 10-row grid of [ElementCell] composables:
+ * - Rows 1–7 -> periods 1–7 of the standard IUPAC layout.
+ * - Row 8 -> empty visual gap row separating f-block elements.
+ * - Rows 9–10 -> lanthanides (La–Lu) and actinides (Ac–Lr).
+ * Each cell is [CELL_SIZE] x [CELL_SIZE] dp with [CELL_PADDING] gaps, colored by [ElementCategory].
+ *
+ * ## Interaction
+ * The student first taps an element chip in the bottom "tray" (selecting it), then taps an empty
+ * slot in the table to place it. The tray only shows elements that are listed in
+ * [Question.PeriodicTableQuiz.missingAtomicNumbers] and have not yet been placed.
+ *
+ * "Sprawdź" validates all slot contents: a `CORRECT` state triggers [onCorrect] after a 600 ms
+ * delay; a `WRONG` state flashes red slots and resets placements after 1200 ms.
+ *
+ * ## Zoom/pan
+ * `graphicsLayer` with `scaleX`/`scaleY`/`translationX`/`translationY` handles pinch-to-zoom
+ * (scale range 0.5x–2.5x). Tap coordinates from `detectTapGestures` are transformed back to
+ * table-local coordinates before computing which cell was hit. This is similar to the coordinate
+ * inversion in [MapQuizContent].
+ *
+ * @param question      The question: which elements are removed from the table and must be placed.
+ * @param accentColor   Subject accent color for selected tray chips and the check button.
+ * @param bottomPadding System navigation bar height padding.
+ * @param onCorrect     Called after a short delay when all placements are correct.
+ * @param onWrong       Called when the placement check fails (placements are reset automatically).
+ */
 @Composable
 fun PeriodicTableContent(
     question: Question.PeriodicTableQuiz,
@@ -69,9 +121,9 @@ fun PeriodicTableContent(
     onCorrect: () -> Unit,
     onWrong: () -> Unit = {}
 ) {
-    // slotContents: slot's correct atomicNumber → which element was placed there
+    // slotContents: slot's correct atomicNumber -> which element was placed there
     val slotContents = remember(question.id) { mutableStateMapOf<Int, Int>() }
-    // checkResult: slot atomicNumber → correct(true) / wrong(false), null = not checked yet
+    // checkResult: slot atomicNumber -> correct(true) / wrong(false), null = not checked yet
     var checkResult by remember(question.id) { mutableStateOf<Map<Int, Boolean>?>(null) }
     var selectedFromTray by remember(question.id) { mutableStateOf<Int?>(null) }
     var showHint by remember(question.id) { mutableStateOf(false) }
@@ -135,7 +187,7 @@ fun PeriodicTableContent(
         )
         Spacer(Modifier.height(8.dp))
 
-        // ── Zoomable periodic table ───────────────────────────────────────────
+        // Zoomable periodic table
         ZoomablePeriodicTable(
             modifier = Modifier.fillMaxWidth().weight(1f),
             missingAtomicNumbers = question.missingAtomicNumbers,
@@ -152,14 +204,14 @@ fun PeriodicTableContent(
                     slotContents[slotAtomicNumber] = sel
                     selectedFromTray = null
                 } else if (currentOccupant != null) {
-                    // Tap occupied slot with nothing selected → pick up that element
+                    // Tap occupied slot with nothing selected -> pick up that element
                     slotContents.remove(slotAtomicNumber)
                     selectedFromTray = currentOccupant
                 }
             }
         )
 
-        // ── Element tray ─────────────────────────────────────────────────────
+        // Element tray
         Surface(
             color = Color.White,
             shadowElevation = 4.dp,
@@ -229,9 +281,22 @@ fun PeriodicTableContent(
     }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Zoomable table using graphicsLayer + pointerInput transform detection
-// ─────────────────────────────────────────────────────────────────────────────
+/**
+ * Wrapper that adds pinch-to-zoom and pan to the full periodic table grid.
+ *
+ * Uses `graphicsLayer` for scale and translation so the transform is applied in a single render
+ * pass without recomposing [TableContent]. Zoom is clamped to [0.3x, 4x].
+ *
+ * @param missingAtomicNumbers Elements removed from the table (shown as empty slots).
+ * @param slotContents         Map of slot atomicNumber -> placed atomicNumber (for placement mode).
+ * @param checkResult          Map of slot atomicNumber -> correct/wrong (null = pending).
+ * @param selectedFromTray     Atomic number of the element selected in the tray, used to highlight
+ *                             empty slots. `null` = nothing selected.
+ * @param findSelected         In "find" mode, the atomic number the student last tapped.
+ * @param findCheckState       Verification state for "find" mode (IDLE/CORRECT/WRONG).
+ * @param onSlotTapped         Called with the slot's correct atomicNumber when tapped (placement mode).
+ * @param onElementTapped      Called with the element's atomicNumber when tapped (find mode).
+ */
 @Composable
 private fun ZoomablePeriodicTable(
     modifier: Modifier,
@@ -291,6 +356,18 @@ private fun ZoomablePeriodicTable(
     }
 }
 
+/**
+ * The actual periodic table grid - an 18-column x 10-row absolute-position layout.
+ *
+ * Each [Element] is placed using `Modifier.offset(x, y)` computed from its [Element.tableRow] /
+ * [Element.tableCol] coordinates. F-block elements (rows 8–9 in the data) are shifted one row
+ * down visually (row 8 = gap) via `visualRow()`.
+ *
+ * Three cell types are rendered:
+ * - [EmptySlotCell] - for missing elements that have not yet been filled.
+ * - [FilledSlotCell] - for missing slots that have a placed element (pre- or post-check).
+ * - [ElementCell] - for all other elements; can highlight `findSelected` in "find" mode.
+ */
 @Composable
 private fun TableContent(
     elementGrid: Map<Pair<Int,Int>, Element>,
@@ -338,13 +415,13 @@ private fun TableContent(
                     )
                 }
                 isMissing && occupant != null -> {
-                    // Slot with element placed — show Wordle color after check
+                    // Slot with element placed - show Wordle color after check
                     val placedEl = elementByNumber[occupant]
                     if (placedEl != null) {
                         val slotColor = when (slotChecked) {
-                            true  -> Color(0xFF4CAF50)   // correct — green
-                            false -> Color(0xFFF44336)   // wrong — red
-                            null  -> accentColor.copy(alpha = 0.25f)  // pending — light accent
+                            true  -> Color(0xFF4CAF50)   // correct - green
+                            false -> Color(0xFFF44336)   // wrong - red
+                            null  -> accentColor.copy(alpha = 0.25f)  // pending - light accent
                         }
                         FilledSlotCell(
                             x = x, y = y,
@@ -356,7 +433,7 @@ private fun TableContent(
                     }
                 }
                 else -> {
-                    // Normal element cell — tappable in find-mode
+                    // Normal element cell - tappable in find-mode
                     val findCellColor: Color? = when {
                         isFindSelected && findCheckState == FindCheckState.CORRECT -> Color(0xFF66BB6A)
                         isFindSelected && findCheckState == FindCheckState.WRONG   -> Color(0xFFE53935)
@@ -412,6 +489,13 @@ private fun TableContent(
     }
 }
 
+/**
+ * A normal (non-missing) periodic-table cell.
+ *
+ * Background defaults to the element's [ElementCategory] color. In "find" mode, tapping a cell
+ * calls [onClick] and [findOverrideColor] overrides the background/border to show selection or
+ * correct/wrong feedback.
+ */
 @Composable
 private fun ElementCell(
     x: Dp,
@@ -467,6 +551,13 @@ private fun ElementCell(
     }
 }
 
+/**
+ * A blank slot for a missing element.
+ *
+ * Animates its border and background between neutral grey and the subject accent color when
+ * [isHighlighted] (i.e. the student has selected a tray chip and this slot is available).
+ * Shows a `?` placeholder until filled.
+ */
 @Composable
 private fun EmptySlotCell(
     x: Dp,
@@ -503,6 +594,14 @@ private fun EmptySlotCell(
     }
 }
 
+/**
+ * A slot that has been filled by the student with a tray element.
+ *
+ * Before "Sprawdź" is tapped ([checkState] = `null`): light accent background, clickable to
+ * return the element to the tray.
+ * After check: [checkState] is `true` (green) or `false` (red); clicking is disabled.
+ * A `✓` / `✗` symbol appears below the symbol when the result is known.
+ */
 @Composable
 private fun FilledSlotCell(
     x: Dp,
@@ -546,9 +645,13 @@ private fun FilledSlotCell(
     }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Tray element card (bottom palette)
-// ─────────────────────────────────────────────────────────────────────────────
+/**
+ * Element chip shown in the bottom tray palette for [PeriodicTableContent].
+ *
+ * - **Unplaced, unselected:** category color background with symbol, name, and atomic mass.
+ * - **Unplaced, selected:** light accent background with an accent border.
+ * - **Placed:** shows a green `✓` icon; the chip is non-clickable and semi-transparent.
+ */
 @Composable
 private fun TrayElementCard(
     element: Element,
@@ -610,9 +713,18 @@ private fun TrayElementCard(
     }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// PeriodicTableByShellContent  —  show shell config, tap the right element
-// ─────────────────────────────────────────────────────────────────────────────
+/**
+ * Question content for [Question.PeriodicTableByShell] - displays a Bohr shell configuration
+ * (e.g. `"2,8,4"`) and asks the student to tap the matching element on the full periodic table.
+ *
+ * Delegates to [PeriodicTableFindContent] with a large-text clue showing the shell string.
+ *
+ * @param question   Contains `shellConfig` (e.g. `"2,8,18,7"`) and `targetAtomicNumber`.
+ * @param accentColor Subject accent color.
+ * @param bottomPadding System navigation bar height padding.
+ * @param onCorrect  Called after the student taps the correct element.
+ * @param onWrong    Called when an incorrect element is tapped.
+ */
 @Composable
 fun PeriodicTableByShellContent(
     question: Question.PeriodicTableByShell,
@@ -649,9 +761,18 @@ fun PeriodicTableByShellContent(
     )
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// PeriodicTableByNameContent  —  show element name, tap the right element
-// ─────────────────────────────────────────────────────────────────────────────
+/**
+ * Question content for [Question.PeriodicTableByName] - displays a Polish element name
+ * (e.g. `"Krzem"`) and asks the student to tap the matching element on the full periodic table.
+ *
+ * Delegates to [PeriodicTableFindContent] with a large-text clue showing the name.
+ *
+ * @param question   Contains `elementNamePL` (Polish name) and `targetAtomicNumber`.
+ * @param accentColor Subject accent color.
+ * @param bottomPadding System navigation bar height padding.
+ * @param onCorrect  Called after the student taps the correct element.
+ * @param onWrong    Called when an incorrect element is tapped.
+ */
 @Composable
 fun PeriodicTableByNameContent(
     question: Question.PeriodicTableByName,
@@ -681,9 +802,32 @@ fun PeriodicTableByNameContent(
     )
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Shared "find element" table screen
-// ─────────────────────────────────────────────────────────────────────────────
+/**
+ * Shared "find element on the table" screen used by both [PeriodicTableByShellContent] and
+ * [PeriodicTableByNameContent].
+ *
+ * Renders:
+ * 1. A `topLabel` pill badge (e.g. `"CHEMIA"`).
+ * 2. A `questionText` subtitle.
+ * 3. A clue card whose content is provided by the [clueContent] composable lambda (allows
+ *    each variant to inject its own large-text clue).
+ * 4. A full [ZoomablePeriodicTable] where the student taps an element.
+ * 5. A "Podpowiedź" / "Sprawdź" button row.
+ *
+ * The clue card flashes green on `CORRECT` and red on `WRONG`. Feedback auto-dismisses:
+ * - **CORRECT** -> 600 ms delay -> `onCorrect()`.
+ * - **WRONG** -> 500 ms delay -> resets to `IDLE` (student can try again).
+ *
+ * @param topLabel           Small pill label above the question (e.g. `"CHEMIA"`).
+ * @param questionText       Subtitle describing what the student should do.
+ * @param clueContent        Composable content injected into the clue card.
+ * @param targetAtomicNumber The correct element's atomic number; compared to the tapped element.
+ * @param hint               Full hint for the [HintBottomSheet].
+ * @param accentColor        Subject accent color.
+ * @param bottomPadding      System navigation bar height padding.
+ * @param onCorrect          Called after a successful tap and the 600 ms delay.
+ * @param onWrong            Called immediately when the wrong element is tapped.
+ */
 @Composable
 private fun PeriodicTableFindContent(
     topLabel: String,
@@ -738,7 +882,7 @@ private fun PeriodicTableFindContent(
         )
         Spacer(Modifier.height(8.dp))
 
-        // Clue card — flashes green/red based on check result
+        // Clue card - flashes green/red based on check result
         val cardBg = when (checkState) {
             FindCheckState.CORRECT -> Color(0xFFE8F5E9)
             FindCheckState.WRONG   -> Color(0xFFFFCDD2)
@@ -780,7 +924,7 @@ private fun PeriodicTableFindContent(
             }
         )
 
-        // Bottom bar — solid background so table doesn't show through
+        // Bottom bar - solid background so table doesn't show through
         Surface(
             color = Color.White,
             shadowElevation = 4.dp,

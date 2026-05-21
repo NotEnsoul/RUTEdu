@@ -14,12 +14,45 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
+/**
+ * The three tabs available in the bottom navigation bar.
+ *
+ * Each entry carries the navigation [route] string that identifies the destination
+ * inside the app's `NavHost`, and a [label] shown below the tab icon.
+ *
+ * @property route Navigation route string that matches a `composable(route)` call in `App.kt`.
+ * @property label Display label shown beneath the icon (Polish).
+ */
 enum class NavTab(val route: String, val label: String) {
+    /** Home screen - subject grid and mini-game launcher. */
     START("home", "START"),
+    /** Learning tab - navigates to the last visited subject, or the subject list placeholder. */
     NAUKA("nauka", "NAUKA"),
+    /** Exercises tab - navigates to the last opened lesson, or the exercises placeholder. */
     CWICZENIA("cwiczenia", "ĆWICZENIA")
 }
 
+/**
+ * Bottom navigation bar with three tabs: START, NAUKA, ĆWICZENIA.
+ *
+ * The **active tab** is derived from the current navigation route rather than stored
+ * as explicit state, so the bar stays in sync with back-stack navigation and deep links:
+ * - Routes starting with `"lesson/"` -> ĆWICZENIA tab is highlighted.
+ * - Routes starting with `"subject/"` or `"topic/"` -> NAUKA tab is highlighted.
+ * - Everything else -> START tab is highlighted.
+ *
+ * The [activeColor] parameter changes the selected icon and label colour to match the
+ * current subject's accent colour, giving visual continuity as the user moves through
+ * different subjects.
+ *
+ * @param currentRoute  The current navigation route string from `navController.currentBackStackEntryAsState()`.
+ *                      `null` defaults to the START tab.
+ * @param onTabSelected Callback invoked with the tapped [NavTab]. The caller (`App.kt`) is
+ *                      responsible for performing the navigation, including restoring the
+ *                      last-visited subject or lesson for NAUKA and ĆWICZENIA respectively.
+ * @param activeColor   Colour applied to the selected tab's icon and label.
+ *                      Defaults to the app's global orange accent.
+ */
 @Composable
 fun BottomNavBar(
     currentRoute: String?,
@@ -28,6 +61,8 @@ fun BottomNavBar(
 ) {
     val inactiveColor = Color(0xFF8F9BB3)
 
+    // Determine which tab is visually active based on the current route prefix.
+    // This keeps the indicator in sync even when navigating via the system back button.
     val activeTab: NavTab = when {
         currentRoute == NavTab.CWICZENIA.route ||
             currentRoute?.startsWith("lesson/") == true -> NavTab.CWICZENIA
@@ -39,7 +74,7 @@ fun BottomNavBar(
 
     NavigationBar(
         containerColor = Color.White,
-        tonalElevation = 0.dp
+        tonalElevation = 0.dp // no shadow - border is handled by Scaffold's bottom bar
     ) {
         NavTab.entries.forEach { tab ->
             val isSelected = tab == activeTab
@@ -49,8 +84,8 @@ fun BottomNavBar(
                 icon = {
                     Icon(
                         imageVector = when (tab) {
-                            NavTab.START -> Icons.Default.Home
-                            NavTab.NAUKA -> Icons.Default.MenuBook
+                            NavTab.START     -> Icons.Default.Home
+                            NavTab.NAUKA     -> Icons.Default.MenuBook
                             NavTab.CWICZENIA -> Icons.Default.Assignment
                         },
                         contentDescription = tab.label
@@ -63,9 +98,9 @@ fun BottomNavBar(
                     )
                 },
                 colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = activeColor,
-                    selectedTextColor = activeColor,
-                    indicatorColor = Color.Transparent,
+                    selectedIconColor   = activeColor,
+                    selectedTextColor   = activeColor,
+                    indicatorColor      = Color.Transparent, // no pill/ripple background
                     unselectedIconColor = inactiveColor,
                     unselectedTextColor = inactiveColor
                 )

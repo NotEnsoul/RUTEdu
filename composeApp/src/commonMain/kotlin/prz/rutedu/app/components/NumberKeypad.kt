@@ -14,6 +14,31 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
+/**
+ * A 4x3 numeric keypad used for entering integer answers in quiz questions.
+ *
+ * The layout mirrors a standard calculator:
+ * ```
+ * [ 1 ] [ 2 ] [ 3 ]
+ * [ 4 ] [ 5 ] [ 6 ]
+ * [ 7 ] [ 8 ] [ 9 ]
+ * [ C ] [ 0 ] [ ⌫ ]
+ * ```
+ *
+ * The three special keys are:
+ * - **C** - clears the entire current input ([onClear]).
+ * - **⌫** - removes the last entered digit ([onBackspace]).
+ * - **0–9** - appends a digit string to the current input ([onDigit]).
+ *
+ * The keypad does **not** manage its own input state - it merely fires callbacks.
+ * The caller is responsible for maintaining the displayed value and enforcing any
+ * length or range constraints before forwarding input to question logic.
+ *
+ * @param onDigit     Called with the digit string `"0"`-`"9"` when a number key is tapped.
+ * @param onClear     Called when the **C** key is tapped. Should reset the input to empty.
+ * @param onBackspace Called when the **⌫** key is tapped. Should remove the last character
+ *                    from the input, or do nothing if the input is already empty.
+ */
 @Composable
 fun NumberKeypad(
     onDigit: (String) -> Unit,

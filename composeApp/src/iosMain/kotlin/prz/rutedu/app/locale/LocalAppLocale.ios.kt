@@ -8,6 +8,11 @@ import platform.Foundation.NSLocale
 import platform.Foundation.NSUserDefaults
 import platform.Foundation.preferredLanguages
 
+/**
+ * iOS implementation of the [LocalAppLocale] expect object.
+ *
+ * Resolves standard iOS locale identifiers through the NSBundle/Foundation APIs.
+ */
 @OptIn(InternalComposeUiApi::class)
 actual object LocalAppLocale {
     private const val LANG_KEY = "AppleLanguages"
@@ -17,6 +22,14 @@ actual object LocalAppLocale {
     actual val current: String
         @Composable get() = LocalAppLocaleComposition.current
 
+    /**
+     * Injects a local context override for iOS subtrees.
+     *
+     * For iOS, this translates the language code string into the local composition context.
+     *
+     * @param value Language code override (e.g. `"en"`) or `null` to default to system.
+     * @return [ProvidedValue] representing the injected Compose locale state.
+     */
     @Composable
     actual infix fun provides(value: String?): ProvidedValue<*> {
         val new = value ?: default
