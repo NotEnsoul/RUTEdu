@@ -46,6 +46,7 @@ kotlin {
             implementation(libs.androidx.lifecycle.runtimeCompose)
             implementation(libs.navigation.compose)
             implementation(libs.kotlinx.serialization)
+            implementation("app.cash.sqldelight:coroutines-extensions:2.2.1")
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
