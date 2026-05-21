@@ -37,6 +37,23 @@ import prz.rutedu.app.components.TopicCard
 import prz.rutedu.app.data.LessonProgressStore
 import prz.rutedu.app.data.SubjectRepository
 
+/**
+ * Topic list for a given subject.
+ *
+ * Displays all topics belonging to [subjectId] as [TopicCard]s in a scrollable list.
+ * Progress for each topic is read from [LessonProgressStore] and refreshed every time the user
+ * navigates back here (via `LaunchedEffect(navBackStackEntry)`), ensuring that completing a
+ * lesson inside a topic is immediately reflected in the topic card's progress bar.
+ *
+ * Locked topics render a non-clickable grey card. Unlocked topics with at least one lesson
+ * navigate to [Screen.TopicDetail] on tap.
+ *
+ * @param subjectId   ID of the subject whose topics are shown. If not found in [SubjectRepository],
+ *                    the composable returns early (renders nothing).
+ * @param navController Used to navigate to [Screen.TopicDetail] and to pop back on back-press.
+ * @param driver       SQLite driver for reading lesson progress from [LessonProgressStore].
+ * @param bottomPadding System navigation bar height padding from `App`.
+ */
 @Composable
 fun SubjectDetailScreen(
     subjectId: String,

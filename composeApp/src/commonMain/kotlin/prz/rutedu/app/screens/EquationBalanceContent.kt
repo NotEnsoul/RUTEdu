@@ -23,6 +23,32 @@ import androidx.compose.ui.unit.sp
 import prz.rutedu.app.components.NumberKeypad
 import prz.rutedu.app.models.Question
 
+/**
+ * Question content for [Question.EquationBalance] - the student fills in stoichiometric
+ * coefficients to balance a chemical equation.
+ *
+ * The equation is displayed as `reactant₁ + reactant₂ -> product₁ + product₂` with horizontally
+ * scrollable overflow. Terms with a non-null `fixedCoefficient` are read-only; terms with
+ * `fixedCoefficient == null` render as interactive [EquationTermCell]s backed by a [NumberKeypad].
+ *
+ * ## Multi-slot editing
+ * The composable tracks an `activePos` index that determines which blank is currently receiving
+ * keypad input. Tapping any blank cell sets it as active. The first blank is pre-selected on
+ * question load. Input is limited to 2 characters per coefficient (maximum value 99).
+ *
+ * ## Correctness check
+ * [isAnswerCorrect] validates by finding a scaling factor `k` from the first term and verifying
+ * that every other term satisfies `userValue == correctValue * k`. This accepts multiples of the
+ * canonical balanced coefficients (e.g., `2H₂ + O₂ -> 2H₂O` and `4H₂ + 2O₂ -> 4H₂O` both pass).
+ *
+ * "Sprawdź" is enabled only when all blanks are non-empty.
+ *
+ * @param question     The question: instruction, sub-instruction, reactants, products, hint.
+ * @param accentColor  Subject accent color for active cells and the check button.
+ * @param bottomPadding System navigation bar height padding.
+ * @param onCorrect    Called when all coefficients are correct (including valid multiples).
+ * @param onWrong      Called when the submitted coefficients are incorrect.
+ */
 @Composable
 internal fun EquationBalanceContent(
     question: Question.EquationBalance,
@@ -58,7 +84,7 @@ internal fun EquationBalanceContent(
         modifier = Modifier.fillMaxSize().padding(bottom = bottomPadding),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Scrollable top area — instruction + equation
+        // Scrollable top area - instruction + equation
         Column(
             modifier = Modifier
                 .weight(1f)
@@ -174,6 +200,25 @@ internal fun EquationBalanceContent(
     }
 }
 
+/**
+ * A single term in the balance equation: a coefficient circle above the formula label.
+ *
+ * Visual states:
+ * - **Fixed** (`isBlank = false`): read-only, white circle with a grey border; never clickable.
+ * - **Blank, idle** (`isBlank = true`, not active): neutral grey border, shows `?` placeholder.
+ * - **Blank, active** (`isBlank = true`, `isActive = true`): accent-colored border and background,
+ *   shows the typed coefficient or `?` if still empty.
+ * - **Wrong** (`isWrong = true`): red border and light red background, immediately resets when
+ *   the user taps any blank.
+ *
+ * @param formula     Chemical formula label (e.g. `"H₂O"`, `"O₂"`).
+ * @param coefficient The coefficient string to display (empty string renders as `?` for blanks).
+ * @param isBlank     Whether this term accepts user input.
+ * @param isActive    Whether this term is currently receiving keypad input.
+ * @param isWrong     Whether the submitted answer was wrong (turns the cell red).
+ * @param accentColor Subject accent color for the active state.
+ * @param onClick     Click callback - `null` for fixed (read-only) terms.
+ */
 @Composable
 internal fun EquationTermCell(
     formula: String,
@@ -224,6 +269,21 @@ internal fun EquationTermCell(
     }
 }
 
+/**
+ * Validates whether the student's coefficient inputs correctly balance the equation.
+ *
+ * Accepts any valid multiple of the canonical coefficients - e.g. if the canonical solution is
+ * `1H₂ + 1Cl₂ -> 2HCl`, then `2H₂ + 2Cl₂ -> 4HCl` (k=2) is also accepted.
+ *
+ * **Algorithm:**
+ * 1. Build a list of `(userValue, correctValue)` pairs for all terms.
+ *    Fixed-coefficient terms contribute their fixed value as both user and correct.
+ * 2. Determine the scaling factor `k = firstUser / firstCorrect` from the first term.
+ * 3. Verify that every term satisfies `userValue == correctValue * k`.
+ * 4. If any blank cannot be parsed as an integer, return `false` immediately.
+ *
+ * @return `true` if all inputs are a consistent k-multiple of the correct coefficients.
+ */
 private fun isAnswerCorrect(question: Question.EquationBalance, inputs: Map<Int, String>): Boolean {
     // Build list of (userValue, correctValue) for all terms.
     // Fixed terms use their fixedCoefficient as both user and correct value.

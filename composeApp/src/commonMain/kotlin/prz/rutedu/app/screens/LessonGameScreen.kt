@@ -23,9 +23,44 @@ import prz.rutedu.app.data.SubjectRepository
 import prz.rutedu.app.models.Question
 import kotlin.math.roundToInt
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Entry point
-// ─────────────────────────────────────────────────────────────────────────────
+/**
+ * The core quiz engine that drives all lesson gameplay.
+ *
+ * ## Startup sequence
+ * 1. Looks up the `Subject`, `Topic`, and `Lesson` objects from [SubjectRepository].
+ * 2. Determines whether this is a chemistry lesson (`lessonId.startsWith("chemia_")`):
+ *    - **Chemistry:** creates or restores a session seed via [ChemistrySessionStore], then loads
+ *      a procedurally generated question list excluding already-answered IDs.
+ *    - **Static:** loads the question list from [QuestionBank].
+ * 3. Trims the question list to the user-configured count from [SubjectConfigStore]
+ *    (defaults to the full list if no config is saved).
+ * 4. Restores the saved progress index and correct-answer count from [LessonProgressStore].
+ *    For chemistry lessons, the index always starts at 0 (the unanswered set may have shrunk).
+ *
+ * ## Progress saving
+ * Progress is saved eagerly on every question advance and also on disposal (`DisposableEffect`)
+ * so that navigating away mid-lesson (back button, tab switch) never loses progress.
+ *
+ * ## Question dispatch
+ * A `when` expression on the sealed [Question] type routes each question to its dedicated
+ * content composable (e.g. [FindAnswerContent], [MapQuizContent], [EquationBalanceContent]).
+ * Adding a new question type requires:
+ * 1. A new subtype in [Question].
+ * 2. A new content composable.
+ * 3. A new `is Question.NewType ->` branch in the `when` block below.
+ *
+ * ## Answer feedback
+ * Content composables call `onAnsweredCorrectly` / `onWrongAnswer` callbacks which set
+ * [FeedbackState]. The [AnswerFeedbackOverlay] reads this state and auto-dismisses after a
+ * fixed delay (950 ms correct, 750 ms wrong). On correct dismissal, `advanceQuestion` fires.
+ *
+ * @param subjectId    ID of the parent subject (e.g. `"chemia"`).
+ * @param topicId      ID of the parent topic (e.g. `"kwasy"`).
+ * @param lessonId     ID of the lesson being played. Drives question-set routing and storage keys.
+ * @param navController Used to pop back to the topic detail screen on back-press or lesson completion.
+ * @param driver        SQLite driver for progress, session, and config stores.
+ * @param bottomPadding System navigation bar height padding passed from `App`.
+ */
 @Composable
 fun LessonGameScreen(
     subjectId: String,
@@ -73,10 +108,13 @@ fun LessonGameScreen(
         mutableStateOf(!isChemistry && savedProgress != null && savedProgress.currentIndex >= totalCount && totalCount > 0)
     }
 
+    // rememberUpdatedState captures the *latest* values without restarting DisposableEffect.
+    // Without this, onDispose would close over the stale initial values of currentIndex/correctCount.
     val latestIndex = rememberUpdatedState(currentIndex)
     val latestCorrect = rememberUpdatedState(correctCount)
     DisposableEffect(Unit) {
         onDispose {
+            // Save on disposal (back-press, tab switch, or process kill) so no progress is lost.
             if (questions.isNotEmpty()) {
                 LessonProgressStore.save(
                     driver, lessonId,
@@ -116,8 +154,11 @@ fun LessonGameScreen(
         return
     }
 
+    // currentIndex can equal totalCount when the lesson is complete, so clamp before indexing.
     val safeIndex = currentIndex.coerceIn(0, totalCount - 1)
     val question = questions[safeIndex]
+
+    // displayQuestion is 1-based and capped at totalCount so the header never shows "11/10".
     val displayQuestion = (currentIndex + 1).coerceAtMost(totalCount)
     val headerProgress = if (totalCount > 0) displayQuestion.toFloat() / totalCount else 0f
 

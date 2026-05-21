@@ -30,10 +30,24 @@ import androidx.compose.ui.unit.sp
 import prz.rutedu.app.math.MathCanvas
 import prz.rutedu.app.models.Question
 
-// ─────────────────────────────────────────────────────────────────────────────
-// GraphTypeAnswerContent — MathCanvas visual + numeric text input
-// ─────────────────────────────────────────────────────────────────────────────
-
+/**
+ * Question content for [Question.GraphTypeAnswer] - a [MathCanvas] visualization paired with a
+ * numeric text-input answer field.
+ *
+ * Renders a prompt above a card containing a [MathCanvas] (220 dp tall) that displays the
+ * mathematical shapes defined in [Question.GraphTypeAnswer.shapes] with the coordinate system
+ * from [Question.GraphTypeAnswer.viewport]. The student reads the graph and types their answer.
+ *
+ * Functionally mirrors [TypeAnswerContent] but uses a graph visualization instead of (or in
+ * addition to) a triangle diagram. An optional `question.unit` suffix and `question.inlineHint`
+ * are rendered exactly as in [TypeAnswerContent].
+ *
+ * @param question     The question: prompt, canvas shapes, viewport, correct answer, unit, inline hint, hint.
+ * @param accentColor  Subject accent color.
+ * @param bottomPadding System navigation bar height padding.
+ * @param onCorrect    Called when `input.toIntOrNull() == question.correctAnswer`.
+ * @param onWrong      Called when the input does not match.
+ */
 @Composable
 internal fun GraphTypeAnswerContent(
     question: Question.GraphTypeAnswer,
@@ -198,10 +212,20 @@ internal fun GraphTypeAnswerContent(
     }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// GraphSelectFromListContent — MathCanvas visual + multiple-choice options
-// ─────────────────────────────────────────────────────────────────────────────
-
+/**
+ * Question content for [Question.GraphSelectFromList] - a [MathCanvas] visualization paired with
+ * a single-select multiple-choice answer list.
+ *
+ * Structurally combines the graph panel from [GraphTypeAnswerContent] with the option list from
+ * [SelectFromListContent], but always in single-select mode (one answer at a time). Tapping an
+ * option deselects any previously selected option.
+ *
+ * @param question     The question: prompt, canvas shapes, viewport, options, correct index set, hint.
+ * @param accentColor  Subject accent color.
+ * @param bottomPadding System navigation bar height padding.
+ * @param onCorrect    Called when `selected == question.correctIndices`.
+ * @param onWrong      Called when the selection is incorrect.
+ */
 @Composable
 internal fun GraphSelectFromListContent(
     question: Question.GraphSelectFromList,

@@ -47,6 +47,24 @@ import prz.rutedu.app.data.LessonProgressStore
 import prz.rutedu.app.data.SubjectRepository
 import prz.rutedu.app.models.Subject
 
+/**
+ * Home screen - the first screen the user sees after launch.
+ *
+ * Displays a 2-column grid of [SubjectCard]s (one per subject defined in [SubjectRepository]).
+ * Each card shows live progress by reading [LessonProgressStore] for all lessons in that subject.
+ *
+ * **Progress refresh:** progress is re-read every time the user navigates back to this screen
+ * (via `LaunchedEffect(navBackStackEntry)`). This ensures that after completing a lesson the
+ * home screen immediately reflects the new progress without requiring a full recomposition restart.
+ *
+ * **Header:** a branded logo row with the app name and a settings icon that navigates to
+ * [Screen.ConfigList] (per-subject question-count configuration).
+ *
+ * @param navController Navigation controller used to push [Screen.SubjectDetail] when a card is tapped.
+ * @param driver         SQLite driver forwarded to [LessonProgressStore] for progress reads.
+ * @param bottomPadding  Extra bottom padding equal to the system navigation bar height, passed down
+ *                       by `App` via `Scaffold` padding values so the grid content is not clipped.
+ */
 @Composable
 fun MainScreen(
     navController: NavController,

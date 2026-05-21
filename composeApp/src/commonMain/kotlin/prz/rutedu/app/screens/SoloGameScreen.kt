@@ -58,28 +58,49 @@ import rutedu.composeapp.generated.resources.yes
 import rutedu.composeapp.generated.resources.no
 import rutedu.composeapp.generated.resources.divisibility_question
 
-// Game modes enum
+/**
+ * The solo mini-game mode selected from [SelectionScreen].
+ * Each entry maps to a distinct question generator.
+ */
 enum class GameMode {
+    /** Addition and subtraction with operands in 1–50. */
     ADD_SUBTRACT,
+    /** Multiplication and division with factors 1–12. */
     MULTIPLY_DIVIDE,
+    /** Divisibility-rule questions requiring a YES or NO answer. */
     DIVISIBILITY,
+    /** Unit-conversion questions (hours<->minutes, km<->m, kg<->g, etc.). */
     UNIT_CONVERSION,
+    /** Multiplication-table questions with factors 1–12. */
     MULTIPLICATION_TABLE
 }
 
-// Question data class that supports different answer types
+/**
+ * A single question produced by one of the solo-game generator functions.
+ *
+ * @property questionText  The expression shown to the player (e.g. `"7 x 8 = ?"`).
+ * @property correctAnswer The expected answer as a string (e.g. `"56"`, `"YES"`, `"NO"`).
+ * @property answerType    Input method - numeric pad or YES/NO buttons; defaults to [AnswerType.NUMBER].
+ */
 data class GameQuestion(
     val questionText: String,
     val correctAnswer: String,
     val answerType: AnswerType = AnswerType.NUMBER
 )
 
+/**
+ * Determines which input widget is shown in [GameScreen].
+ * - [NUMBER] - full-screen number pad ([FullScreenNumberPad]).
+ * - [YES_NO] - two large YES/NO buttons ([YesNoButtons]).
+ */
 enum class AnswerType {
+    /** Student types a numeric answer. */
     NUMBER,
+    /** Student taps YES or NO (used for divisibility questions). */
     YES_NO
 }
 
-// Question generators for each game mode
+/** Returns a random addition or subtraction question with operands in 1–50. */
 fun generateAddSubtractQuestion(): GameQuestion {
     val a = (1..50).random()
     val b = (1..50).random()
@@ -92,6 +113,7 @@ fun generateAddSubtractQuestion(): GameQuestion {
     }
 }
 
+/** Returns a random multiplication or division question with factors 1–12. */
 fun generateMultiplyDivideQuestion(): GameQuestion {
     val a = (1..12).random()
     val b = (1..12).random()
@@ -103,15 +125,14 @@ fun generateMultiplyDivideQuestion(): GameQuestion {
     }
 }
 
+/** Returns a random divisibility-rule question ("Is N divisible by D?") with a YES/NO answer. */
 fun generateDivisibilityQuestion(): GameQuestion {
 
     val divisor = (2..10).random()
 
     val multiplier = (2..20).random()
 
-
     val isDivisible = Random.nextBoolean()
-
 
     val number = (divisor * multiplier) + if (isDivisible) 0 else 1
 
@@ -122,6 +143,7 @@ fun generateDivisibilityQuestion(): GameQuestion {
     )
 }
 
+/** Returns a random unit-conversion question (e.g. `"3 hours = ? minutes"`). */
 fun generateUnitConversionQuestion(): GameQuestion {
     val conversions = listOf(
         Triple("hours", "minutes", 60),
@@ -141,12 +163,19 @@ fun generateUnitConversionQuestion(): GameQuestion {
     )
 }
 
+/** Returns a random multiplication-table question with factors 1–12. */
 fun generateMultiplicationTableQuestion(): GameQuestion {
     val a = (1..12).random()
     val b = (1..12).random()
     return GameQuestion("$a × $b = ?", (a * b).toString())
 }
 
+/**
+ * Dispatches to the correct generator based on [mode].
+ *
+ * @param mode The active [GameMode].
+ * @return A fresh [GameQuestion] for that mode.
+ */
 fun generateQuestionForMode(mode: GameMode): GameQuestion {
     return when (mode) {
         GameMode.ADD_SUBTRACT -> generateAddSubtractQuestion()
@@ -157,6 +186,17 @@ fun generateQuestionForMode(mode: GameMode): GameQuestion {
     }
 }
 
+/**
+ * Solo 10-question arithmetic mini-game screen.
+ *
+ * Generates questions via [generateQuestionForMode], tracks score, and saves the result to the
+ * leaderboard when [playerId] is non-null. Switches to [GameOverContent] after all 10 questions.
+ *
+ * @param navController Navigation controller for the back-stack pop on "Back".
+ * @param gameMode      Which type of arithmetic questions to generate.
+ * @param database      Optional [Database] used to save the score and fetch player name.
+ * @param playerId      Optional DB row ID of the active player; required to save the score.
+ */
 @Composable
 fun GameScreen(
     navController: NavController,
@@ -365,6 +405,19 @@ fun GameScreen(
     }
 }
 
+/**
+ * Post-game results screen shown after all questions are answered in [GameScreen].
+ *
+ * Displays the final score, a performance label (Excellent / Great / Good / Practice), an
+ * optional score-saved confirmation, and Play Again / Back buttons.
+ *
+ * @param score          Number of correct answers (0–[totalQuestions]).
+ * @param totalQuestions Total questions in the session (always 10).
+ * @param playerName     Active player's nickname; `null` when no profile is active.
+ * @param scoreSaved     Whether the score has already been committed to the database.
+ * @param onPlayAgain    Resets all state and starts a new game session.
+ * @param onBack         Pops the back-stack to the previous screen.
+ */
 @Composable
 fun GameOverContent(
     score: Int,
@@ -448,6 +501,12 @@ fun GameOverContent(
     }
 }
 
+/**
+ * Two large YES / NO buttons for [AnswerType.YES_NO] questions in [GameScreen].
+ *
+ * @param onYes Called when the player taps YES.
+ * @param onNo  Called when the player taps NO.
+ */
 @Composable
 fun YesNoButtons(
     onYes: () -> Unit,
@@ -498,6 +557,18 @@ fun YesNoButtons(
     }
 }
 
+/**
+ * Full-width 5-row numeric keypad used in [GameScreen] for [AnswerType.NUMBER] questions.
+ *
+ * Rows: `1 2 3` / `4 5 6` / `7 8 9` / `C 0 ⌫` / `- [Check]`.
+ * The Submit button is enabled only when [canSubmit] is `true`.
+ *
+ * @param onNumberClick Called with a digit string when a digit key is tapped.
+ * @param onDelete      Called on backspace (⌫) tap.
+ * @param onClear       Called on clear (C) tap.
+ * @param onSubmit      Called when the Submit/Check button is tapped.
+ * @param canSubmit     Whether the Submit button should be enabled.
+ */
 @Composable
 fun FullScreenNumberPad(
     onNumberClick: (String) -> Unit,
@@ -582,6 +653,14 @@ fun FullScreenNumberPad(
     }
 }
 
+/**
+ * A single 64 dp tall key button used inside [FullScreenNumberPad].
+ *
+ * @param text            Label shown on the key.
+ * @param modifier        Modifier applied to the button (typically `Modifier.weight(1f)`).
+ * @param backgroundColor Key background; defaults to `primaryContainer`.
+ * @param onClick         Click handler.
+ */
 @Composable
 fun FullWidthKeyButton(
     text: String,

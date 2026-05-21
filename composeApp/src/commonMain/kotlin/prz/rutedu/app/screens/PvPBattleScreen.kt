@@ -55,11 +55,29 @@ import rutedu.composeapp.generated.resources.wrong
 import rutedu.composeapp.generated.resources.answer_submitted
 import rutedu.composeapp.generated.resources.check
 
+/**
+ * A single round question in the two-player PvP battle.
+ *
+ * @property question      The arithmetic expression shown to both players (e.g. `"7 + 5"`).
+ * @property correctAnswer The expected integer result.
+ */
 data class PvPQuestion(
     val question: String,
     val correctAnswer: Int
 )
 
+/**
+ * Two-player head-to-head arithmetic battle screen.
+ *
+ * The screen is split horizontally into two [PlayerGameArea]s. Player 2's half is rotated 180°
+ * so both players face each other on the same device. Each of the 10 rounds shows the same
+ * arithmetic question simultaneously; the player who is the only one correct scores a point
+ * (both correct -> both score; both wrong -> neither scores).
+ *
+ * @param navController Navigation controller for the post-game "Back to menu" pop.
+ * @param player1Name   Display name for player 1 (green, bottom, normal orientation).
+ * @param player2Name   Display name for player 2 (blue, top, rotated 180°).
+ */
 @Composable
 fun PvPBattleScreen(
     navController: NavController,
@@ -368,6 +386,25 @@ fun PvPBattleScreen(
     }
 }
 
+/**
+ * One player's half of the [PvPBattleScreen]: name, score, question, answer display, and keypad.
+ *
+ * Replaces the keypad with a "waiting" label once [hasAnswered] is `true`, then shows
+ * correct/wrong feedback when [showResult] flips to `true`.
+ *
+ * @param playerName    Display name shown at the top.
+ * @param score         Current accumulated score for this player.
+ * @param question      Arithmetic expression string to solve.
+ * @param answer        The answer the player has typed so far.
+ * @param hasAnswered   Whether the player has already submitted an answer this round.
+ * @param showResult    Whether to reveal the correct/wrong result (after both players answer).
+ * @param isCorrect     Whether this player's submitted answer matched the correct answer.
+ * @param onNumberClick Called with a digit string when a digit key is tapped.
+ * @param onDelete      Called on backspace tap.
+ * @param onClear       Called on clear tap.
+ * @param onSubmit      Called when the Submit/Check button is tapped.
+ * @param playerColor   Accent color for this player's UI elements.
+ */
 @Composable
 fun PlayerGameArea(
     playerName: String,
@@ -471,6 +508,18 @@ fun PlayerGameArea(
     }
 }
 
+/**
+ * Compact 5-row numeric keypad for [PlayerGameArea] in the split-screen battle layout.
+ *
+ * Mirrors [FullScreenNumberPad] but uses 40 dp keys to fit each player's half of the screen.
+ *
+ * @param onNumberClick Called with a digit string when a digit key is tapped.
+ * @param onDelete      Called on backspace (⌫) tap.
+ * @param onClear       Called on clear (C) tap.
+ * @param onSubmit      Called when the Submit/Check button is tapped.
+ * @param canSubmit     Whether the Submit button should be enabled.
+ * @param accentColor   Player accent color applied to the Submit button background.
+ */
 @Composable
 fun PvPNumberPad(
     onNumberClick: (String) -> Unit,
@@ -554,6 +603,14 @@ fun PvPNumberPad(
     }
 }
 
+/**
+ * A single 40 dp tall key button used inside [PvPNumberPad].
+ *
+ * @param text            Label shown on the key.
+ * @param modifier        Modifier applied to the button (typically `Modifier.weight(1f)`).
+ * @param backgroundColor Key background; defaults to `primaryContainer`.
+ * @param onClick         Click handler.
+ */
 @Composable
 fun PvPKeyButton(
     text: String,

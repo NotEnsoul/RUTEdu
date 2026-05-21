@@ -30,6 +30,19 @@ import prz.rutedu.app.models.Lesson
 import prz.rutedu.app.models.Topic
 import kotlin.math.roundToInt
 
+/**
+ * Per-subject lesson configurator: lets the student choose how many questions to practise per lesson.
+ *
+ * Displays a slider for each unlocked lesson (range 5..max questions, default = min(max, 25)).
+ * Config is auto-saved to [SubjectConfigStore] via `rememberUpdatedState` + `DisposableEffect`
+ * when the screen is left, and also explicitly on the "Zapisz" (Save) button tap. A "Reset
+ * progress" card can wipe [LessonProgressStore] for all lessons in the subject.
+ *
+ * @param subjectId     ID of the subject to configure (e.g. `"matematyka"`).
+ * @param navController Navigation controller for the back-stack pop.
+ * @param driver        SQLite driver used by [SubjectConfigStore] and [LessonProgressStore].
+ * @param bottomPadding System navigation bar height; applied to the Save button bottom padding.
+ */
 @Composable
 fun SubjectConfigScreen(
     subjectId: String,
