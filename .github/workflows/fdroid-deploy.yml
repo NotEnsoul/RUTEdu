@@ -87,9 +87,11 @@ jobs:
       - name: Update F-Droid index
         working-directory: fdroid-repo
         env:
-          FDROID_KEY_PASSWORD: ${{ secrets.FDROID_KEY_PASSWORD }}
+          FDROID_KEY_STORE_PASS: ${{ secrets.FDROID_KEY_PASSWORD }}
         run: |
           find repo -name '.gitkeep' -delete
+          sed -i 's/env:FDROID_KEY_PASSWORD/env:FDROID_KEY_STORE_PASS/g' config.yml
+          chmod 0600 config.yml
           fdroid update --create-metadata --verbose
 
       - name: Deploy to fdroid branch
