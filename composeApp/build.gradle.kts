@@ -1,4 +1,5 @@
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
+//import org.jetbrains.dokka.gradle.engine.parameters.VisibilityModifier // optional
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
@@ -7,6 +8,7 @@ plugins {
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.kotlinSerialization)
+    alias(libs.plugins.dokka)
 
     id("app.cash.sqldelight") version "2.2.1"
 }
@@ -96,5 +98,31 @@ sqldelight {
             packageName.set("prz.rutedu.app")
             generateAsync.set(true)
         }
+    }
+}
+
+dokka {
+    moduleName.set("RUTEdu")
+
+    dokkaSourceSets.configureEach {
+        perPackageOption {
+            matchingRegex.set("rutedu\\.composeapp\\.generated\\..*")
+            suppress.set(true)
+        }
+        perPackageOption {
+            matchingRegex.set("com\\.example\\.myapplication\\.Database.*")
+            suppress.set(true)
+        }
+
+        /*documentedVisibilities.set(setOf(
+            VisibilityModifier.Public,
+            VisibilityModifier.Private,
+            VisibilityModifier.Protected,
+            VisibilityModifier.Internal
+        ))*/
+
+        jdkVersion.set(17)
+
+        reportUndocumented.set(true)
     }
 }
