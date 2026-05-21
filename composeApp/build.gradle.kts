@@ -110,7 +110,7 @@ dokka {
             suppress.set(true)
         }
         perPackageOption {
-            matchingRegex.set("com\\.example\\.myapplication\\.Database.*")
+            matchingRegex.set("prz\\\\.rutedu\\\\.app\\\\.Database.*")
             suppress.set(true)
         }
 
