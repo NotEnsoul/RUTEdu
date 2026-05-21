@@ -26,18 +26,32 @@ import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 
 /**
- * Blue-ish MenuButton with an icon box on the left.
- * Uses theme primary colors so it will adapt to your MaterialTheme,
- * but gives a soft bluish surface via alpha over primary.
+ * Full-width horizontal button used on the main menu / home screen for primary navigation actions
+ * (e.g. "Graj solo", "Tryb PvP").
+ *
+ * Layout: `[spacer] [icon box] [spacer] [label text]`
+ *
+ * The button uses a fixed cyan/teal hue (`HSL 195.82°, 100%, 50%`) regardless of the active
+ * `MaterialTheme`, giving a consistent brand look across all subjects:
+ * - **Background:** the hue at 70% alpha so the underlying scaffold color shows faintly through.
+ * - **Icon box:** the same hue at full opacity, creating a slightly darker square relative to the
+ *   semi-transparent button background.
+ * - **Text:** `MaterialTheme.colorScheme.onPrimary` (white in the default theme) for contrast.
+ *
+ * The icon is loaded from a drawable resource (PNG/SVG via Compose resources) rather than a
+ * vector `ImageVector`, because the menu icons are raster assets in the resource bundle.
+ *
+ * @param iconRes Drawable resource ID for the 36 dp image displayed inside the icon box.
+ * @param text    Label rendered to the right of the icon box at 24 sp bold.
+ * @param onClick Called when the user taps anywhere on the button row.
  */
 @Composable
 fun MenuButton(iconRes: DrawableResource, text: String, onClick: () -> Unit) {
-//    val buttonBg = MaterialTheme.colorScheme.primary.copy(alpha = 0.16f)
-    val buttonBg = Color.hsl(195.82f,1f, 0.5f).copy(0.70f)
-    val iconBoxBg = Color.hsl(195.82f,1f, 0.5f)
+    // HSL chosen to produce a vivid cyan that reads as "active/interactive" without conflicting
+    // with any of the subject accent colors (orange, green, blue, red).
+    val buttonBg = Color.hsl(195.82f, 1f, 0.5f).copy(0.70f)
+    val iconBoxBg = Color.hsl(195.82f, 1f, 0.5f)
     val textColor = MaterialTheme.colorScheme.onPrimary
-
-
 
     Row(
         modifier = Modifier

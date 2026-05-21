@@ -33,6 +33,27 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import prz.rutedu.app.models.Question
 
+/**
+ * Question content for [Question.TypeAnswer] - the student types a numeric answer into a text field.
+ *
+ * Unlike [FindAnswerContent] (which uses `NumberKeypad`), this composable uses a system keyboard
+ * so the student can submit with the IME "Done" action. Input is restricted to digits only, up
+ * to 4 characters, enforced in `onValueChange`.
+ *
+ * Optional visual elements (rendered only when the question data is non-null/non-empty):
+ * - **Triangle diagram** (`question.triangleAngles != null`): a [TriangleCanvas] showing two
+ *   known angles and a `?` at the apex, drawn via the Compose `Canvas` API.
+ * - **Unit suffix** (`question.unit.isNotEmpty()`): a greyed-out unit label (e.g. `"°"`, `"cm"`)
+ *   appended inside the text field so the student doesn't type the unit.
+ * - **Inline hint** (`question.inlineHint != null`): a small lightbulb-styled tip shown permanently
+ *   below the input field (as opposed to the full [HintBottomSheet] which requires a tap).
+ *
+ * @param question     Question data: prompt, correct answer, optional triangle, unit, and inline hint.
+ * @param accentColor  Subject accent color for borders, the inline hint background, and buttons.
+ * @param bottomPadding System navigation bar height padding.
+ * @param onCorrect    Called when `input.toIntOrNull() == question.correctAnswer`.
+ * @param onWrong      Called when the input does not match the answer.
+ */
 @Composable
 internal fun TypeAnswerContent(
     question: Question.TypeAnswer,
@@ -202,6 +223,27 @@ internal fun TypeAnswerContent(
     }
 }
 
+/**
+ * Draws a fixed-layout triangle diagram with two labeled known angles and a `?` at the apex.
+ *
+ * The triangle vertices are positioned at fixed proportions of the canvas:
+ * - Bottom-left (A): `(8%, 88%)`
+ * - Bottom-right (B): `(92%, 88%)`
+ * - Apex (C): `(50%, 5%)`
+ *
+ * The apex angle is shown with a dashed arc (unknown) while the two base angles get solid arcs.
+ * Labels are placed near each arc:
+ * - `angle1°` to the upper-right of bottom-left
+ * - `angle2°` to the upper-left of bottom-right
+ * - `?` below the apex arc
+ *
+ * This is a pure drawing composable - it does not interact with any state.
+ *
+ * @param angle1 The known angle at the bottom-left vertex, in degrees.
+ * @param angle2 The known angle at the bottom-right vertex, in degrees.
+ * @param color  Stroke and text color (usually the subject accent color).
+ * @param modifier Layout modifier applied to the underlying [Canvas].
+ */
 @Composable
 internal fun TriangleCanvas(
     angle1: Int,

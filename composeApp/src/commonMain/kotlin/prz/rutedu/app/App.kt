@@ -48,55 +48,97 @@ import rutedu.composeapp.generated.resources.player2
 import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
+/**
+ * All navigation destinations in the app, expressed as a sealed class hierarchy.
+ *
+ * Each object holds a [route] string that must match a `composable(route)` declaration in
+ * the [App] `NavHost`. Destinations with path parameters expose a `createRoute(...)` factory
+ * so the caller never constructs URL strings by hand.
+ *
+ * The three bottom-nav tabs (START, NAUKA, ĆWICZENIA) map to [Home], [SubjectDetail] (last
+ * visited), and [LessonGame] (last visited) respectively - see [BottomNavBar] and [App].
+ *
+ * @property route The navigation route string used in [NavHost] composable declarations.
+ */
 sealed class Screen(val route: String) {
+    /** Home screen - 2-column subject grid with settings shortcut. */
     object Home : Screen("home")
+    /** Game-mode selection after player pick. */
     object Selection : Screen("selection")
+    /** Leaderboard player picker before a game session. */
     object PlayerSelection : Screen("player-selection")
+    /** Two-player PvP battle screen. */
     object PvP : Screen("pvp")
+    /** Language / app settings. */
     object Settings : Screen("settings")
+    /** Placeholder shown when NAUKA tab is tapped with no last-visited subject. */
     object Nauka : Screen("nauka")
+    /** Placeholder shown when ĆWICZENIA tab is tapped with no last-visited lesson. */
     object Cwiczenia : Screen("cwiczenia")
+    /** Solo arithmetic mini-game: addition and subtraction. */
     object GameAddSubtract : Screen("game-add-subtract")
+    /** Solo arithmetic mini-game: multiplication and division. */
     object GameMultiplyDivide : Screen("game-multiply-divide")
+    /** Solo arithmetic mini-game: divisibility rules. */
     object GameDivisibility : Screen("game-divisibility")
+    /** Solo arithmetic mini-game: unit conversion. */
     object GameUnitConversion : Screen("game-unit-conversion")
+    /** Solo arithmetic mini-game: multiplication table. */
     object GameMultiplicationTable : Screen("game-multiplication-table")
 
-    // Config list screen (settings)
+    /** List of all subjects for per-subject question-count configuration. */
     object ConfigList : Screen("config-list")
 
-    // Subject configurator
+    /** Per-subject question-count configurator. Requires `subjectId` path argument. */
     object SubjectConfig : Screen("subject-config/{subjectId}") {
+        /** @return A concrete route string, e.g. `"subject-config/matematyka"`. */
         fun createRoute(subjectId: String) = "subject-config/$subjectId"
     }
 
-    // Subject detail – pass subject id as path arg
+    /** Topic list for a subject. Requires `subjectId` path argument. */
     object SubjectDetail : Screen("subject/{subjectId}") {
+        /** @return A concrete route string, e.g. `"subject/geografia"`. */
         fun createRoute(subjectId: String) = "subject/$subjectId"
     }
 
-    // Topic detail – pass both subject id and topic id as path args
+    /** Lesson list for a topic. Requires `subjectId` and `topicId` path arguments. */
     object TopicDetail : Screen("topic/{subjectId}/{topicId}") {
+        /** @return A concrete route string, e.g. `"topic/chemia/kwasy"`. */
         fun createRoute(subjectId: String, topicId: String) = "topic/$subjectId/$topicId"
     }
 
-    // Lesson game – subject + topic + lesson ids
+    /**
+     * In-lesson quiz screen. Requires `subjectId`, `topicId`, and `lessonId` path arguments.
+     *
+     * The `lessonId` determines which question set is loaded:
+     * - IDs starting with `"chemia_"` -> `ChemistryQuestionGenerator` (procedural).
+     * - All other IDs -> static `QuestionBank`.
+     */
     object LessonGame : Screen("lesson/{subjectId}/{topicId}/{lessonId}") {
+        /** @return A concrete route string, e.g. `"lesson/chemia/kwasy/chemia_3_2"`. */
         fun createRoute(subjectId: String, topicId: String, lessonId: String) =
             "lesson/$subjectId/$topicId/$lessonId"
     }
 }
 
-// Global state to hold the selected player ID
+/** The database row ID of the player chosen on the player-selection screen. `null` when no player
+ *  is active (e.g. first launch before any profile has been created). */
 var selectedPlayerId by mutableStateOf<Long?>(null)
 
-// Remembers the last visited subject so NAUKA tab returns to it
+/** Subject ID of the most recently visited subject detail screen.
+ *  The NAUKA tab uses this to jump directly back rather than landing on the placeholder. */
 var lastVisitedSubjectId by mutableStateOf<String?>(null)
 
-// Remembers the last opened lesson so ĆWICZENIA tab returns to it
+/** Full navigation route of the most recently opened lesson (e.g. `"lesson/chemia/kwasy/chemia_3_2"`).
+ *  The ĆWICZENIA tab uses this to resume the last lesson immediately. */
 var lastVisitedLessonRoute by mutableStateOf<String?>(null)
 
-// Routes where the bottom nav bar is visible
+/**
+ * Returns `true` for routes where the [BottomNavBar] should be visible.
+ *
+ * The bottom bar is hidden on game screens (e.g. `"pvp"`, `"game-add-subtract"`) and settings
+ * screens to avoid cluttering full-screen experiences.
+ */
 private fun showBottomNav(route: String?): Boolean =
     route == Screen.Home.route ||
         route == Screen.Nauka.route ||
@@ -105,6 +147,30 @@ private fun showBottomNav(route: String?): Boolean =
         route?.startsWith("topic/") == true ||
         route?.startsWith("lesson/") == true
 
+/**
+ * Root composable and single entry point for the entire app.
+ *
+ * Responsibilities:
+ * 1. Creates the `NavController` and [Database] instances for the session.
+ * 2. Restores the persisted language preference from the database on first launch
+ *    (writes into [customAppLocale] so [AppLocaleProvider] reacts immediately).
+ * 3. Wraps the whole UI in [MaterialTheme] and [AppLocaleProvider] so every descendant
+ *    reacts to locale changes without needing to be individually locale-aware.
+ * 4. Provides a [Scaffold] with a context-sensitive [BottomNavBar]:
+ *    - The bar is hidden on non-navigable screens (see [showBottomNav]).
+ *    - The active accent color tracks the current subject for visual continuity.
+ *    - Tab clicks use [lastVisitedSubjectId] / [lastVisitedLessonRoute] to restore the
+ *      user's position rather than landing on placeholder screens.
+ * 5. Hosts the [NavHost] with all application routes registered as `composable()` blocks.
+ *    All nav transitions are instant (no enter/exit animation) to keep the UI snappy.
+ *
+ * **Adding a new screen:** declare an `object` in [Screen], add a `composable()` block here,
+ * and add the route to [showBottomNav] if the bottom bar should be visible there.
+ *
+ * @param driver Platform-specific SQLite driver created by `DriverFactory` in the platform entry
+ *               point (Android `MainActivity` / iOS `MainViewController`). Must outlive this
+ *               composable - do not create a new driver inside `App`.
+ */
 @Composable
 @Preview
 fun App(driver: SqlDriver) {
@@ -123,7 +189,8 @@ fun App(driver: SqlDriver) {
             val backStackEntry by navController.currentBackStackEntryAsState()
             val currentRoute = backStackEntry?.destination?.route
 
-            // Derive active color from current subject (changes nav color per subject)
+            // Read the subjectId path arg from the back stack (null on non-subject routes).
+            // Used to match the bottom nav accent color to the subject the user is currently in.
             val activeNavColor: Color = run {
                 val subjectId = backStackEntry?.arguments?.getString("subjectId")
                 if (subjectId != null) SubjectRepository.getById(subjectId)?.color ?: Color(0xFFF47B20)
@@ -138,7 +205,9 @@ fun App(driver: SqlDriver) {
                             currentRoute = currentRoute,
                             activeColor = activeNavColor,
                             onTabSelected = { tab ->
-                                // NAUKA tab returns to the last opened subject
+                                // NAUKA/ĆWICZENIA tabs restore the last-visited destination instead of
+                                // landing on placeholder screens. Falls back to the placeholder route
+                                // when no subject/lesson has been visited yet in this session.
                                 val destination = when (tab) {
                                     NavTab.NAUKA -> lastVisitedSubjectId
                                         ?.let { Screen.SubjectDetail.createRoute(it) }
@@ -147,8 +216,9 @@ fun App(driver: SqlDriver) {
                                         ?: Screen.Cwiczenia.route
                                     else -> tab.route
                                 }
-                                // Simple pop-to-home then navigate – no saveState/restoreState
-                                // which was causing HOME to stop responding
+                                // popUpTo HOME (non-inclusive) clears intermediate back-stack entries.
+                                // saveState/restoreState was intentionally removed - it caused
+                                // the HOME tab to stop responding after repeated tab switches.
                                 navController.navigate(destination) {
                                     popUpTo(Screen.Home.route) { inclusive = false }
                                     launchSingleTop = true
@@ -326,6 +396,13 @@ fun App(driver: SqlDriver) {
     }
 }
 
+/**
+ * Temporary stand-in screen shown for tabs (NAUKA, ĆWICZENIA) that have not yet been
+ * fleshed out, or when the user reaches a tab with no prior navigation history.
+ *
+ * Renders a centered label on a white background. Replace this with real content once
+ * the corresponding tab feature is implemented.
+ */
 @Composable
 private fun PlaceholderScreen(label: String, bottomPadding: Dp = 0.dp) {
     Box(

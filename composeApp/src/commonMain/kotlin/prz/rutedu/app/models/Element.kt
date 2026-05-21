@@ -1,22 +1,64 @@
 package prz.rutedu.app.models
 
+/**
+ * Broad chemical category of an element, used to assign a colour in the periodic table UI.
+ *
+ * Each value carries a packed ARGB colour ([colorHex]) so the UI can tint element cells
+ * without referencing Compose APIs from pure-data code.
+ *
+ * The colour values are intentionally pastel to remain legible with dark text overlay.
+ *
+ * @property colorHex ARGB hex value (e.g. `0xFFFF8A65`). Alpha is always `0xFF` (fully opaque).
+ */
 enum class ElementCategory(val colorHex: Long) {
+    /** Group 1 metals (Li, Na, K ...). Soft, highly reactive metals. */
     ALKALI_METAL(0xFFFF8A65),
+    /** Group 2 metals (Be, Mg, Ca ...). Less reactive than alkali metals. */
     ALKALINE_EARTH(0xFFFFCC80),
+    /** d-block elements (Sc–Zn and equivalents). Most common structural metals. */
     TRANSITION_METAL(0xFF90CAF9),
+    /** p-block metals below the metalloid staircase (Al, Ga, In, Sn ...). */
     POST_TRANSITION(0xFF80CBC4),
+    /** Elements on the semiconductor staircase (B, Si, Ge, As, Sb, Te, Po, At). */
     METALLOID(0xFFA5D6A7),
+    /** Highly reactive non-metals (H, C, N, O, P, S, Se). */
     REACTIVE_NONMETAL(0xFFFFF176),
+    /** Group 17 (F, Cl, Br, I, At, Ts). */
     HALOGEN(0xFFDCE775),
+    /** Group 18 - chemically inert gases (He, Ne, Ar ...). */
     NOBLE_GAS(0xFFCE93D8),
+    /** f-block, period 6 (Ce–Lu). Placed in the separate bottom rows of the table. */
     LANTHANIDE(0xFFF48FB1),
+    /** f-block, period 7 (Th–Lr). Radioactive; placed in the separate bottom rows. */
     ACTINIDE(0xFFFFAB91),
+    /** Superheavy elements whose chemical behaviour is not yet well established. */
     UNKNOWN(0xFFB0BEC5)
 }
 
 /**
- * @param tableRow  1–7 = normal periods, 8 = lanthanides row, 9 = actinides row
- * @param tableCol  1–18 for main block, 4–17 for f-block rows
+ * Represents a single chemical element as displayed in the periodic table.
+ *
+ * The `tableRow` and `tableCol` coordinates define where the element's cell is
+ * drawn in the 18-column grid used by the app:
+ * - Rows 1–7 are the standard periods.
+ * - Row 8 holds the lanthanide series (cols 4–17).
+ * - Row 9 holds the actinide series (cols 4–17).
+ *
+ * @property atomicNumber  Proton count (Z); unique identifier for every element. Range: 1–118.
+ * @property symbol        IUPAC chemical symbol (1–3 characters), e.g. `"H"`, `"Fe"`, `"Og"`.
+ * @property namePL        Polish name used throughout the app UI (e.g. `"Wodór"`, `"Żelazo"`).
+ * @property atomicMass    Standard atomic weight in u (unified atomic mass units).
+ *                         Rounded to three decimal places for display; exact values are IUPAC 2021.
+ * @property tableRow      Row in the periodic table grid (1–7 for main periods, 8 for lanthanides,
+ *                         9 for actinides).
+ * @property tableCol      Column in the 18-column grid (1–18 for main block,
+ *                         4–17 for f-block rows).
+ * @property category      Visual category; drives cell background colour.
+ * @property electronConfig Abbreviated ground-state electron configuration using noble-gas notation,
+ *                         e.g. `"[Ne] 3s² 3p¹"`. Empty string for superheavy elements whose
+ *                         configurations are not experimentally confirmed.
+ * @property groupName     Polish name of the element's IUPAC group (e.g. `"Halogeny"`).
+ *                         Empty string when the element does not belong to a named group.
  */
 data class Element(
     val atomicNumber: Int,
@@ -30,6 +72,8 @@ data class Element(
     val groupName: String = ""
 )
 
+// Short aliases used only when building the ELEMENTS list below - keeps each
+// line under 100 characters without sacrificing readability.
 private val AM  = ElementCategory.ALKALI_METAL
 private val AE  = ElementCategory.ALKALINE_EARTH
 private val TM  = ElementCategory.TRANSITION_METAL
@@ -42,6 +86,13 @@ private val LAN = ElementCategory.LANTHANIDE
 private val ACT = ElementCategory.ACTINIDE
 private val UNK = ElementCategory.UNKNOWN
 
+/**
+ * Complete list of all 118 confirmed chemical elements ordered by atomic number.
+ *
+ * Data source: IUPAC 2021 atomic weights and standard periodic-table layout.
+ * Lanthanides (Z 58–71) are placed in `tableRow` 8 and actinides (Z 90–103) in
+ * row 9 to match the detached f-block rows of the standard 18-column table.
+ */
 val ELEMENTS: List<Element> = listOf(
     // Period 1
     Element(1,  "H",  "Wodór",     1.008f,  1,  1, RN,  "1s¹",              ""),
@@ -106,7 +157,7 @@ val ELEMENTS: List<Element> = listOf(
     Element(55, "Cs", "Cez",     132.905f,  6,  1, AM,  "[Xe] 6s¹",         "Litowce"),
     Element(56, "Ba", "Bar",     137.327f,  6,  2, AE,  "[Xe] 6s²",         "Berylowce"),
     Element(57, "La", "Lantan",  138.905f,  6,  3, LAN, "[Xe] 5d¹ 6s²",     "Lantanowce"),
-    // Lanthanides — tableRow=8, tableCol=4..17
+    // Lanthanides - tableRow = 8, tableCol = 4..17 (detached f-block row)
     Element(58, "Ce", "Cer",     140.116f,  8,  4, LAN, "[Xe] 4f¹ 5d¹ 6s²", "Lantanowce"),
     Element(59, "Pr", "Prazeodym",140.908f, 8,  5, LAN, "[Xe] 4f³ 6s²",     "Lantanowce"),
     Element(60, "Nd", "Neodym",  144.242f,  8,  6, LAN, "[Xe] 4f⁴ 6s²",     "Lantanowce"),
@@ -141,7 +192,7 @@ val ELEMENTS: List<Element> = listOf(
     Element(87, "Fr", "Frans",   223.0f,    7,  1, AM,  "[Rn] 7s¹",         "Litowce"),
     Element(88, "Ra", "Rad",     226.0f,    7,  2, AE,  "[Rn] 7s²",         "Berylowce"),
     Element(89, "Ac", "Aktyn",   227.0f,    7,  3, ACT, "[Rn] 6d¹ 7s²",     "Aktynowce"),
-    // Actinides — tableRow=9, tableCol=4..17
+    // Actinides - tableRow = 9, tableCol = 4..17 (detached f-block row)
     Element(90,  "Th", "Tor",        232.038f, 9,  4, ACT, "[Rn] 6d² 7s²",      "Aktynowce"),
     Element(91,  "Pa", "Protaktyn",  231.036f, 9,  5, ACT, "[Rn] 5f² 6d¹ 7s²", "Aktynowce"),
     Element(92,  "U",  "Uran",       238.029f, 9,  6, ACT, "[Rn] 5f³ 6d¹ 7s²", "Aktynowce"),
@@ -156,7 +207,7 @@ val ELEMENTS: List<Element> = listOf(
     Element(101, "Md", "Mendeleew",  258.0f,   9, 15, ACT, "[Rn] 5f¹³ 7s²",    "Aktynowce"),
     Element(102, "No", "Nobel",      259.0f,   9, 16, ACT, "[Rn] 5f¹⁴ 7s²",    "Aktynowce"),
     Element(103, "Lr", "Lorens",     266.0f,   9, 17, ACT, "[Rn] 5f¹⁴ 7s²",    "Aktynowce"),
-    // Period 7 continued (Rf–Og)
+    // Period 7 continued - superheavy elements (Rf–Og)
     Element(104, "Rf", "Rutherford", 267.0f,   7,  4, TM,  "",                  ""),
     Element(105, "Db", "Dubn",       268.0f,   7,  5, TM,  "",                  ""),
     Element(106, "Sg", "Seaborg",    271.0f,   7,  6, TM,  "",                  ""),
@@ -174,9 +225,18 @@ val ELEMENTS: List<Element> = listOf(
     Element(118, "Og", "Oganesson",  294.0f,   7, 18, NG,  "",                  "Gazy szlachetne"),
 )
 
+/** Quick lookup of an [Element] by its atomic number (Z). Covers Z = 1..118. */
 val elementByNumber: Map<Int, Element> = ELEMENTS.associateBy { it.atomicNumber }
 
-/** Simple shell (K/L/M/N…) electron count notation, e.g. "2,8,1" for Na */
+/**
+ * Maps an atomic number (Z) to the simplified Bohr-model shell notation
+ * used in Polish middle-school chemistry (e.g. `"2,8,1"` for sodium, Z = 11).
+ *
+ * This notation counts electrons per shell (K, L, M, N ...) rather than using
+ * quantum-mechanical sub-shell notation. Only elements tested in the app's
+ * chemistry lessons are included; the map intentionally omits elements for
+ * which shell configurations are not part of the curriculum.
+ */
 val shellConfigByNumber: Map<Int, String> = mapOf(
     1  to "1",
     2  to "2",

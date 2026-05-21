@@ -34,8 +34,36 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
 
+/**
+ * The three possible feedback states for a quiz answer.
+ *
+ * - [NONE] - no overlay shown (default between questions).
+ * - [CORRECT] - green check card shown for 950 ms, then `onCorrectDismiss` fires.
+ * - [WRONG] - red cross card shown for 750 ms, then `onWrongDismiss` fires.
+ */
 enum class FeedbackState { NONE, CORRECT, WRONG }
 
+/**
+ * Full-screen overlay that briefly displays a correct / wrong feedback card after the user
+ * submits an answer.
+ *
+ * The card appears with a spring-bounce scale-in animation and fades out on dismissal. Timing:
+ * - **Correct:** 950 ms visible, then [onCorrectDismiss] is called (which advances to the next question).
+ * - **Wrong:** 750 ms visible, then [onWrongDismiss] is called (which hides the overlay so the user
+ *   can retry the same question).
+ *
+ * **`displayState` latch:** a separate `displayState` variable remembers the last non-NONE state
+ * so the exit animation always shows the right icon/text while `AnimatedVisibility` fades out.
+ * Without this latch, switching `state` to NONE before the animation finishes would show a blank card.
+ *
+ * This composable is stateless with respect to timing - [LessonGameScreen] owns [FeedbackState]
+ * and provides the dismiss callbacks.
+ *
+ * @param state           Current feedback state driven by [LessonGameScreen].
+ * @param accentColor     Subject accent color (unused in the overlay itself, present for future use).
+ * @param onCorrectDismiss Called after the 950 ms correct delay - should advance to the next question.
+ * @param onWrongDismiss   Called after the 750 ms wrong delay - should reset state to [FeedbackState.NONE].
+ */
 @Composable
 internal fun AnswerFeedbackOverlay(
     state: FeedbackState,

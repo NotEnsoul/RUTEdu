@@ -32,6 +32,14 @@ import rutedu.composeapp.generated.resources.fragment_modes_table
 import rutedu.composeapp.generated.resources.back
 import org.jetbrains.compose.resources.stringResource
 
+/**
+ * Game-mode selection screen shown after a player is chosen in [PlayerSelectionScreen].
+ *
+ * Lists all five solo arithmetic game modes as [MenuButton] entries. Each button navigates
+ * to the corresponding [GameScreen] route.
+ *
+ * @param navController Navigation controller used to push a [Screen] game route.
+ */
 @Composable
 fun SelectionScreen(navController: NavController) {
     val instructionText = stringResource(Res.string.fragment_modes_instruction)

@@ -17,6 +17,30 @@ import androidx.compose.ui.text.font.FontWeight
 import prz.rutedu.app.components.NumberKeypad
 import prz.rutedu.app.models.Question
 
+/**
+ * Question content for [Question.FindAnswer] - the student computes a missing arithmetic result.
+ *
+ * Renders an equation like `12 + 5 = ?` using [EquationText], then a [NumberKeypad] for numeric
+ * input. The input display (the typed digits) is underlined and changes color based on state:
+ * - **Empty** -> neutral grey (`0xFFBCC1CA`).
+ * - **Non-empty** -> subject accent color.
+ * - **Wrong** -> red (`0xFFE53935`), animated via `animateColorAsState`.
+ *
+ * Font size scales down from 48 sp to 34 sp when any operand has 3 or more digits, to avoid
+ * overflow on small screens.
+ *
+ * All state (`input`, `isWrong`, `showHint`) is keyed on `question.id` so it resets automatically
+ * when [LessonGameScreen] moves to the next question.
+ *
+ * @param question  The question data: operands, operator, correct answer, and hint.
+ * @param accentColor Subject accent color.
+ * @param bottomPadding System navigation bar height padding.
+ * @param onCorrect Called when the submitted input matches [Question.FindAnswer.correctAnswer].
+ * @param onWrong   Called when the input does not match (triggers [AnswerFeedbackOverlay]).
+ * @param onSkip    Called by the "skip" affordance (if present); advances to the next question
+ *                  without marking it correct. Currently only wired to the back gesture in
+ *                  [LessonGameScreen]; not rendered as a visible button in this composable.
+ */
 @Composable
 internal fun FindAnswerContent(
     question: Question.FindAnswer,
@@ -50,6 +74,7 @@ internal fun FindAnswerContent(
     ) {
         Spacer(modifier = Modifier.height(32.dp))
 
+        // Scale down font when operands are 3+ digits to prevent row overflow on small screens.
         val eqFontSize = if (maxOf("${question.operand1}".length, "${question.operand2}".length) >= 3) 34.sp else 48.sp
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -72,7 +97,7 @@ internal fun FindAnswerContent(
         Box(modifier = Modifier.width(180.dp), contentAlignment = Alignment.Center) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
-                    text = if (input.isEmpty()) "?" else input,
+                    text = input.ifEmpty { "?" },
                     fontSize = 40.sp,
                     fontWeight = FontWeight.Bold,
                     color = inputColor

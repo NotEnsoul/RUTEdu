@@ -22,15 +22,47 @@ import prz.rutedu.app.math.MathShape
 import prz.rutedu.app.math.MathViewport
 import prz.rutedu.app.math.TriangleBuilder
 
+/**
+ * Central registry of all static (hardcoded) quiz questions.
+ *
+ * Questions for non-chemistry lessons are stored as private `List<Question>` fields and
+ * registered in the [banks] map at the bottom of this file. Chemistry lessons are routed
+ * to [ChemistryQuestionGenerator] which creates questions dynamically from a random seed.
+ *
+ * ## How to add questions for a new lesson
+ *
+ * 1. Declare a new private `val` (e.g. `private val mat_6_1: List<Question> = listOf(...)`).
+ * 2. Populate it with [Question] instances. Each question's `id` must be unique within
+ *    the list (sequential integers from 0 work well).
+ * 3. Register it in [banks]: `"mat_6_1" to mat_6_1`.
+ * 4. Make sure the lesson exists in [SubjectRepository] with the same id.
+ *
+ * For chemistry lessons, implement a generator function in [ChemistryQuestionGenerator]
+ * instead of adding a static list here.
+ */
 object QuestionBank {
 
+    /**
+     * Returns the ordered list of questions for the given lesson.
+     *
+     * Routing:
+     * - Lesson IDs starting with `"chemia_"` are delegated to [ChemistryQuestionGenerator],
+     *   which shuffles and filters the pool using [seed] and [excludeIds].
+     * - All other IDs look up the static list in [banks]. The [seed] and [excludeIds]
+     *   parameters are **ignored** for static banks.
+     *
+     * @param lessonId   The lesson identifier (e.g. `"mat_1_1"`, `"chemia_3_1"`).
+     * @param seed       Random seed for chemistry lesson generation. Ignored for static banks.
+     * @param excludeIds Set of question IDs to omit (previously answered chemistry questions).
+     *                   Ignored for static banks.
+     * @return Ordered list of questions to present, or an empty list if [lessonId] is not registered.
+     */
     fun questionsFor(lessonId: String, seed: Long = 0L, excludeIds: Set<Int> = emptySet()): List<Question> =
         if (lessonId.startsWith("chemia_"))
             ChemistryQuestionGenerator.generateFor(lessonId, seed, excludeIds)
         else
             banks[lessonId] ?: emptyList()
 
-    // ── mat_1_1  Dodawanie i odejmowanie ──────────────────────────────────────
     private val mat_1_1: List<Question> = listOf(
         FindAnswer(0, 3, 5, ADD,
             Hint("Dodawanie to liczenie do przodu.",
@@ -70,7 +102,6 @@ object QuestionBank {
                 steps = listOf("4 + 6 = 10 (jedności)", "40 + 50 = 90 (dziesiątki)", "90 + 10 = 100 ✓")))
     )
 
-    // ── mat_1_2  Mnożenie i dzielenie ─────────────────────────────────────────
     private val mat_1_2: List<Question> = listOf(
         FindAnswer(0, 7, 8, MULTIPLY,
             Hint("7 × 8 to wynik, który warto zapamiętać.",
@@ -146,7 +177,6 @@ object QuestionBank {
                 steps = listOf("3 × 3 = 9", "9 × 3 = 27", "27 × 3 = 81")))
     )
 
-    // ── mat_2_1  Jednomiany i wielomiany ──────────────────────────────────────
     private val mat_2_1: List<Question> = listOf(
         SelectFromList(0,
             "Który z poniższych wyrażeń jest jednomianem?",
@@ -214,7 +244,6 @@ object QuestionBank {
                 steps = listOf("3·4 = 12", "x·x = x²", "Wynik: 12x²")))
     )
 
-    // ── mat_2_2  Wzory skróconego mnożenia ────────────────────────────────────
     private val mat_2_2: List<Question> = listOf(
         SelectFromList(0,
             "Co jest rozwinięciem  (a + b)²?",
@@ -281,7 +310,6 @@ object QuestionBank {
                 steps = listOf("10² = 100", "2·10·1 = 20", "1² = 1", "Razem: 121")))
     )
 
-    // ── mat_5_1  Kąty w trójkącie ──────────────────────────────────────────────
     private val mat_5_1: List<Question> = run {
         fun tri(aA: Double, aB: Double, id: Int, answer: Int, hint: Hint): GraphTypeAnswer {
             val (verts, vp) = TriangleBuilder.fromAnglesWithViewport(aA, aB)
@@ -331,11 +359,7 @@ object QuestionBank {
         )
     }
 
-    // ── mat_4_1  Funkcja kwadratowa ────────────────────────────────────────────
     private val mat_4_1: List<Question> = listOf(
-
-        // --- wartości funkcji ---
-
         GraphSelectFromList(0,
             prompt = "Dana jest funkcja f(x) = x².\nIle wynosi f(3)?",
             shapes = listOf(
@@ -388,8 +412,6 @@ object QuestionBank {
             hint = Hint("f(2) = (2 − 2)² = 0² = 0.", boldPart = "(x−2)²",
                 steps = listOf("f(2) = (2 − 2)²", "= 0² = 0"))),
 
-        // --- pisemne odpowiedzi ---
-
         GraphTypeAnswer(5,
             prompt = "Dana jest funkcja f(x) = x².\nIle wynosi f(4)?",
             shapes = listOf(
@@ -429,7 +451,6 @@ object QuestionBank {
             hint = Hint("f(2) = 2 · 2² = 2 · 4.", boldPart = "2·2²", steps = listOf("2² = 4", "2 × 4 = 8")))
     )
 
-    // ── generic (chemia, geo) ─────────────────────────────────────────────────
     private val genericMath: List<Question> = listOf(
         FindAnswer(0, 5, 3, ADD,
             Hint("Dodaj obie liczby.", steps = listOf("5 + 3 = 8"))),
@@ -453,7 +474,6 @@ object QuestionBank {
             Hint("20 ÷ 4 = 5.", steps = listOf("4 × 5 = 20", "Więc 20 ÷ 4 = 5")))
     )
 
-    // ── geo_1_1  Kraje Europy – quiz mapowy ───────────────────────────────────
     private val geo_1_1: List<Question> = listOf(
         MapQuiz(0, "Poland", "Gdzie leży Polska?", MapRegion.EUROPE,
             Hint("Polska leży w środkowej Europie, nad Morzem Bałtyckim.",
@@ -487,7 +507,6 @@ object QuestionBank {
                 steps = listOf("Południe Europy", "Dużo wysp na Morzu Egejskim")))
     )
 
-    // ── geo_4_1  Sąsiedzi Polski ──────────────────────────────────────────────
     private val geo_4_1: List<Question> = listOf(
         MapQuiz(0, "Germany", "Zaznacz Niemcy — sąsiada Polski", MapRegion.CENTRAL_EUROPE,
             Hint("Niemcy graniczą z Polską na zachodzie.",
@@ -512,7 +531,6 @@ object QuestionBank {
                 steps = listOf("Szukaj enklawy nad Morzem Bałtyckim", "Rosyjski obwód odcięty od Rosji, między Polską a Litwą")))
     )
 
-    // ── geo_4_2  Kraje Azji ───────────────────────────────────────────────────
     private val geo_4_2: List<Question> = listOf(
         MapQuiz(0, "China", "Gdzie leżą Chiny?", MapRegion.ASIA,
             Hint("Chiny to największy kraj Azji pod względem populacji.",
@@ -546,7 +564,6 @@ object QuestionBank {
                 steps = listOf("Azja Południowo-Wschodnia", "Na południe od Laosu, na zachód od Wietnamu")))
     )
 
-    // ── geo_4_3  Stolice Europy ───────────────────────────────────────────────
     private val geo_4_3: List<Question> = listOf(
         MapQuiz(0, "France", "Wskaż kraj, którego stolicą jest Paryż", MapRegion.EUROPE,
             Hint("Paryż to stolica Francji.",
@@ -579,9 +596,7 @@ object QuestionBank {
             Hint("Ateny to stolica Grecji.",
                 steps = listOf("Południe Bałkanów", "Wiele wysp na Morzu Egejskim")))
     )
-
-
-    // ── chemia_3_1  Wzory kwasów – rozpoznaj wzór kwasu ─────────────────────
+    
     private val chemia_3_1: List<Question> = listOf(
         SelectFromList(
             id = 3101,
@@ -847,6 +862,8 @@ object QuestionBank {
         )
     )
 
+    // Maps lesson IDs to their static question lists. Add new entries here after
+    // declaring the corresponding private val above.
     private val banks: Map<String, List<Question>> = mapOf(
         "mat_1_1" to mat_1_1,
         "mat_1_2" to mat_1_2,

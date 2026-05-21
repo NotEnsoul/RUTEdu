@@ -21,8 +21,13 @@ import prz.rutedu.app.models.Question
 import kotlin.math.abs
 import kotlin.math.round
 
-// ── atomic mass formatter (KMP-safe, identical to PeriodicTableContent) ───────
-
+/**
+ * Formats a float to exactly 3 decimal places without using `String.format` (which is not
+ * available in Kotlin/Native). Used for displaying atomic mass (e.g. `"12.011"`).
+ *
+ * The implementation multiplies by 1000, rounds to the nearest integer, then reconstructs the
+ * decimal string with `padStart` to preserve leading zeros in the fractional part.
+ */
 private fun Float.to3dp(): String {
     val rounded = round(this * 1000).toLong()
     val intPart = rounded / 1000
@@ -32,6 +37,24 @@ private fun Float.to3dp(): String {
 
 // ─────────────────────────────────────────────────────────────────────────────
 
+/**
+ * Question content for [Question.ElementCardQuiz] - displays a styled element card and asks the
+ * student to select one of four multiple-choice answers about that element.
+ *
+ * The element card mirrors the visual design of a real periodic-table cell:
+ * - A circle border containing the chemical **symbol** in large type.
+ * - The Polish element **name** and **atomic mass** (3 decimal places, KMP-safe formatter).
+ * - An electron **configuration** row and **group** row when present.
+ *
+ * The four answer options are arranged in a 2x2 grid of tappable cards. Selection and wrong-answer
+ * highlighting follow the same pattern as [SelectFromListContent] (accent border / red background).
+ *
+ * @param question      The question: atomic number, prompt, subtitle, 4 option strings, correct index, hint.
+ * @param accentColor   Subject accent color applied to the element card background and selected option.
+ * @param bottomPadding System navigation bar height padding.
+ * @param onCorrect     Called when `selectedIndex == question.correctIndex`.
+ * @param onWrong       Called when the selection is incorrect.
+ */
 @Composable
 internal fun ElementCardContent(
     question: Question.ElementCardQuiz,
@@ -159,7 +182,7 @@ internal fun ElementCardContent(
 
         Spacer(Modifier.height(24.dp))
 
-        // 2×2 answer grid
+        // 2x2 answer grid
         question.options.chunked(2).forEachIndexed { rowIdx, rowOptions ->
             Row(
                 modifier = Modifier
@@ -223,6 +246,7 @@ internal fun ElementCardContent(
     }
 }
 
+/** A two-column label/value row used inside the element information card. */
 @Composable
 private fun ElementInfoRow(label: String, value: String, accentColor: Color) {
     Row(

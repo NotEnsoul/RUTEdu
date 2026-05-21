@@ -23,6 +23,28 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import prz.rutedu.app.models.Question
 
+/**
+ * Question content for [Question.SelectFromList] - the student picks one or more options.
+ *
+ * Supports two selection modes controlled by [Question.SelectFromList.multiSelect]:
+ * - **Single-select** (`multiSelect = false`): radio-button style; tapping a row selects it and
+ *   deselects any previous selection. The indicator is a circle.
+ * - **Multi-select** (`multiSelect = true`): checkbox style; tapping toggles each option
+ *   independently. A hint "Zaznacz wszystkie poprawne odpowiedzi" appears below the prompt.
+ *   The indicator is a rounded square.
+ *
+ * Selected rows are highlighted with a light accent background and an accent-colored border.
+ * When the user taps "Sprawdź" with the wrong selection, borders and backgrounds of the
+ * incorrectly selected rows turn red; the state resets when any option is tapped again.
+ *
+ * "Sprawdź" is enabled as soon as at least one option is selected and disabled when none is.
+ *
+ * @param question    The question: prompt, option strings, correct index set, multi-select flag, hint.
+ * @param accentColor Subject accent color for selection indicators and the check button.
+ * @param bottomPadding System navigation bar height padding.
+ * @param onCorrect   Called when `selected == question.correctIndices`.
+ * @param onWrong     Called when the submitted selection is incorrect.
+ */
 @Composable
 internal fun SelectFromListContent(
     question: Question.SelectFromList,

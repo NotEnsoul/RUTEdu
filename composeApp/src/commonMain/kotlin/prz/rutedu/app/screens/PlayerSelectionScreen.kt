@@ -63,6 +63,17 @@ import rutedu.composeapp.generated.resources.error_creating_player
 import rutedu.composeapp.generated.resources.high_score_games
 import rutedu.composeapp.generated.resources.star
 
+/**
+ * Leaderboard player-selection screen shown before a solo or PvP game session.
+ *
+ * Lists all player profiles from the database as [PlayerCard]s. A FAB opens a "Create player"
+ * dialog; new players are persisted to the database and the list refreshes immediately.
+ *
+ * @param navController    Navigation controller for the back-stack pop.
+ * @param database         [Database] instance used to read/write player records.
+ * @param onPlayerSelected Called with the chosen [Player] when a card is tapped; also saves the
+ *                         current player ID to the database.
+ */
 @Composable
 fun PlayerSelectionScreen(
     navController: NavController,
@@ -259,6 +270,18 @@ fun PlayerSelectionScreen(
     }
 }
 
+/**
+ * A player list item card in [PlayerSelectionScreen].
+ *
+ * Highlights with `primaryContainer` background when [isSelected]. Shows the player's nickname,
+ * [highScoreGamesFormat] subtitle, and a star icon when the player's high score is non-zero.
+ *
+ * @param player                 The player model to display.
+ * @param isSelected             Whether this card should show the selected highlight.
+ * @param highScoreGamesFormat   Pre-formatted "score · games" string (avoids nested resource calls).
+ * @param starContentDescription Accessibility label for the star icon.
+ * @param onClick                Called when the card is tapped.
+ */
 @Composable
 fun PlayerCard(
     player: Player,

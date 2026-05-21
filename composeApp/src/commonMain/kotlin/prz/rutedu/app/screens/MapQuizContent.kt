@@ -34,14 +34,27 @@ import prz.rutedu.app.models.Question
 import kotlin.math.PI
 import kotlin.math.cos
 
-// ── Colors ────────────────────────────────────────────────────────────────────
+/** Ocean / background fill. */
 private val COLOR_OCEAN    = Color(0xFF9DC3D4)
+/** Default country fill. */
 private val COLOR_COUNTRY  = Color(0xFF4A9B5F)
+/** Country border stroke. */
 private val COLOR_BORDER   = Color(0xFF2D6B3A)
+/** Tapped (selected, not yet checked) country fill. */
 private val COLOR_SELECTED = Color(0xFFF4A430)
+/** Wrong answer highlight color. */
 private val COLOR_WRONG    = Color(0xFFE53935)
 
-// ── Region proximity filter ───────────────────────────────────────────────────
+/**
+ * Returns `true` if any of this country's rings has its centroid within [r]'s bounding box
+ * plus a `margin` degree buffer.
+ *
+ * Used to filter the full world country list down to only those visible in the current
+ * [MapRegion] before computing screen coordinates - avoids projecting thousands of polygons
+ * that are completely off-screen.
+ *
+ * The 10-degree margin prevents edge-clipping artifacts for countries that straddle the region boundary.
+ */
 private fun CountryFeature.hasRingNear(r: MapRegion): Boolean {
     val margin = 10f
     return rings.any { ring ->
@@ -53,7 +66,16 @@ private fun CountryFeature.hasRingNear(r: MapRegion): Boolean {
     }
 }
 
-// ── Point-in-polygon (ray casting) ───────────────────────────────────────────
+/**
+ * Returns `true` if screen point (`px`, `py`) lies inside [polygon] using the ray-casting algorithm.
+ *
+ * Casts a horizontal ray from (`px`, `py`) to the right and counts how many polygon edges it
+ * crosses. An odd crossing count means the point is inside. Returns `false` for degenerate
+ * polygons with fewer than 3 vertices.
+ *
+ * Note: works in **canvas/screen space**, not geographic space, because the projection is already
+ * applied before this function is called.
+ */
 private fun pointInPolygon(px: Float, py: Float, polygon: List<Offset>): Boolean {
     if (polygon.size < 3) return false
     var inside = false
@@ -68,13 +90,47 @@ private fun pointInPolygon(px: Float, py: Float, polygon: List<Offset>): Boolean
     return inside
 }
 
-// ── Screen data ───────────────────────────────────────────────────────────────
+/**
+ * Pre-projected ring: [offsets] for hit-testing, [path] for `Canvas.drawPath`.
+ * Both are in canvas pixel coordinates after `buildScreenCountries` runs.
+ *
+ * @property offsets Vertex positions in canvas coordinates used for hit-testing.
+ * @property path    Drawable path in canvas coordinates, passed to `Canvas.drawPath`.
+ */
 private data class ScreenRing(val offsets: List<Offset>, val path: Path)
+
+/**
+ * Pairing of the original [CountryFeature] with its per-ring screen projections.
+ * The feature is kept so the composable can compare [CountryFeature.name] against the answer key.
+ *
+ * @property feature The source [CountryFeature] from the GeoJSON data.
+ * @property rings   Per-ring screen projections computed by `buildScreenCountries`.
+ */
 private data class ScreenCountry(val feature: CountryFeature, val rings: List<ScreenRing>)
 
 /**
- * Equirectangular projection corrected by cos(midLat) to avoid horizontal stretch.
- * The map is letterboxed inside the canvas to preserve its natural aspect ratio.
+ * Projects each [CountryFeature]'s geographic rings into canvas pixel coordinates using an
+ * equirectangular projection with a cosine-latitude correction.
+ *
+ * **Projection formula (per vertex):**
+ * ```
+ * lonCorrection = cos(midLat * π/180) // shrinks horizontal extent at high latitudes
+ * canvasX = originX + (lon - lonMin) * lonCorrection / (lonRange * lonCorrection) * mapW
+ * canvasY = originY + (latMax - lat) / latRange * mapH // Y flipped: north = top
+ * ```
+ *
+ * **Letterboxing:** the map rectangle (`mapW` x `mapH`) is centered inside (`canvasW` x `canvasH`)
+ * to preserve the natural aspect ratio. Empty bars appear on the short sides when the canvas
+ * aspect ratio does not match the geographic region's corrected aspect ratio.
+ *
+ * This function is called from `remember(countries, canvasSize, region)` so it only recomputes
+ * when the canvas is resized or the question changes - not on every recomposition.
+ *
+ * @param features All country features to project (pre-filtered to the region by [hasRingNear]).
+ * @param canvasW  Canvas width in pixels.
+ * @param canvasH  Canvas height in pixels.
+ * @param r        The geographic bounding box that defines the visible map area.
+ * @return List of [ScreenCountry] objects ready for drawing and hit-testing.
  */
 private fun buildScreenCountries(
     features: List<CountryFeature>,
@@ -83,12 +139,13 @@ private fun buildScreenCountries(
     r: MapRegion
 ): List<ScreenCountry> {
     val midLatRad = ((r.latMin + r.latMax) / 2f) * (PI / 180.0).toFloat()
-    val lonCorrection = cos(midLatRad)          // squish longitude at high latitudes
+    val lonCorrection = cos(midLatRad) // squish longitude at high latitudes
     val lonRange = r.lonMax - r.lonMin
     val latRange = r.latMax - r.latMin
-    val naturalAR = (lonRange * lonCorrection) / latRange   // natural width/height ratio
+    val naturalAR = (lonRange * lonCorrection) / latRange // natural width/height ratio
 
-    // Fit map inside canvas while keeping aspect ratio (letterbox)
+    // Fit map inside canvas while keeping aspect ratio (letterbox).
+    // Choose the axis that is the binding constraint so the map fills as much of the canvas as possible.
     val (mapW, mapH) = if (canvasW / canvasH > naturalAR) {
         Pair(canvasH * naturalAR, canvasH)
     } else {
@@ -117,10 +174,44 @@ private fun buildScreenCountries(
     }
 }
 
+/**
+ * Returns `true` if [tap] (canvas pixel coordinates) falls inside any ring of [country].
+ *
+ * Multi-ring countries (e.g. archipelagos) are handled correctly because `any` checks each
+ * island ring separately - the tap only needs to land in one of them.
+ */
 private fun hitTest(tap: Offset, country: ScreenCountry): Boolean =
     country.rings.any { ring -> pointInPolygon(tap.x, tap.y, ring.offsets) }
 
-// ── Composable ────────────────────────────────────────────────────────────────
+/**
+ * Interactive map quiz where the student taps a country to answer the question.
+ *
+ * ## Data flow
+ * 1. GeoJSON country data is loaded once from [loadCountries] and cached globally.
+ * 2. On each render (and whenever `canvasSize` changes), [buildScreenCountries] reprojects
+ *    only the countries near [Question.MapQuiz.region] into canvas coordinates.
+ * 3. When the user taps the canvas, the raw tap coordinate is **un-transformed** (reversing the
+ *    current pan/zoom) before being passed to [hitTest]. This keeps hit-testing simple - it
+ *    always works in the base (unzoomed) coordinate space.
+ * 4. "Sprawdź" compares the selected country name to [Question.MapQuiz.countryKey] and calls
+ *    [onCorrect] or [onWrong].
+ *
+ * ## Zoom / pan
+ * Pinch-zoom and single-finger pan are implemented via `Modifier.transformable`. The transform
+ * is applied as a `withTransform { translate; scale }` block inside the Canvas, so the hit-test
+ * inversion must mirror this: `base = (tap - pan - pivot) / scale + pivot`.
+ *
+ * ## State reset
+ * All per-question state (`selectedCountry`, `isWrong`, `panOffset`, `zoomScale`) is keyed on
+ * `question.id` via `remember(question.id)` so navigating to the next question resets the map
+ * to its default zoom/position without needing explicit reset logic.
+ *
+ * @param question      The map quiz question: bounding region, country key, hint, and prompt text.
+ * @param accentColor   Subject accent color for buttons and UI accents.
+ * @param bottomPadding System navigation bar height padding from `App`.
+ * @param onCorrect     Called when the user taps "Sprawdź" and the selection matches [Question.MapQuiz.countryKey].
+ * @param onWrong       Called when the user taps "Sprawdź" and the selection is incorrect.
+ */
 @Composable
 internal fun MapQuizContent(
     question: Question.MapQuiz,
@@ -129,7 +220,6 @@ internal fun MapQuizContent(
     onCorrect: () -> Unit,
     onWrong: () -> Unit = {}
 ) {
-    // ── State ─────────────────────────────────────────────────────────────────
     var countries    by remember { mutableStateOf<List<CountryFeature>>(emptyList()) }
     var loading      by remember { mutableStateOf(true) }
     // All per-question state keyed by question.id so they reset on every new question
@@ -169,7 +259,6 @@ internal fun MapQuizContent(
         )
     }
 
-    // ── UI ────────────────────────────────────────────────────────────────────
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -223,7 +312,7 @@ internal fun MapQuizContent(
                         .onSizeChanged { cs -> canvasSize = Pair(cs.width, cs.height) }
                         // transformable handles single-finger pan + two-finger pinch zoom
                         .transformable(state = transformableState)
-                        // pointerInput for tap — MUST include question.id so it restarts
+                        // pointerInput for tap - MUST include question.id so it restarts
                         // on each new question and captures the fresh selectedCountry state
                         .pointerInput(screenCountries, question.id) {
                             detectTapGestures { tap ->
@@ -232,9 +321,11 @@ internal fun MapQuizContent(
                                 val h = cs.second.toFloat()
                                 val cx = w / 2f
                                 val cy = h / 2f
-                                // Invert canvas transform:
-                                //   visual = (base - pivot)*scale + pivot + pan
-                                //   base   = (visual - pan - pivot)/scale + pivot
+                                // The Canvas draws with: visual = (base - pivot) * scale + pivot + pan
+                                // To find which base coordinate the user tapped, invert that:
+                                //   base = (visual - pan - pivot)/scale + pivot
+                                // Without this inversion, tapping a zoomed-in country would test
+                                // the wrong coordinates and miss the polygon.
                                 val base = Offset(
                                     x = (tap.x - panOffset.x - cx) / zoomScale + cx,
                                     y = (tap.y - panOffset.y - cy) / zoomScale + cy
