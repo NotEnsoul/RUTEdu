@@ -38,10 +38,11 @@ data class CountryFeature(
 data class LonLat(val lon: Float, val lat: Float)
 
 /**
- * Module-level cache populated on the first [loadCountries] call.
- * Subsequent calls return the cached list without re-reading the asset.
+ * Module-level cache mapping GeoJSON asset paths to their parsed [CountryFeature] lists.
+ * Subsequent calls to [loadGeoJson] with the same path return the cached list without
+ * re-reading or re-parsing the asset.
  */
-private var cachedCountries: List<CountryFeature>? = null
+private val geoCache = mutableMapOf<String, List<CountryFeature>>()
 
 /**
  * Removes points from a polygon ring that are closer than [epsilon] degrees to the
@@ -83,64 +84,79 @@ private fun parseRing(ringArray: kotlinx.serialization.json.JsonArray): List<Lon
 }
 
 /**
- * Loads and parses the bundled `countries.geojson` asset, returning a list of
+ * Loads and parses a GeoJSON asset from the specified [path], returning a list of
  * [CountryFeature] objects ready for rendering and hit-testing.
  *
  * The function is **suspend** because reading a bundled resource is an IO operation on
- * some platforms. The result is cached in memory after the first call so repeated
- * invocations are instant.
+ * some platforms. The result is cached in memory under [geoCache] after the first call
+ * so repeated invocations for the same path are instant.
  *
  * Supported GeoJSON geometry types:
  * - `"Polygon"` - a single polygon (outer ring only; holes are ignored).
  * - `"MultiPolygon"` - multiple polygons (outer rings only), e.g. island chains.
  *
- * Countries with no valid rings after simplification are excluded from the result.
+ * Features with no valid rings after simplification are excluded from the result.
  *
- * @return The full list of [CountryFeature] objects, cached after the first load.
+ * @param path The resource path to the GeoJSON file (e.g., `"files/countries.geojson"`).
+ * @return A list of [CountryFeature] objects parsed from the specified file.
  */
 @OptIn(ExperimentalResourceApi::class)
-suspend fun loadCountries(): List<CountryFeature> {
-    cachedCountries?.let { return it }
-
-    val bytes = Res.readBytes("files/countries.geojson")
-    val jsonStr = bytes.decodeToString()
-    val root = Json.parseToJsonElement(jsonStr).jsonObject
-    val features = root["features"]!!.jsonArray
+suspend fun loadGeoJson(path: String): List<CountryFeature> {
+    geoCache[path]?.let { return it }
 
     val result = mutableListOf<CountryFeature>()
-    for (featureElem in features) {
-        val featureObj = featureElem.jsonObject
-        val props = featureObj["properties"]!!.jsonObject
-        val name = props["name"]?.jsonPrimitive?.content ?: continue
-        val iso2 = props["ISO3166-1-Alpha-2"]?.jsonPrimitive?.content ?: ""
-        val geomObj = featureObj["geometry"]?.jsonObject ?: continue
-        val geomType = geomObj["type"]?.jsonPrimitive?.content ?: continue
-        val coordsArr = geomObj["coordinates"]?.jsonArray ?: continue
+    try {
+        val bytes = Res.readBytes(path)
+        val jsonStr = bytes.decodeToString()
+        val root = Json.parseToJsonElement(jsonStr).jsonObject
+        val features = root["features"]?.jsonArray ?: return emptyList()
 
-        val rings = mutableListOf<List<LonLat>>()
+        for (featureElem in features) {
+            val featureObj = featureElem.jsonObject
+            val props = featureObj["properties"]?.jsonObject ?: continue
 
-        when (geomType) {
-            "Polygon" -> {
-                // coordsArr = [ outerRing, hole1, hole2, ... ] - only outer ring is used
-                val outerRing = parseRing(coordsArr[0].jsonArray).simplify()
-                if (outerRing.size >= 3) rings.add(outerRing)
-            }
-            "MultiPolygon" -> {
-                // coordsArr = [ polygon1, polygon2, ... ] where polygon = [ outerRing, holes… ]
-                for (polyElem in coordsArr) {
-                    val polyArr = polyElem.jsonArray
-                    if (polyArr.isEmpty()) continue
-                    val outerRing = parseRing(polyArr[0].jsonArray).simplify()
-                    if (outerRing.size >= 3) rings.add(outerRing)
+            // Try multiple common property names for the name/key
+            val name = props["name"]?.jsonPrimitive?.content
+                ?: props["JPT_NAZWA_"]?.jsonPrimitive?.content
+                ?: props["NAME"]?.jsonPrimitive?.content
+                ?: props["VARNAME_1"]?.jsonPrimitive?.content
+                ?: continue
+
+            val iso2 = props["ISO3166-1-Alpha-2"]?.jsonPrimitive?.content ?: ""
+            val geomObj = featureObj["geometry"]?.jsonObject ?: continue
+            val geomType = geomObj["type"]?.jsonPrimitive?.content ?: continue
+            val coordsArr = geomObj["coordinates"]?.jsonArray ?: continue
+
+            val rings = mutableListOf<List<LonLat>>()
+
+            when (geomType) {
+                "Polygon" -> {
+                    if (coordsArr.isNotEmpty()) {
+                        val outerRing = parseRing(coordsArr[0].jsonArray).simplify()
+                        if (outerRing.size >= 3) rings.add(outerRing)
+                    }
+                }
+                "MultiPolygon" -> {
+                    for (polyElem in coordsArr) {
+                        val polyArr = polyElem.jsonArray
+                        if (polyArr.isNotEmpty()) {
+                            val outerRing = parseRing(polyArr[0].jsonArray).simplify()
+                            if (outerRing.size >= 3) rings.add(outerRing)
+                        }
+                    }
                 }
             }
-            else -> continue
-        }
 
-        if (rings.isEmpty()) continue
-        result.add(CountryFeature(name, iso2, rings))
+            if (rings.isNotEmpty()) {
+                result.add(CountryFeature(name, iso2, rings))
+            }
+        }
+    } catch (e: Exception) {
+        println("Error loading GeoJSON from $path: ${e.message}")
     }
 
-    cachedCountries = result
+    if (result.isNotEmpty()) {
+        geoCache[path] = result
+    }
     return result
 }

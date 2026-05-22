@@ -28,7 +28,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import prz.rutedu.app.geo.CountryFeature
-import prz.rutedu.app.geo.loadCountries
+import prz.rutedu.app.geo.loadGeoJson
 import prz.rutedu.app.models.MapRegion
 import prz.rutedu.app.models.Question
 import kotlin.math.PI
@@ -246,8 +246,9 @@ internal fun MapQuizContent(
         panOffset += panChange
     }
 
-    LaunchedEffect(Unit) {
-        countries = loadCountries()
+    LaunchedEffect(question.mapFile) {
+        loading = true
+        countries = prz.rutedu.app.geo.loadGeoJson(question.mapFile)
         loading = false
     }
 
