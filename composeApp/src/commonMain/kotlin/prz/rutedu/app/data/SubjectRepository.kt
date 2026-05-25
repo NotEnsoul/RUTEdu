@@ -60,7 +60,16 @@ object SubjectRepository {
      */
     val subjects: List<Subject> = listOf(
 
-        // -- MATEMATYKA ---------------------------------------------------------------------------
+        /**
+         * **Mathematics Subject**
+         *
+         * Includes core high school math topics:
+         * - Liczby rzeczywiste (Real Numbers)
+         * - Wyrażenia algebraiczne (Algebraic Expressions)
+         * - Równania i nierówności (Equations and Inequalities)
+         * - Funkcje (Functions)
+         * - Ciągi (Sequences)
+         */
         Subject(
             id = "matematyka",
             name = "Matematyka",
@@ -236,7 +245,16 @@ object SubjectRepository {
             )
         ),
 
-        // -- CHEMIA -------------------------------------------------------------------------------
+        /**
+         * **Chemistry Subject**
+         *
+         * Includes organic and inorganic chemistry topics:
+         * - Układ okresowy (Periodic Table)
+         * - Tlenki, wodorotlenki, kwasy, sole (Oxides, Hydroxides, Acids, Salts)
+         * - Dysocjacja elektrolityczna (Electrolytic Dissociation)
+         * - Węglowodory (Hydrocarbons)
+         * - Pochodne węglowodorów (Hydrocarbon Derivatives)
+         */
         Subject(
             id = "chemia",
             name = "Chemia",
@@ -450,7 +468,13 @@ object SubjectRepository {
             )
         ),
 
-        // -- ALGEBRA ------------------------------------------------------------------------------
+        /**
+         * **Algebra Subject**
+         *
+         * Focused on advanced algebraic calculations and analysis:
+         * - Przekształcenia wyrażeń (Expression Transformations, Derivatives, Integrals)
+         * - Równania liniowe i kwadratowe (Linear and Quadratic Equations)
+         */
         Subject(
             id = "algebra",
             name = "Algebra",
@@ -530,7 +554,15 @@ object SubjectRepository {
             )
         ),
 
-        // -- GEOGRAFIA ----------------------------------------------------------------------------
+        /**
+         * **Geography Subject**
+         *
+         * Covers physical and political geography topics:
+         * - Kontynenty i oceany (Continents and Oceans)
+         * - Klimat i pogoda (Climate and Weather)
+         * - Ludność świata (World Population)
+         * - Kraje i stolice (Countries and Capitals map quizzes)
+         */
         Subject(
             id = "geografia",
             name = "Geografia",
