@@ -36,6 +36,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
+import org.jetbrains.compose.resources.stringResource
+import rutedu.composeapp.generated.resources.Res
+import rutedu.composeapp.generated.resources.*
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -119,7 +122,7 @@ internal fun ExpressionTypeAnswerContent(
         Spacer(Modifier.height(24.dp))
 
         Text(
-            text = "Twoja odpowiedź",
+            text = stringResource(Res.string.your_answer),
             fontSize = 14.sp,
             fontWeight = FontWeight.SemiBold,
             color = MaterialTheme.colorScheme.onBackground,
@@ -155,7 +158,7 @@ internal fun ExpressionTypeAnswerContent(
                     }
                 },
                 placeholder = {
-                    Text("np. 2*x^2 + 3*x", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(stringResource(Res.string.placeholder_algebra), color = MaterialTheme.colorScheme.onSurfaceVariant)
                 },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(

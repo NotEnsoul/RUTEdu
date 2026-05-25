@@ -55,6 +55,10 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
+import org.jetbrains.compose.resources.stringResource
+import rutedu.composeapp.generated.resources.Res
+import rutedu.composeapp.generated.resources.*
+import prz.rutedu.app.models.getElementNameRes
 import prz.rutedu.app.models.ELEMENTS
 import prz.rutedu.app.models.Element
 import prz.rutedu.app.models.ElementCategory
@@ -191,7 +195,7 @@ fun PeriodicTableContent(
                 .background(accentColor.copy(alpha = 0.12f))
                 .padding(horizontal = 16.dp, vertical = 5.dp)
         ) {
-            Text("CHEMIA", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = accentColor)
+            Text(stringResource(Res.string.periodic_table_chemistry), fontSize = 11.sp, fontWeight = FontWeight.Bold, color = accentColor)
         }
         Spacer(Modifier.height(8.dp))
         Text(
@@ -203,7 +207,7 @@ fun PeriodicTableContent(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp)
         )
         Text(
-            text = "Wybierz pierwiastek z tacy, wstaw w puste miejsce",
+            text = stringResource(Res.string.periodic_table_tray_instruction),
             fontSize = 13.sp,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
@@ -280,7 +284,7 @@ fun PeriodicTableContent(
                         ) {
                             Icon(Icons.Default.Lightbulb, contentDescription = null, modifier = Modifier.size(18.dp))
                             Spacer(Modifier.width(6.dp))
-                            Text("Podpowiedź")
+                            Text(stringResource(Res.string.button_hint))
                         }
                     }
                     Button(
@@ -297,7 +301,7 @@ fun PeriodicTableContent(
                         shape = RoundedCornerShape(50),
                         colors = ButtonDefaults.buttonColors(containerColor = accentColor)
                     ) {
-                        Text("Sprawdź ✓", fontWeight = FontWeight.Bold)
+                        Text(stringResource(Res.string.button_check), fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -493,7 +497,7 @@ private fun TableContent(
 
         // Gap row label
         Text(
-            text = "Lantanowce →",
+            text = stringResource(Res.string.periodic_table_lanthanides),
             fontSize = 7.sp,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.offset(
@@ -502,7 +506,7 @@ private fun TableContent(
             )
         )
         Text(
-            text = "Aktynowce →",
+            text = stringResource(Res.string.periodic_table_actinides),
             fontSize = 7.sp,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.offset(
@@ -753,7 +757,7 @@ private fun TrayElementCard(
                     color = symbolColor.copy(alpha = textAlpha)
                 )
                 Text(
-                    text = element.namePL,
+                    text = stringResource(getElementNameRes(element.atomicNumber)),
                     fontSize = 9.sp,
                     color = nameColor.copy(alpha = textAlpha),
                     textAlign = TextAlign.Center,
@@ -792,8 +796,8 @@ fun PeriodicTableByShellContent(
 ) {
     val isDark = isAppInDarkTheme()
     PeriodicTableFindContent(
-        topLabel = "CHEMIA",
-        questionText = "Wskaż pierwiastek o konfiguracji powłokowej",
+        topLabel = stringResource(Res.string.periodic_table_chemistry),
+        questionText = stringResource(Res.string.periodic_table_find_by_shell_prompt),
         clueContent = { clueColor ->
             Text(
                 text = question.shellConfig,
@@ -804,7 +808,7 @@ fun PeriodicTableByShellContent(
                 letterSpacing = 2.sp
             )
             Text(
-                text = "elektrony w powłokach K, L, M, N…",
+                text = stringResource(Res.string.periodic_table_electrons_shells),
                 fontSize = 12.sp,
                 color = if (isDark) MaterialTheme.colorScheme.onSurfaceVariant else Color(0xFF9E9E9E),
                 textAlign = TextAlign.Center
@@ -840,11 +844,11 @@ fun PeriodicTableByNameContent(
     onWrong: () -> Unit = {}
 ) {
     PeriodicTableFindContent(
-        topLabel = "CHEMIA",
-        questionText = "Znajdź w układzie pierwiastek o nazwie",
+        topLabel = stringResource(Res.string.periodic_table_chemistry),
+        questionText = stringResource(Res.string.periodic_table_find_by_name_prompt),
         clueContent = { clueColor ->
             Text(
-                text = question.elementNamePL,
+                text = stringResource(getElementNameRes(question.targetAtomicNumber)),
                 fontSize = 34.sp,
                 fontWeight = FontWeight.Bold,
                 color = clueColor,
@@ -1009,7 +1013,7 @@ private fun PeriodicTableFindContent(
                     ) {
                         Icon(Icons.Default.Lightbulb, contentDescription = null, modifier = Modifier.size(18.dp))
                         Spacer(Modifier.width(6.dp))
-                        Text("Podpowiedź")
+                        Text(stringResource(Res.string.button_hint))
                     }
                 }
                 Button(
@@ -1027,7 +1031,7 @@ private fun PeriodicTableFindContent(
                     shape = RoundedCornerShape(50),
                     colors = ButtonDefaults.buttonColors(containerColor = accentColor)
                 ) {
-                    Text("Sprawdź ✓", fontWeight = FontWeight.Bold)
+                    Text(stringResource(Res.string.button_check), fontWeight = FontWeight.Bold)
                 }
             }
         }

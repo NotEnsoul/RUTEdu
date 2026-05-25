@@ -38,7 +38,11 @@ import prz.rutedu.app.data.LessonProgressStore
 import prz.rutedu.app.data.QuestionBank
 import prz.rutedu.app.data.SubjectConfigStore
 import prz.rutedu.app.data.SubjectRepository
+import org.jetbrains.compose.resources.stringResource
+import rutedu.composeapp.generated.resources.Res
+import rutedu.composeapp.generated.resources.*
 import prz.rutedu.app.models.Question
+import prz.rutedu.app.locale.getNameRes
 import kotlin.math.roundToInt
 
 /**
@@ -146,8 +150,8 @@ fun LessonGameScreen(
 
     if (isComplete) {
         LessonCompleteContent(
-            subjectName = subject?.name ?: "",
-            lessonName = lesson?.name ?: "",
+            subjectName = subject?.let { stringResource(it.getNameRes()) } ?: "",
+            lessonName = lesson?.let { stringResource(it.getNameRes()) } ?: "",
             accentColor = accentColor,
             bottomPadding = bottomPadding,
             onReset = {
@@ -167,7 +171,7 @@ fun LessonGameScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            Text("Brak pytań dla tej lekcji", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 16.sp)
+            Text(stringResource(Res.string.lesson_no_questions), color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 16.sp)
         }
         return
     }
@@ -223,12 +227,12 @@ fun LessonGameScreen(
                 IconButton(onClick = { navController.popBackStack() }) {
                     Icon(
                         Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Wróć",
+                        contentDescription = stringResource(Res.string.back),
                         tint = MaterialTheme.colorScheme.onSurface
                     )
                 }
                 Text(
-                    text = subject?.name ?: "Lekcja",
+                    text = subject?.let { stringResource(it.getNameRes()) } ?: stringResource(Res.string.lesson_fallback),
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface
@@ -242,7 +246,7 @@ fun LessonGameScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "${(headerProgress * 100).roundToInt()}% ukończone",
+                    text = stringResource(Res.string.lesson_progress_completed, "${(headerProgress * 100).roundToInt()}%"),
                     fontSize = 12.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.weight(1f)

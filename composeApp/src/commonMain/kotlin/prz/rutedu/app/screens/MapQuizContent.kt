@@ -54,6 +54,9 @@ import prz.rutedu.app.geo.CountryFeature
 import prz.rutedu.app.models.MapRegion
 import prz.rutedu.app.models.Question
 import prz.rutedu.app.theme.isAppInDarkTheme
+import org.jetbrains.compose.resources.stringResource
+import rutedu.composeapp.generated.resources.Res
+import rutedu.composeapp.generated.resources.*
 import kotlin.math.PI
 import kotlin.math.cos
 
@@ -415,7 +418,7 @@ internal fun MapQuizContent(
             ) {
                 Icon(Icons.Default.Lightbulb, null, tint = accentColor, modifier = Modifier.size(18.dp))
                 Spacer(Modifier.width(6.dp))
-                Text("Podpowiedź", color = accentColor, fontWeight = FontWeight.SemiBold)
+                Text(stringResource(Res.string.button_hint), color = accentColor, fontWeight = FontWeight.SemiBold)
             }
             Button(
                 onClick = {
@@ -429,7 +432,7 @@ internal fun MapQuizContent(
             ) {
                 Icon(Icons.Default.Check, null, modifier = Modifier.size(18.dp))
                 Spacer(Modifier.width(6.dp))
-                Text("Sprawdź", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                Text(stringResource(Res.string.button_check), fontWeight = FontWeight.Bold, fontSize = 16.sp)
             }
         }
         Spacer(Modifier.height(16.dp))

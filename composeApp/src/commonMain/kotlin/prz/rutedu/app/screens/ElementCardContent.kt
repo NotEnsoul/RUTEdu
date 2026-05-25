@@ -38,6 +38,11 @@ import prz.rutedu.app.models.ELEMENTS
 import prz.rutedu.app.models.Question
 import kotlin.math.abs
 import kotlin.math.round
+import org.jetbrains.compose.resources.stringResource
+import rutedu.composeapp.generated.resources.Res
+import rutedu.composeapp.generated.resources.element_card_configuration
+import rutedu.composeapp.generated.resources.element_card_group
+import prz.rutedu.app.models.getElementNameRes
 
 /**
  * Formats a float to exactly 3 decimal places without using `String.format` (which is not
@@ -160,7 +165,7 @@ internal fun ElementCardContent(
                             }
                             Spacer(Modifier.height(10.dp))
                             Text(
-                                text = element.namePL,
+                                text = stringResource(getElementNameRes(element.atomicNumber)),
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.SemiBold,
                                 color = MaterialTheme.colorScheme.onSurface
@@ -179,12 +184,12 @@ internal fun ElementCardContent(
 
                     // Info rows
                     if (element.electronConfig.isNotEmpty()) {
-                        ElementInfoRow("Konfiguracja:", element.electronConfig, accentColor)
+                        ElementInfoRow(stringResource(Res.string.element_card_configuration), element.electronConfig, accentColor)
                         Spacer(Modifier.height(6.dp))
                     }
                     if (element.groupName.isNotEmpty()) {
                         ElementInfoRow(
-                            label = "Grupa:",
+                            label = stringResource(Res.string.element_card_group),
                             value = "${element.tableCol} (${element.groupName.lowercase()})",
                             accentColor = accentColor
                         )

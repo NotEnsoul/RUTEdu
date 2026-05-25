@@ -24,6 +24,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import prz.rutedu.app.models.Subject
 import prz.rutedu.app.theme.themeBackgroundColor
+import org.jetbrains.compose.resources.stringResource
+import rutedu.composeapp.generated.resources.Res
+import rutedu.composeapp.generated.resources.*
+import prz.rutedu.app.locale.getNameRes
 
 /**
  * Grid tile that represents a single [Subject] on the home screen.
@@ -62,6 +66,7 @@ fun SubjectCard(
             .padding(16.dp)
     ) {
         Column {
+            val subjectName = stringResource(subject.getNameRes())
             Box(
                 modifier = Modifier
                     .size(52.dp)
@@ -71,7 +76,7 @@ fun SubjectCard(
             ) {
                 Icon(
                     imageVector = subject.icon,
-                    contentDescription = subject.name,
+                    contentDescription = subjectName,
                     tint = Color.White,
                     modifier = Modifier.size(28.dp)
                 )
@@ -80,14 +85,14 @@ fun SubjectCard(
             Spacer(modifier = Modifier.height(16.dp))
 
             Text(
-                text = subject.name,
+                text = subjectName,
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface
             )
 
             Text(
-                text = "${subject.lessonCount} lekcji",
+                text = stringResource(Res.string.subject_lessons_count, subject.lessonCount),
                 fontSize = 13.sp,
                 color = subject.color,
                 fontWeight = FontWeight.Medium

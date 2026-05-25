@@ -269,14 +269,14 @@ sealed class Question(open val id: Int) {
      *
      * Rendered by `PeriodicTableContent` (via the `PeriodicTableByName` branch).
      *
-     * @property elementNamePL       Polish name of the element (e.g. `"Sód"` for sodium).
-     *                               Must match [Element.namePL] exactly.
+     * @property elementName         Polish name of the element (e.g. `"Sód"` for sodium).
+     *                               Must match [Element.name] exactly.
      * @property targetAtomicNumber  Atomic number of the element with that name.
      * @property hint                Full hint shown in the bottom sheet.
      */
     data class PeriodicTableByName(
         override val id: Int,
-        val elementNamePL: String,
+        val elementName: String,
         val targetAtomicNumber: Int,
         val hint: Hint = Hint("")
     ) : Question(id)

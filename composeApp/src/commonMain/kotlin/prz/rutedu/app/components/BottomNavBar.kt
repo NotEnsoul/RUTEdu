@@ -14,6 +14,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import org.jetbrains.compose.resources.stringResource
+import rutedu.composeapp.generated.resources.Res
+import rutedu.composeapp.generated.resources.*
 
 /**
  * The three tabs available in the bottom navigation bar.
@@ -79,6 +82,11 @@ fun BottomNavBar(
     ) {
         NavTab.entries.forEach { tab ->
             val isSelected = tab == activeTab
+            val labelText = when (tab) {
+                NavTab.START -> stringResource(Res.string.nav_start)
+                NavTab.NAUKA -> stringResource(Res.string.nav_learn)
+                NavTab.CWICZENIA -> stringResource(Res.string.nav_exercises)
+            }
             NavigationBarItem(
                 selected = isSelected,
                 onClick = { onTabSelected(tab) },
@@ -89,12 +97,12 @@ fun BottomNavBar(
                             NavTab.NAUKA     -> Icons.AutoMirrored.Filled.MenuBook
                             NavTab.CWICZENIA -> Icons.AutoMirrored.Filled.Assignment
                         },
-                        contentDescription = tab.label
+                        contentDescription = labelText
                     )
                 },
                 label = {
                     Text(
-                        text = tab.label,
+                        text = labelText,
                         fontSize = 10.sp
                     )
                 },

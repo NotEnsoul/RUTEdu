@@ -49,6 +49,9 @@ import androidx.compose.ui.unit.sp
 import prz.rutedu.app.math.MathCanvas
 import prz.rutedu.app.models.Question
 import prz.rutedu.app.theme.isAppInDarkTheme
+import org.jetbrains.compose.resources.stringResource
+import rutedu.composeapp.generated.resources.Res
+import rutedu.composeapp.generated.resources.*
 
 /**
  * Question content for [Question.GraphTypeAnswer] - a [MathCanvas] visualization paired with a
@@ -127,7 +130,7 @@ internal fun GraphTypeAnswerContent(
         Spacer(Modifier.height(20.dp))
 
         Text(
-            text = "Twoja odpowiedź",
+            text = stringResource(Res.string.your_answer),
             fontSize = 14.sp,
             fontWeight = FontWeight.SemiBold,
             color = MaterialTheme.colorScheme.onBackground,
@@ -161,7 +164,7 @@ internal fun GraphTypeAnswerContent(
                         isWrong = false
                     }
                 },
-                placeholder = { Text("Wpisz wynik…", color = MaterialTheme.colorScheme.onSurfaceVariant) },
+                placeholder = { Text(stringResource(Res.string.placeholder_enter_result), color = MaterialTheme.colorScheme.onSurfaceVariant) },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Number,

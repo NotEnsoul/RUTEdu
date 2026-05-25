@@ -49,6 +49,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import prz.rutedu.app.models.Question
 import prz.rutedu.app.theme.isAppInDarkTheme
+import org.jetbrains.compose.resources.stringResource
+import rutedu.composeapp.generated.resources.Res
+import rutedu.composeapp.generated.resources.*
 
 /**
  * Question content for [Question.TypeAnswer] - the student types a numeric answer into a text field.
@@ -133,7 +136,7 @@ internal fun TypeAnswerContent(
 
         // "Twoja odpowiedź" label
         Text(
-            text = "Twoja odpowiedź",
+            text = stringResource(Res.string.your_answer),
             fontSize = 14.sp,
             fontWeight = FontWeight.SemiBold,
             color = MaterialTheme.colorScheme.onBackground,
@@ -164,7 +167,7 @@ internal fun TypeAnswerContent(
                         isWrong = false
                     }
                 },
-                placeholder = { Text("Wpisz wynik...", color = MaterialTheme.colorScheme.onSurfaceVariant) },
+                placeholder = { Text(stringResource(Res.string.placeholder_enter_result), color = MaterialTheme.colorScheme.onSurfaceVariant) },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Number,

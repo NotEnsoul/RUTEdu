@@ -48,13 +48,15 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import app.cash.sqldelight.db.SqlDriver
 import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
+import rutedu.composeapp.generated.resources.Res
+import rutedu.composeapp.generated.resources.*
 import prz.rutedu.app.Screen
 import prz.rutedu.app.components.SubjectCard
 import prz.rutedu.app.data.LessonProgressStore
 import prz.rutedu.app.data.SubjectRepository
-import rutedu.composeapp.generated.resources.Res
-import rutedu.composeapp.generated.resources.logo_prz
-import rutedu.composeapp.generated.resources.weii_header
+
+
 
 /**
  * Home screen - the first screen the user sees after launch.
@@ -139,7 +141,7 @@ fun MainScreen(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Settings,
-                        contentDescription = "Ustawienia",
+                        contentDescription = stringResource(Res.string.menu_settings),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.size(22.dp)
                     )
@@ -150,12 +152,12 @@ fun MainScreen(
         Spacer(modifier = Modifier.height(28.dp))
 
         Text(
-            text = "Dzień dobry!",
+            text = stringResource(Res.string.main_good_morning),
             fontSize = 15.sp,
             color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
         )
         Text(
-            text = "Czego dzisiaj się nauczymy?",
+            text = stringResource(Res.string.main_what_to_learn),
             fontSize = 22.sp,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onBackground,
@@ -219,7 +221,7 @@ fun MainScreen(
                         ) {
                             Image(
                                 painter = painterResource(Res.drawable.weii_header),
-                                contentDescription = "Wydział Elektrotechniki, Informatyki i Telekomunikacji",
+                                contentDescription = stringResource(Res.string.weii_description),
                                 modifier = Modifier.fillMaxWidth().height(36.dp),
                                 contentScale = ContentScale.Fit
                             )
