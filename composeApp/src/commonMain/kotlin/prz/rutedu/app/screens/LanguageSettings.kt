@@ -43,21 +43,19 @@ import rutedu.composeapp.generated.resources.Res
 import rutedu.composeapp.generated.resources.*
 import prz.rutedu.app.locale.customAppLocale
 import prz.rutedu.app.Database
-import prz.rutedu.app.theme.ThemeMode
-import prz.rutedu.app.theme.customAppThemeMode
 
 /**
-  * App settings screen focusing exclusively on Theme Mode selection.
-  * Styled after the SubjectConfigScreen layout.
-  */
+ * App settings screen focusing exclusively on Language selection.
+ * Styled after Settings.kt.
+ */
 @Composable
-fun Settings(
+fun LanguageSettings(
     navController: NavController,
     database: Database,
     bottomPadding: Dp = 0.dp
 ) {
     val coroutineScope = rememberCoroutineScope()
-    var selectedThemeMode by remember { mutableStateOf(customAppThemeMode) }
+    var selectedLanguage by remember { mutableStateOf(customAppLocale ?: "en") }
 
     Column(
         modifier = Modifier
@@ -81,7 +79,7 @@ fun Settings(
                 )
             }
             Text(
-                stringResource(Res.string.settings_theme_title),
+                stringResource(Res.string.settings_lang_title),
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface
@@ -96,7 +94,7 @@ fun Settings(
                 .padding(horizontal = 16.dp, vertical = 20.dp)
         ) {
             Text(
-                stringResource(Res.string.settings_select_theme).uppercase(),
+                stringResource(Res.string.settings_select_language).uppercase(),
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -112,41 +110,34 @@ fun Settings(
                 modifier = Modifier.fillMaxWidth().padding(bottom = 10.dp)
             ) {
                 Column {
-                    ThemeMode.entries.forEachIndexed { index, mode ->
-                                                val displayName = when (mode) {
-                            ThemeMode.SYSTEM -> stringResource(Res.string.settings_theme_system)
-                            ThemeMode.LIGHT -> stringResource(Res.string.settings_theme_light)
-                            ThemeMode.DARK -> stringResource(Res.string.settings_theme_dark)
-                        }
-                        
-                        val description = when (mode) {
-                            ThemeMode.SYSTEM -> stringResource(Res.string.settings_theme_system_desc)
-                            ThemeMode.LIGHT -> stringResource(Res.string.settings_theme_theme_light_desc)
-                            ThemeMode.DARK -> stringResource(Res.string.settings_theme_theme_dark_desc)
-                        }
-
+                    val languages = listOf(
+                        ("pl" to stringResource(Res.string.settings_lang_pl)) to stringResource(Res.string.settings_lang_pl_desc),
+                        ("en" to stringResource(Res.string.settings_lang_en)) to stringResource(Res.string.settings_lang_en_desc)
+                    )
+                    languages.forEachIndexed { index, (pair, desc) ->
+                        val (code, name) = pair
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clickable { selectedThemeMode = mode }
+                                .clickable { selectedLanguage = code }
                                 .padding(horizontal = 16.dp, vertical = 16.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
-                                    text = displayName,
+                                    text = name,
                                     fontSize = 16.sp,
                                     fontWeight = FontWeight.SemiBold,
                                     color = MaterialTheme.colorScheme.onSurface
                                 )
                                 Spacer(Modifier.height(2.dp))
                                 Text(
-                                    text = description,
+                                    text = desc,
                                     fontSize = 12.sp,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
-                            if (selectedThemeMode == mode) {
+                            if (selectedLanguage == code) {
                                 Text(
                                     text = "✓",
                                     fontSize = 20.sp,
@@ -156,7 +147,7 @@ fun Settings(
                             }
                         }
 
-                        if (index < ThemeMode.entries.size - 1) {
+                        if (index < languages.size - 1) {
                             HorizontalDivider(
                                 modifier = Modifier.padding(horizontal = 16.dp),
                                 color = MaterialTheme.colorScheme.outlineVariant
@@ -165,18 +156,15 @@ fun Settings(
                     }
                 }
             }
-
-
-
         }
 
         // Save
         Button(
             onClick = {
-                customAppThemeMode = selectedThemeMode
+                customAppLocale = selectedLanguage
                 coroutineScope.launch {
                     try {
-                        database.databaseQueries.setThemeMode(selectedThemeMode.name.lowercase())
+                        database.databaseQueries.setLanguage(selectedLanguage)
                     } catch (e: Exception) {}
                 }
                 navController.popBackStack()
