@@ -1,0 +1,10 @@
+-- Migration from version 1 to 2: Create the storedQuestion table for lesson quiz questions
+
+CREATE TABLE storedQuestion (
+  lesson_id TEXT NOT NULL,
+  question_id INTEGER NOT NULL,
+  language TEXT NOT NULL,
+  type TEXT NOT NULL,
+  data_json TEXT NOT NULL,
+  PRIMARY KEY (lesson_id, question_id, language)
+);

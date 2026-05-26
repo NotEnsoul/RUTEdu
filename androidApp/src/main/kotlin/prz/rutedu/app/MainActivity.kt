@@ -20,11 +20,10 @@ class MainActivity : ComponentActivity() {
 
         val context = applicationContext
 
-        val driver = DriverFactory(context)
-
+        val driverFactory = DriverFactory(context)
 
         setContent {
-            App(driver.createDriver())
+            App(driverFactory)
         }
     }
 }

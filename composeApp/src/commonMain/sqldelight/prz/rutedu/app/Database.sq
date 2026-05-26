@@ -132,3 +132,40 @@ isPreviousLevelCompleted:
 SELECT completed FROM levelProgress 
 WHERE player_id = ? AND game_mode = ? AND level = ?;
 
+
+-- Stored Questions table for lesson quiz questions
+CREATE TABLE storedQuestion (
+  lesson_id TEXT NOT NULL,
+  question_id INTEGER NOT NULL,
+  language TEXT NOT NULL,
+  type TEXT NOT NULL,
+  data_json TEXT NOT NULL,
+  PRIMARY KEY (lesson_id, question_id, language)
+);
+
+-- Get questions for a lesson and language
+getQuestionsForLesson:
+SELECT * FROM storedQuestion
+WHERE lesson_id = ? AND language = ?
+ORDER BY question_id ASC;
+
+-- Insert or replace a question
+upsertQuestion:
+INSERT OR REPLACE INTO storedQuestion (lesson_id, question_id, language, type, data_json)
+VALUES (?, ?, ?, ?, ?);
+
+-- Count questions for a lesson and language
+countQuestionsForLesson:
+SELECT COUNT(*) FROM storedQuestion
+WHERE lesson_id = ? AND language = ?;
+
+-- Check if any questions exist in the database (to decide if seeding is needed)
+hasAnyQuestions:
+SELECT COUNT(*) FROM storedQuestion;
+
+-- Delete all stored questions
+clearStoredQuestions:
+DELETE FROM storedQuestion;
+
+
+

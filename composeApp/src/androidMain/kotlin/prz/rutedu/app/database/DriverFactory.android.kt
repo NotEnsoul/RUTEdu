@@ -1,6 +1,7 @@
 package prz.rutedu.app.database
 
 import android.content.Context
+import android.util.Log
 import app.cash.sqldelight.async.coroutines.synchronous
 import app.cash.sqldelight.db.SqlDriver
 import app.cash.sqldelight.driver.android.AndroidSqliteDriver
@@ -28,5 +29,14 @@ actual class DriverFactory(private val context: Context) {
                 schema = schema
             )
         )
+    }
+
+    actual fun deleteDatabase(): Boolean {
+        return try {
+            context.deleteDatabase("test.db")
+        } catch (e: Exception) {
+            Log.e("DriverFactory", "Failed to delete database", e)
+            false
+        }
     }
 }

@@ -6,6 +6,16 @@ import androidx.compose.runtime.ProvidedValue
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import prz.rutedu.app.getSystemLanguage
+
+/**
+ * Returns the currently active language code ("pl" or "en"), checking custom app locale
+ * override first, and falling back to the detected system language.
+ */
+fun getCurrentLanguage(): String {
+    val lang = customAppLocale ?: getSystemLanguage()
+    return if (lang == "pl" || lang == "en") lang else "en"
+}
 
 /**
  * Global mutable state that holds the user's selected language code

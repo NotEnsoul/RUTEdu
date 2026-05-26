@@ -24,6 +24,8 @@ import prz.rutedu.app.models.Question.PeriodicTableQuiz
 import prz.rutedu.app.models.Question.SelectFromList
 import prz.rutedu.app.models.elementByNumber
 import prz.rutedu.app.models.shellConfigByNumber
+import prz.rutedu.app.models.localizedName
+import prz.rutedu.app.models.localizedGroupName
 import kotlin.math.roundToInt
 import kotlin.random.Random
 
@@ -71,8 +73,6 @@ object ChemistryQuestionGenerator {
             "chemia_1_4" -> chemia_1_4(seed)
             "chemia_2_1" -> chemia_2_1(seed)
             "chemia_2_2" -> chemia_2_2(seed)
-            "chemia_3_1" -> chemia_3_1(seed)
-            "chemia_3_2" -> chemia_3_2(seed)
             "chemia_3_3" -> chemia_3_3(seed)
             "chemia_3_4" -> chemia_3_4(seed)
             "chemia_4_1" -> chemia_4_1(seed)
@@ -212,384 +212,6 @@ object ChemistryQuestionGenerator {
         return propertyQuestions(rng)
     }
 
-    /**
-     * Lookup record for a single acid used in chemia_3_1 question generation.
-     *
-     * @property formula Chemical formula (e.g. `"H₂SO₄"`).
-     * @property name  Polish name (e.g. `"kwas siarkowy(VI)"`).
-     * @property type    Acid class: `"beztlenowy"` (oxyacid-free) or `"tlenowy"` (oxyacid).
-     * @property hint    Hint sentence shown to the student after a wrong answer.
-     */
-    private data class AcidEntry(
-        val formula: String,
-        val name: String,
-        val type: String,
-        val hint: String
-    )
-
-    private val acids = listOf(
-        AcidEntry("HF",      "kwas fluorowodorowy",   "beztlenowy", "HF – fluorowodorowy, trawiący szkło."),
-        AcidEntry("HCl",     "kwas chlorowodorowy",   "beztlenowy", "HCl – chlorowodorowy (solny), składnik soku żołądkowego."),
-        AcidEntry("HBr",     "kwas bromowodorowy",    "beztlenowy", "HBr – bromowodorowy, podobny do HCl."),
-        AcidEntry("HI",      "kwas jodowodorowy",     "beztlenowy", "HI – jodowodorowy, silny kwas beztlenowy."),
-        AcidEntry("H₂S",    "kwas siarkowodorowy",   "beztlenowy", "H₂S – siarkowodorowy, znany ze smrodu zgniłych jaj."),
-        AcidEntry("H₂SO₄",  "kwas siarkowy(VI)",      "tlenowy",    "H₂SO₄ – siarkowy(VI), siarka na +6. Najważniejszy kwas przemysłowy."),
-        AcidEntry("H₂SO₃",  "kwas siarkowy(IV)",      "tlenowy",    "H₂SO₃ – siarkowy(IV), siarka na +4. Przyczyna kwaśnych deszczy."),
-        AcidEntry("HNO₃",   "kwas azotowy(V)",        "tlenowy",    "HNO₃ – azotowy(V), azot na +5. Używany do nawozów i materiałów wybuchowych."),
-        AcidEntry("HNO₂",   "kwas azotowy(III)",      "tlenowy",    "HNO₂ – azotowy(III), azot na +3. Słabszy kwas niż HNO₃."),
-        AcidEntry("H₃PO₄",  "kwas fosforowy(V)",      "tlenowy",    "H₃PO₄ – fosforowy(V). Składnik nawozów i napojów cola."),
-        AcidEntry("H₂CO₃",  "kwas węglowy",           "tlenowy",    "H₂CO₃ – węglowy. Powstaje gdy CO₂ rozpuszcza się w wodzie."),
-        AcidEntry("HClO₄",  "kwas chlorowy(VII)",     "tlenowy",    "HClO₄ – chlorowy(VII), chlor na +7. Jeden z najmocniejszych kwasów."),
-        AcidEntry("HClO₃",  "kwas chlorowy(V)",       "tlenowy",    "HClO₃ – chlorowy(V), chlor na +5."),
-        AcidEntry("HClO₂",  "kwas chlorowy(III)",     "tlenowy",    "HClO₂ – chlorowy(III), chlor na +3."),
-        AcidEntry("HClO",   "kwas chlorowy(I)",       "tlenowy",    "HClO – chlorowy(I), chlor na +1. Słaby kwas, właściwości odkażające."),
-        AcidEntry("H₃BO₃",  "kwas borowy",            "tlenowy",    "H₃BO₃ – borowy. Stosowany w okulistyce jako środek dezynfekcyjny."),
-    )
-
-    /**
-     * Generates questions for Lesson 3-1: "Kwasy" (Acids).
-     *
-     * Quizzes students on acid names, formulas, and classification into oxyacids (tlenowe)
-     * and oxyacid-free (beztlenowe) acids.
-     *
-     * @param seed Random seed for question and option randomization.
-     * @return A list of [SelectFromList] question objects.
-     */
-    private fun chemia_3_1(seed: Long): List<Question> {
-        val rng = Random(seed)
-        val qs = mutableListOf<SelectFromList>()
-        val allFormulas = acids.map { it.formula }
-        val allNames    = acids.map { it.name }
-        val typeOpts    = listOf("beztlenowy", "tlenowy")
-        val typeHint    = "Kwasy beztlenowe nie zawierają tlenu (HX, H₂X). Kwasy tlenowe zawierają tlen (np. HNO₃, H₂SO₄)."
-
-        acids.forEach { acid ->
-            // formula -> name
-            val wNames = allNames.filter { it != acid.name }.shuffled(rng).take(3)
-            val opts1 = (wNames + acid.name).shuffled(rng)
-            qs += SelectFromList(
-                id = 0,
-                prompt = "Kwas o wzorze ${acid.formula} to:",
-                options = opts1,
-                correctIndices = setOf(opts1.indexOf(acid.name)),
-                hint = Hint(acid.hint, boldPart = acid.name)
-            )
-
-            // name -> formula
-            val wForms = allFormulas.filter { it != acid.formula }.shuffled(rng).take(3)
-            val opts2 = (wForms + acid.formula).shuffled(rng)
-            qs += SelectFromList(
-                id = 0,
-                prompt = "Wzór ${acid.name} to:",
-                options = opts2,
-                correctIndices = setOf(opts2.indexOf(acid.formula)),
-                hint = Hint(acid.hint, boldPart = acid.formula)
-            )
-
-            // type: tlenowy / beztlenowy
-            qs += SelectFromList(
-                id = 0,
-                prompt = "${acid.name} (${acid.formula}) jest kwasem:",
-                options = typeOpts,
-                correctIndices = setOf(typeOpts.indexOf(acid.type)),
-                hint = Hint(typeHint, boldPart = acid.type)
-            )
-        }
-
-        return qs.shuffled(rng).mapIndexed { i, q -> q.copy(id = 3100 + i) }
-    }
-
-    private val acidReactions: List<EquationBalance> = listOf(
-        EquationBalance(
-            id = 0,
-            instruction = "Zbilansuj reakcję syntezy kwasu",
-            reactants = listOf(BalanceTerm("H₂", fixedCoefficient = null, correctCoefficient = 1), BalanceTerm("Cl₂", fixedCoefficient = 1)),
-            products = listOf(BalanceTerm("HCl", fixedCoefficient = null, correctCoefficient = 2)),
-            hint = Hint("H₂ + Cl₂ → 2HCl. Po lewej: 2H i 2Cl → po prawej 2 cząsteczki HCl.", boldPart = "2HCl",
-                steps = listOf("1×H₂ = 2H, 1×Cl₂ = 2Cl", "2H + 2Cl → 2×HCl"))
-        ),
-        EquationBalance(
-            id = 0,
-            instruction = "Zbilansuj reakcję syntezy kwasu",
-            reactants = listOf(BalanceTerm("H₂", fixedCoefficient = 1), BalanceTerm("F₂", fixedCoefficient = null, correctCoefficient = 1)),
-            products = listOf(BalanceTerm("HF", fixedCoefficient = null, correctCoefficient = 2)),
-            hint = Hint("H₂ + F₂ → 2HF. Analogicznie jak synteza HCl.", boldPart = "2HF",
-                steps = listOf("1×H₂ = 2H, 1×F₂ = 2F", "2H + 2F → 2×HF"))
-        ),
-        EquationBalance(
-            id = 0,
-            instruction = "Zbilansuj reakcję syntezy kwasu",
-            reactants = listOf(BalanceTerm("H₂", fixedCoefficient = null, correctCoefficient = 1), BalanceTerm("Br₂", fixedCoefficient = 1)),
-            products = listOf(BalanceTerm("HBr", fixedCoefficient = null, correctCoefficient = 2)),
-            hint = Hint("H₂ + Br₂ → 2HBr.", boldPart = "2HBr",
-                steps = listOf("1×H₂ = 2H, 1×Br₂ = 2Br", "2H + 2Br → 2×HBr"))
-        ),
-        EquationBalance(
-            id = 0,
-            instruction = "Zbilansuj reakcję syntezy kwasu",
-            reactants = listOf(BalanceTerm("H₂", fixedCoefficient = 1), BalanceTerm("I₂", fixedCoefficient = null, correctCoefficient = 1)),
-            products = listOf(BalanceTerm("HI", fixedCoefficient = null, correctCoefficient = 2)),
-            hint = Hint("H₂ + I₂ → 2HI.", boldPart = "2HI",
-                steps = listOf("1×H₂ = 2H, 1×I₂ = 2I", "2H + 2I → 2×HI"))
-        ),
-        EquationBalance(
-            id = 0,
-            instruction = "Zbilansuj reakcję syntezy kwasu",
-            reactants = listOf(BalanceTerm("H₂", fixedCoefficient = null, correctCoefficient = 1), BalanceTerm("S", fixedCoefficient = 1)),
-            products = listOf(BalanceTerm("H₂S", fixedCoefficient = null, correctCoefficient = 1)),
-            hint = Hint("H₂ + S → H₂S. Wszystkie współczynniki = 1.", boldPart = "H₂S")
-        ),
-        EquationBalance(
-            id = 0,
-            instruction = "Uzupełnij reakcję otrzymywania kwasu",
-            reactants = listOf(BalanceTerm("SO₃", fixedCoefficient = null, correctCoefficient = 1), BalanceTerm("H₂O", fixedCoefficient = 1)),
-            products = listOf(BalanceTerm("H₂SO₄", fixedCoefficient = null, correctCoefficient = 1)),
-            hint = Hint("SO₃ + H₂O → H₂SO₄. Tlenek kwasowy + woda → kwas.", boldPart = "H₂SO₄")
-        ),
-        EquationBalance(
-            id = 0,
-            instruction = "Uzupełnij reakcję otrzymywania kwasu",
-            reactants = listOf(BalanceTerm("SO₂", fixedCoefficient = 1), BalanceTerm("H₂O", fixedCoefficient = null, correctCoefficient = 1)),
-            products = listOf(BalanceTerm("H₂SO₃", fixedCoefficient = null, correctCoefficient = 1)),
-            hint = Hint("SO₂ + H₂O → H₂SO₃. Kwas siarkowy(IV) — przyczyna kwaśnych deszczy.", boldPart = "H₂SO₃")
-        ),
-        EquationBalance(
-            id = 0,
-            instruction = "Uzupełnij reakcję otrzymywania kwasu",
-            reactants = listOf(BalanceTerm("CO₂", fixedCoefficient = null, correctCoefficient = 1), BalanceTerm("H₂O", fixedCoefficient = 1)),
-            products = listOf(BalanceTerm("H₂CO₃", fixedCoefficient = null, correctCoefficient = 1)),
-            hint = Hint("CO₂ + H₂O → H₂CO₃. Tak powstaje kwas węglowy w napojach gazowanych.", boldPart = "H₂CO₃")
-        ),
-        EquationBalance(
-            id = 0,
-            instruction = "Zbilansuj równanie reakcji",
-            reactants = listOf(BalanceTerm("N₂O₅", fixedCoefficient = null, correctCoefficient = 1), BalanceTerm("H₂O", fixedCoefficient = 1)),
-            products = listOf(BalanceTerm("HNO₃", fixedCoefficient = null, correctCoefficient = 2)),
-            hint = Hint("N₂O₅ + H₂O → 2HNO₃. Dwa atomy N → 2 cząsteczki HNO₃.", boldPart = "2HNO₃",
-                steps = listOf("N₂O₅ ma 2N → potrzeba 2×HNO₃", "2×HNO₃ ma 2H → 1×H₂O"))
-        ),
-        EquationBalance(
-            id = 0,
-            instruction = "Zbilansuj równanie reakcji",
-            reactants = listOf(BalanceTerm("N₂O₃", fixedCoefficient = 1), BalanceTerm("H₂O", fixedCoefficient = null, correctCoefficient = 1)),
-            products = listOf(BalanceTerm("HNO₂", fixedCoefficient = null, correctCoefficient = 2)),
-            hint = Hint("N₂O₃ + H₂O → 2HNO₂. Kwas azotowy(III).", boldPart = "2HNO₂",
-                steps = listOf("N₂O₃ ma 2N → potrzeba 2×HNO₂", "2×HNO₂ ma 2H → 1×H₂O"))
-        ),
-        EquationBalance(
-            id = 0,
-            instruction = "Zbilansuj równanie reakcji",
-            reactants = listOf(BalanceTerm("P₂O₅", fixedCoefficient = 1), BalanceTerm("H₂O", fixedCoefficient = null, correctCoefficient = 3)),
-            products = listOf(BalanceTerm("H₃PO₄", fixedCoefficient = null, correctCoefficient = 2)),
-            hint = Hint("P₂O₅ + 3H₂O → 2H₃PO₄.", boldPart = "2H₃PO₄",
-                steps = listOf("2P → 2×H₃PO₄", "2×H₃PO₄ ma 6H → 3×H₂O", "Sprawdź O: 5+3=8 = 2×4 ✓"))
-        ),
-        EquationBalance(
-            id = 0,
-            instruction = "Zbilansuj równanie reakcji",
-            reactants = listOf(BalanceTerm("Cl₂O₇", fixedCoefficient = null, correctCoefficient = 1), BalanceTerm("H₂O", fixedCoefficient = 1)),
-            products = listOf(BalanceTerm("HClO₄", fixedCoefficient = null, correctCoefficient = 2)),
-            hint = Hint("Cl₂O₇ + H₂O → 2HClO₄. Dwa atomy Cl → 2 cząsteczki kwasu.", boldPart = "2HClO₄",
-                steps = listOf("Cl₂O₇ ma 2Cl → 2×HClO₄", "2×HClO₄ ma 2H → 1×H₂O"))
-        ),
-        EquationBalance(
-            id = 0,
-            instruction = "Zbilansuj równanie reakcji",
-            reactants = listOf(BalanceTerm("Cl₂O", fixedCoefficient = 1), BalanceTerm("H₂O", fixedCoefficient = null, correctCoefficient = 1)),
-            products = listOf(BalanceTerm("HClO", fixedCoefficient = null, correctCoefficient = 2)),
-            hint = Hint("Cl₂O + H₂O → 2HClO. Kwas chlorowy(I).", boldPart = "2HClO",
-                steps = listOf("Cl₂O ma 2Cl → 2×HClO", "2×HClO ma 2H → 1×H₂O"))
-        ),
-        EquationBalance(
-            id = 0,
-            instruction = "Zbilansuj reakcję syntezy wody",
-            reactants = listOf(BalanceTerm("H₂", fixedCoefficient = null, correctCoefficient = 2), BalanceTerm("O₂", fixedCoefficient = 1)),
-            products = listOf(BalanceTerm("H₂O", fixedCoefficient = null, correctCoefficient = 2)),
-            hint = Hint("2H₂ + O₂ → 2H₂O. Klasyczna reakcja syntezy wody.", boldPart = "2H₂O",
-                steps = listOf("2×H₂O = 4H i 2O", "4H → 2×H₂", "2O → 1×O₂"))
-        ),
-    )
-
-    private val metalAcidReactions: List<EquationBalance> = listOf(
-        EquationBalance(
-            id = 0, instruction = "Zbilansuj reakcję metalu z kwasem",
-            reactants = listOf(BalanceTerm("Zn", fixedCoefficient = 1), BalanceTerm("HCl", fixedCoefficient = null, correctCoefficient = 2)),
-            products  = listOf(BalanceTerm("ZnCl₂", fixedCoefficient = null, correctCoefficient = 1), BalanceTerm("H₂", fixedCoefficient = 1)),
-            hint = Hint("Zn + 2HCl → ZnCl₂ + H₂. Metal + kwas → sól + wodór.", boldPart = "2HCl",
-                steps = listOf("Zn²⁺ + 2Cl⁻ → ZnCl₂", "2H z HCl → H₂"))
-        ),
-        EquationBalance(
-            id = 0, instruction = "Zbilansuj reakcję metalu z kwasem",
-            reactants = listOf(BalanceTerm("Mg", fixedCoefficient = 1), BalanceTerm("HCl", fixedCoefficient = null, correctCoefficient = 2)),
-            products  = listOf(BalanceTerm("MgCl₂", fixedCoefficient = null, correctCoefficient = 1), BalanceTerm("H₂", fixedCoefficient = 1)),
-            hint = Hint("Mg + 2HCl → MgCl₂ + H₂.", boldPart = "2HCl",
-                steps = listOf("Mg²⁺ + 2Cl⁻ → MgCl₂", "2H → H₂"))
-        ),
-        EquationBalance(
-            id = 0, instruction = "Zbilansuj reakcję metalu z kwasem",
-            reactants = listOf(BalanceTerm("Fe", fixedCoefficient = 1), BalanceTerm("H₂SO₄", fixedCoefficient = 1)),
-            products  = listOf(BalanceTerm("FeSO₄", fixedCoefficient = null, correctCoefficient = 1), BalanceTerm("H₂", fixedCoefficient = null, correctCoefficient = 1)),
-            hint = Hint("Fe + H₂SO₄ → FeSO₄ + H₂. Wszystkie współczynniki = 1.", boldPart = "FeSO₄",
-                steps = listOf("Fe²⁺ + SO₄²⁻ → FeSO₄", "2H z H₂SO₄ → H₂"))
-        ),
-        EquationBalance(
-            id = 0, instruction = "Zbilansuj reakcję metalu z kwasem",
-            reactants = listOf(BalanceTerm("Ca", fixedCoefficient = 1), BalanceTerm("HCl", fixedCoefficient = null, correctCoefficient = 2)),
-            products  = listOf(BalanceTerm("CaCl₂", fixedCoefficient = null, correctCoefficient = 1), BalanceTerm("H₂", fixedCoefficient = 1)),
-            hint = Hint("Ca + 2HCl → CaCl₂ + H₂.", boldPart = "2HCl",
-                steps = listOf("Ca²⁺ + 2Cl⁻ → CaCl₂", "2H → H₂"))
-        ),
-        EquationBalance(
-            id = 0, instruction = "Zbilansuj reakcję metalu z kwasem",
-            reactants = listOf(BalanceTerm("Zn", fixedCoefficient = null, correctCoefficient = 1), BalanceTerm("H₂SO₄", fixedCoefficient = 1)),
-            products  = listOf(BalanceTerm("ZnSO₄", fixedCoefficient = null, correctCoefficient = 1), BalanceTerm("H₂", fixedCoefficient = 1)),
-            hint = Hint("Zn + H₂SO₄ → ZnSO₄ + H₂. Wszystkie współczynniki = 1.", boldPart = "ZnSO₄")
-        ),
-        EquationBalance(
-            id = 0, instruction = "Zbilansuj reakcję metalu z kwasem",
-            reactants = listOf(BalanceTerm("Mg", fixedCoefficient = null, correctCoefficient = 1), BalanceTerm("H₂SO₄", fixedCoefficient = 1)),
-            products  = listOf(BalanceTerm("MgSO₄", fixedCoefficient = null, correctCoefficient = 1), BalanceTerm("H₂", fixedCoefficient = 1)),
-            hint = Hint("Mg + H₂SO₄ → MgSO₄ + H₂. Wszystkie współczynniki = 1.", boldPart = "MgSO₄")
-        ),
-    )
-
-    private val neutralizationReactions: List<EquationBalance> = listOf(
-        EquationBalance(
-            id = 0, instruction = "Zbilansuj reakcję zobojętniania",
-            reactants = listOf(BalanceTerm("NaOH", fixedCoefficient = null, correctCoefficient = 1), BalanceTerm("HCl", fixedCoefficient = 1)),
-            products  = listOf(BalanceTerm("NaCl", fixedCoefficient = 1), BalanceTerm("H₂O", fixedCoefficient = null, correctCoefficient = 1)),
-            hint = Hint("NaOH + HCl → NaCl + H₂O. Zasada + kwas → sól + woda.", boldPart = "NaCl + H₂O",
-                steps = listOf("Na⁺ + Cl⁻ → NaCl", "OH⁻ + H⁺ → H₂O"))
-        ),
-        EquationBalance(
-            id = 0, instruction = "Zbilansuj reakcję zobojętniania",
-            reactants = listOf(BalanceTerm("KOH", fixedCoefficient = 1), BalanceTerm("HNO₃", fixedCoefficient = null, correctCoefficient = 1)),
-            products  = listOf(BalanceTerm("KNO₃", fixedCoefficient = null, correctCoefficient = 1), BalanceTerm("H₂O", fixedCoefficient = 1)),
-            hint = Hint("KOH + HNO₃ → KNO₃ + H₂O.", boldPart = "KNO₃",
-                steps = listOf("K⁺ + NO₃⁻ → KNO₃", "OH⁻ + H⁺ → H₂O"))
-        ),
-        EquationBalance(
-            id = 0, instruction = "Zbilansuj reakcję zobojętniania",
-            reactants = listOf(BalanceTerm("Ca(OH)₂", fixedCoefficient = 1), BalanceTerm("HCl", fixedCoefficient = null, correctCoefficient = 2)),
-            products  = listOf(BalanceTerm("CaCl₂", fixedCoefficient = null, correctCoefficient = 1), BalanceTerm("H₂O", fixedCoefficient = null, correctCoefficient = 2)),
-            hint = Hint("Ca(OH)₂ + 2HCl → CaCl₂ + 2H₂O.", boldPart = "2HCl",
-                steps = listOf("Ca(OH)₂ ma 2 grupy OH⁻ → potrzeba 2 HCl", "2Cl⁻ + Ca²⁺ → CaCl₂", "2OH⁻ + 2H⁺ → 2H₂O"))
-        ),
-        EquationBalance(
-            id = 0, instruction = "Zbilansuj reakcję zobojętniania",
-            reactants = listOf(BalanceTerm("NaOH", fixedCoefficient = null, correctCoefficient = 2), BalanceTerm("H₂SO₄", fixedCoefficient = 1)),
-            products  = listOf(BalanceTerm("Na₂SO₄", fixedCoefficient = null, correctCoefficient = 1), BalanceTerm("H₂O", fixedCoefficient = null, correctCoefficient = 2)),
-            hint = Hint("2NaOH + H₂SO₄ → Na₂SO₄ + 2H₂O.", boldPart = "2NaOH",
-                steps = listOf("H₂SO₄ ma 2H⁺ → potrzeba 2 NaOH", "2Na⁺ + SO₄²⁻ → Na₂SO₄", "2OH⁻ + 2H⁺ → 2H₂O"))
-        ),
-        EquationBalance(
-            id = 0, instruction = "Zbilansuj reakcję zobojętniania",
-            subInstruction = "Siarczan baru wytrąca się jako biały osad",
-            reactants = listOf(BalanceTerm("Ba(OH)₂", fixedCoefficient = 1), BalanceTerm("H₂SO₄", fixedCoefficient = 1)),
-            products  = listOf(BalanceTerm("BaSO₄", fixedCoefficient = null, correctCoefficient = 1), BalanceTerm("H₂O", fixedCoefficient = null, correctCoefficient = 2)),
-            hint = Hint("Ba(OH)₂ + H₂SO₄ → BaSO₄↓ + 2H₂O. BaSO₄ to biały osad — reakcja służy do wykrywania siarczanów.", boldPart = "BaSO₄",
-                steps = listOf("Ba²⁺ + SO₄²⁻ → BaSO₄↓", "2OH⁻ + 2H⁺ → 2H₂O"))
-        ),
-        EquationBalance(
-            id = 0, instruction = "Zbilansuj reakcję zobojętniania",
-            reactants = listOf(BalanceTerm("NaOH", fixedCoefficient = null, correctCoefficient = 3), BalanceTerm("H₃PO₄", fixedCoefficient = 1)),
-            products  = listOf(BalanceTerm("Na₃PO₄", fixedCoefficient = null, correctCoefficient = 1), BalanceTerm("H₂O", fixedCoefficient = null, correctCoefficient = 3)),
-            hint = Hint("3NaOH + H₃PO₄ → Na₃PO₄ + 3H₂O.", boldPart = "3NaOH",
-                steps = listOf("H₃PO₄ ma 3H⁺ → potrzeba 3 NaOH", "3Na⁺ + PO₄³⁻ → Na₃PO₄", "3OH⁻ + 3H⁺ → 3H₂O"))
-        ),
-    )
-
-    private val combustionReactions: List<EquationBalance> = listOf(
-        EquationBalance(
-            id = 0, instruction = "Zbilansuj reakcję spalania",
-            reactants = listOf(BalanceTerm("C", fixedCoefficient = null, correctCoefficient = 1), BalanceTerm("O₂", fixedCoefficient = 1)),
-            products  = listOf(BalanceTerm("CO₂", fixedCoefficient = null, correctCoefficient = 1)),
-            hint = Hint("C + O₂ → CO₂. Spalanie węgla. Wszystkie współczynniki = 1.", boldPart = "CO₂")
-        ),
-        EquationBalance(
-            id = 0, instruction = "Zbilansuj reakcję spalania",
-            reactants = listOf(BalanceTerm("S", fixedCoefficient = 1), BalanceTerm("O₂", fixedCoefficient = null, correctCoefficient = 1)),
-            products  = listOf(BalanceTerm("SO₂", fixedCoefficient = null, correctCoefficient = 1)),
-            hint = Hint("S + O₂ → SO₂. Spalanie siarki. Wszystkie współczynniki = 1.", boldPart = "SO₂")
-        ),
-        EquationBalance(
-            id = 0, instruction = "Zbilansuj reakcję spalania",
-            reactants = listOf(BalanceTerm("Mg", fixedCoefficient = null, correctCoefficient = 2), BalanceTerm("O₂", fixedCoefficient = 1)),
-            products  = listOf(BalanceTerm("MgO", fixedCoefficient = null, correctCoefficient = 2)),
-            hint = Hint("2Mg + O₂ → 2MgO. O₂ = 2 atomy O → 2 cząsteczki MgO.", boldPart = "2MgO",
-                steps = listOf("1×O₂ = 2 atomy O", "2O → 2×MgO", "2×MgO wymaga 2×Mg"))
-        ),
-        EquationBalance(
-            id = 0, instruction = "Zbilansuj reakcję spalania",
-            reactants = listOf(BalanceTerm("Ca", fixedCoefficient = null, correctCoefficient = 2), BalanceTerm("O₂", fixedCoefficient = 1)),
-            products  = listOf(BalanceTerm("CaO", fixedCoefficient = null, correctCoefficient = 2)),
-            hint = Hint("2Ca + O₂ → 2CaO. Analogicznie jak spalanie magnezu.", boldPart = "2CaO",
-                steps = listOf("O₂ = 2O → 2×CaO → 2×Ca"))
-        ),
-        EquationBalance(
-            id = 0, instruction = "Zbilansuj spalanie metanu",
-            subInstruction = "Metan — główny składnik gazu ziemnego",
-            reactants = listOf(BalanceTerm("CH₄", fixedCoefficient = 1), BalanceTerm("O₂", fixedCoefficient = null, correctCoefficient = 2)),
-            products  = listOf(BalanceTerm("CO₂", fixedCoefficient = 1), BalanceTerm("H₂O", fixedCoefficient = null, correctCoefficient = 2)),
-            hint = Hint("CH₄ + 2O₂ → CO₂ + 2H₂O.", boldPart = "2O₂",
-                steps = listOf("CH₄ ma 4H → 2×H₂O (2O)", "CO₂ potrzebuje 2O", "Razem 4O → 2×O₂"))
-        ),
-        EquationBalance(
-            id = 0, instruction = "Zbilansuj spalanie etanu",
-            reactants = listOf(BalanceTerm("C₂H₆", fixedCoefficient = null, correctCoefficient = 2), BalanceTerm("O₂", fixedCoefficient = null, correctCoefficient = 7)),
-            products  = listOf(BalanceTerm("CO₂", fixedCoefficient = null, correctCoefficient = 4), BalanceTerm("H₂O", fixedCoefficient = null, correctCoefficient = 6)),
-            hint = Hint("2C₂H₆ + 7O₂ → 4CO₂ + 6H₂O.", boldPart = "7O₂",
-                steps = listOf("2×C₂H₆ ma 4C → 4CO₂", "2×C₂H₆ ma 12H → 6H₂O", "4CO₂ + 6H₂O = 8O+6O = 14O → 7O₂"))
-        ),
-    )
-
-    private val decompositionReactions: List<EquationBalance> = listOf(
-        EquationBalance(
-            id = 0, instruction = "Zbilansuj reakcję rozkładu",
-            subInstruction = "Rozkład wody utlenionej (katalizator: MnO₂)",
-            reactants = listOf(BalanceTerm("H₂O₂", fixedCoefficient = null, correctCoefficient = 2)),
-            products  = listOf(BalanceTerm("H₂O", fixedCoefficient = null, correctCoefficient = 2), BalanceTerm("O₂", fixedCoefficient = 1)),
-            hint = Hint("2H₂O₂ → 2H₂O + O₂. Katalizator MnO₂ przyspiesza rozkład.", boldPart = "2H₂O₂",
-                steps = listOf("2×H₂O₂ = 4H + 4O", "4H → 2×H₂O (2O)", "Pozostałe 2O → O₂"))
-        ),
-        EquationBalance(
-            id = 0, instruction = "Zbilansuj reakcję rozkładu",
-            subInstruction = "Historyczna reakcja Lavoisiera — rozkład tlenku rtęci(II)",
-            reactants = listOf(BalanceTerm("HgO", fixedCoefficient = null, correctCoefficient = 2)),
-            products  = listOf(BalanceTerm("Hg", fixedCoefficient = null, correctCoefficient = 2), BalanceTerm("O₂", fixedCoefficient = 1)),
-            hint = Hint("2HgO → 2Hg + O₂.", boldPart = "2HgO",
-                steps = listOf("2×HgO = 2Hg + 2O", "2O → O₂"))
-        ),
-        EquationBalance(
-            id = 0, instruction = "Zbilansuj reakcję prażenia wapienia",
-            subInstruction = "Ważna reakcja przemysłowa — produkcja wapna palonego",
-            reactants = listOf(BalanceTerm("CaCO₃", fixedCoefficient = null, correctCoefficient = 1)),
-            products  = listOf(BalanceTerm("CaO", fixedCoefficient = null, correctCoefficient = 1), BalanceTerm("CO₂", fixedCoefficient = 1)),
-            hint = Hint("CaCO₃ → CaO + CO₂. Wapno palone (CaO) stosowane w budownictwie.", boldPart = "CaO")
-        ),
-        EquationBalance(
-            id = 0, instruction = "Zbilansuj reakcję elektrolizy wody",
-            reactants = listOf(BalanceTerm("H₂O", fixedCoefficient = null, correctCoefficient = 2)),
-            products  = listOf(BalanceTerm("H₂", fixedCoefficient = null, correctCoefficient = 2), BalanceTerm("O₂", fixedCoefficient = 1)),
-            hint = Hint("2H₂O → 2H₂ + O₂. Elektroliza — odwrotność syntezy wody.", boldPart = "2H₂",
-                steps = listOf("2×H₂O = 4H + 2O", "4H → 2×H₂", "2O → O₂"))
-        ),
-    )
-
-    /**
-     * Generates questions for Lesson 3-2: "Reakcje kwasów i bilansowanie".
-     *
-     * Asks students to fill in coefficients to balance equations for combustion,
-     * neutralization, and metal-acid chemical reactions.
-     *
-     * @param seed Random seed for selection order.
-     * @return A list of [EquationBalance] question objects.
-     */
-    private fun chemia_3_2(seed: Long): List<Question> {
-        val rng = Random(seed)
-        val all = acidReactions + metalAcidReactions + neutralizationReactions + combustionReactions + decompositionReactions
-        return all.shuffled(rng).mapIndexed { i, q -> q.copy(id = 3200 + i) }
-    }
 
     private val phRealWorld = listOf(
         Triple("Sok cytrynowy (pH ≈ 2)", 2, "kwasowy"),
@@ -1650,4 +1272,807 @@ object ChemistryQuestionGenerator {
             "Powłoka ${shellNames.getOrElse(i) { "?" }}: $n"
         } + "Razem: $z → ${elementByNumber[z]?.name} (${elementByNumber[z]?.symbol})"
     }
+
+    /**
+     * Localizes a chemistry question to the specified target language.
+     *
+     * Translates prompts, options, hints, steps, and sub-instructions using a
+     * comprehensive chemistry terminology dictionary.
+     *
+     * @param question The question model to translate.
+     * @param lang     Target language code (e.g. `"en"`).
+     * @return Localized copy of the question, or the original if lang is `"pl"`.
+     */
+    fun localize(question: Question, lang: String): Question {
+        if (lang == "pl") return question
+        return when (question) {
+            is SelectFromList -> {
+                val el = ELEMENTS.find { question.prompt.contains("(${it.symbol})") }
+                val promptText = if (el != null) {
+                    if (question.prompt.startsWith("Do jakiej grupy zaliczamy ")) {
+                        "To which group do we classify ${el.localizedName(lang)} (${el.symbol})?"
+                    } else {
+                        translate(question.prompt, lang)
+                    }
+                } else {
+                    translate(question.prompt, lang)
+                }
+
+                question.copy(
+                    prompt = promptText,
+                    options = question.options.map { translate(it, lang) },
+                    hint = localizeHint(question.hint, lang)
+                )
+            }
+            is ElementCardQuiz -> {
+                val el = elementByNumber[question.atomicNumber]!!
+                val engName = el.localizedName(lang)
+                val promptText = when {
+                    question.prompt.startsWith("Ile elektronów posiada atom ") -> "How many electrons does the $engName atom have?"
+                    question.prompt.startsWith("Ile protonów posiada atom ") -> "How many protons does the $engName atom have?"
+                    question.prompt.startsWith("Przybliżona masa atomowa ") -> "The approximate atomic mass of ${el.symbol} is:"
+                    question.prompt.startsWith("W którym okresie leży pierwiastek ") -> "In which period is the element ${el.symbol} located?"
+                    else -> translate(question.prompt, lang)
+                }
+                val mainText = when {
+                    question.hint.mainText.startsWith("Elektrony = liczba atomowa Z = ") -> "Electrons = atomic number Z = ${question.atomicNumber}."
+                    question.hint.mainText.startsWith("Protonów = liczba atomowa Z = ") -> "Protons = atomic number Z = ${question.atomicNumber}."
+                    question.hint.mainText.startsWith("Masa atomowa ") -> "Atomic mass of ${el.symbol} ≈ ${el.atomicMass.roundToInt()} u."
+                    question.hint.mainText.contains(" leży w ") -> "$engName is in period ${el.tableRow} of the periodic table."
+                    else -> translate(question.hint.mainText, lang)
+                }
+                val steps = question.hint.steps.map { step ->
+                    when (step) {
+                        "Elektronów = ${question.atomicNumber}" -> "Electrons = ${question.atomicNumber}"
+                        "Protonów = ${question.atomicNumber}" -> "Protons = ${question.atomicNumber}"
+                        "Odczytaj masę atomową z karty pierwiastka" -> "Read the atomic mass from the element card"
+                        "Policz wiersz od góry tabeli — to numer okresu" -> "Count the row from the top of the table — this is the period number"
+                        else -> translate(step, lang)
+                    }
+                }
+                question.copy(
+                    prompt = promptText,
+                    subtitle = if (question.subtitle == "Wybierz poprawną odpowiedź na podstawie karty pierwiastka.") "Choose the correct answer based on the element card." else translate(question.subtitle, lang),
+                    hint = Hint(mainText = mainText, boldPart = question.hint.boldPart?.let { translate(it, lang) }, steps = steps)
+                )
+            }
+            is PeriodicTableByShell -> {
+                val el = elementByNumber[question.targetAtomicNumber]!!
+                val engName = el.localizedName(lang)
+                val mainText = "$engName (${el.symbol}) has ${question.targetAtomicNumber} electrons: ${question.shellConfig}."
+                val steps = question.hint.steps.map { step ->
+                    when {
+                        step.startsWith("Powłoka ") -> {
+                            val parts = step.removePrefix("Powłoka ").split(":")
+                            "Shell ${parts.getOrNull(0) ?: ""}:${parts.getOrNull(1) ?: ""}"
+                        }
+                        step.startsWith("Razem: ") -> {
+                            "Total: ${question.targetAtomicNumber} → $engName (${el.symbol})"
+                        }
+                        else -> translate(step, lang)
+                    }
+                }
+                question.copy(
+                    hint = Hint(mainText = mainText, boldPart = el.symbol, steps = steps)
+                )
+            }
+            is PeriodicTableByName -> {
+                val el = elementByNumber[question.targetAtomicNumber]!!
+                val engName = el.localizedName(lang)
+                val mainText = "$engName (${el.symbol}) — group ${el.tableCol}, period ${el.tableRow}."
+                question.copy(
+                    elementName = engName,
+                    hint = Hint(mainText = mainText, boldPart = el.symbol)
+                )
+            }
+            is PeriodicTableQuiz -> {
+                question.copy(
+                    questionText = translate(question.questionText, lang),
+                    hint = localizeHint(question.hint, lang)
+                )
+            }
+            is EquationBalance -> {
+                question.copy(
+                    instruction = translate(question.instruction, lang),
+                    subInstruction = translate(question.subInstruction, lang),
+                    hint = localizeHint(question.hint, lang)
+                )
+            }
+            else -> question
+        }
+    }
+
+    /**
+     * Recursively translates all textual components of a [Hint] object.
+     */
+    private fun localizeHint(hint: Hint, lang: String): Hint {
+        return Hint(
+            mainText = translate(hint.mainText, lang),
+            boldPart = hint.boldPart?.let { translate(it, lang) },
+            sectionTitle = hint.sectionTitle?.let { translate(it, lang) },
+            items = hint.items.map { translate(it, lang) },
+            steps = hint.steps.map { translate(it, lang) }
+        )
+    }
+
+    /**
+     * Translates a name-formula combination, handling parenthesized parts dynamically.
+     * Works for both "Formula (Name)" and "Name (Formula)" patterns.
+     */
+    private fun translateNameFormula(nameFormula: String, lang: String): String {
+        if (!nameFormula.endsWith(")")) return translate(nameFormula, lang)
+        val openParen = nameFormula.lastIndexOf("(")
+        if (openParen == -1) return translate(nameFormula, lang)
+        val outside = nameFormula.substring(0, openParen).trim()
+        val inside = nameFormula.substring(openParen + 1, nameFormula.length - 1).trim()
+        return "${translate(outside, lang)} (${translate(inside, lang)})"
+    }
+
+    /**
+     * Translates a given Polish chemistry term, prompt, or sentence to English.
+     * Matches against a static dictionary of common terms/prompts, capital-insensitive
+     * element names, and dynamic sentence patterns.
+     */
+    private fun translate(text: String, lang: String): String {
+        if (lang == "pl") return text
+        val trimmed = text.trim()
+
+        val dictMap = mapOf(
+            "gaz szlachetny" to "noble gas",
+            "metal" to "metal",
+            "niemetal" to "nonmetal",
+            "metaloid" to "metalloid",
+            "obojętny" to "neutral",
+            "zasadowy" to "basic",
+            "kwasowy" to "acidic",
+            "amfoteryczny" to "amphoteric",
+
+            "metalem" to "a metal",
+            "niemetalem" to "a nonmetal",
+            "gazem szlachetnym" to "a noble gas",
+
+            "rozpuszczalny" to "soluble",
+            "trudno rozpuszczalny" to "sparingly soluble",
+            "trudno rozpuszczalne" to "sparingly soluble",
+
+            "beztlenowy" to "binary acid",
+            "tlenowy" to "oxyacid",
+
+            "alkan" to "alkane",
+            "alken" to "alkene",
+            "alkyn" to "alkyne",
+            "alkohol" to "alcohol",
+            "kwas karboksylowy" to "carboxylic acid",
+            "amina" to "amine",
+            "ester" to "ester",
+
+            // Molecules names
+            "woda" to "water",
+            "dwutlenek węgla" to "carbon dioxide",
+            "chlorek sodu" to "sodium chloride",
+            "amoniak" to "ammonia",
+            "metan" to "methane",
+            "wodorotlenek sodu" to "sodium hydroxide",
+            "wodorotlenek wapnia" to "calcium hydroxide",
+            "tlenek wapnia" to "calcium oxide",
+            "tlenek żelaza(III)" to "iron(III) oxide",
+            "dwutlenek siarki" to "sulfur dioxide",
+            "trójtlenek siarki" to "sulfur trioxide",
+            "azot cząsteczkowy" to "molecular nitrogen",
+            "tlen cząsteczkowy" to "molecular oxygen",
+            "wodór cząsteczkowy" to "molecular hydrogen",
+            "węglan wapnia" to "calcium carbonate",
+            "tlenek glinu" to "aluminium oxide",
+            "tlenek sodu" to "sodium oxide",
+            "tlenek węgla(II)" to "carbon monoxide",
+            "kwas fluorowodorowy" to "hydrofluoric acid",
+            "kwas bromowodorowy" to "hydrobromic acid",
+
+            // Acids names
+            "kwas chlorowodorowy" to "hydrochloric acid",
+            "kwas jodowodorowy" to "hydroiodic acid",
+            "kwas siarkowodorowy" to "hydrosulfuric acid",
+            "kwas siarkowy(VI)" to "sulfuric acid",
+            "kwas siarkowy(IV)" to "sulfurous acid",
+            "kwas azotowy(V)" to "nitric acid",
+            "kwas azotowy(III)" to "nitrous acid",
+            "kwas fosforowy(V)" to "phosphoric acid",
+            "kwas węglowy" to "carbonic acid",
+            "kwas chlorowy(VII)" to "perchloric acid",
+            "kwas chlorowy(V)" to "chloric acid",
+            "kwas chlorowy(III)" to "chlorous acid",
+            "kwas chlorowy(I)" to "hypochlorous acid",
+            "kwas borowy" to "boric acid",
+
+            // Hydroxides names
+            "wodorotlenek potasu" to "potassium hydroxide",
+            "wodorotlenek litu" to "lithium hydroxide",
+            "wodorotlenek baru" to "barium hydroxide",
+            "wodorotlenek magnezu" to "magnesium hydroxide",
+            "wodorotlenek żelaza(II)" to "iron(II) hydroxide",
+            "wodorotlenek żelaza(III)" to "iron(III) hydroxide",
+            "wodorotlenek miedzi(II)" to "copper(II) hydroxide",
+            "wodorotlenek cynku" to "zinc hydroxide",
+            "wodorotlenek manganu(II)" to "manganese(II) hydroxide",
+            "wodorotlenek niklu(II)" to "nickel(II) hydroxide",
+
+            // Salts names
+            "chlorek potasu" to "potassium chloride",
+            "chlorek wapnia" to "calcium chloride",
+            "chlorek magnezu" to "magnesium chloride",
+            "chlorek żelaza(II)" to "iron(II) chloride",
+            "chlorek żelaza(III)" to "iron(III) chloride",
+            "chlorek glinu" to "aluminium chloride",
+            "chlorek cynku" to "zinc chloride",
+            "siarczan(VI) sodu" to "sodium sulfate",
+            "siarczan(VI) wapnia" to "calcium sulfate",
+            "siarczan(VI) magnezu" to "magnesium sulfate",
+            "siarczan(VI) cynku" to "zinc sulfate",
+            "siarczan(VI) żelaza(II)" to "iron(II) sulfate",
+            "siarczan(VI) baru" to "barium sulfate",
+            "siarczan(VI) potasu" to "potassium sulfate",
+            "węglan sodu" to "sodium carbonate",
+            "węglan magnezu" to "magnesium carbonate",
+            "azotan(V) sodu" to "sodium nitrate",
+            "azotan(V) wapnia" to "calcium nitrate",
+            "azotan(V) potasu" to "potassium nitrate",
+            "fosforan(V) sodu" to "sodium phosphate",
+            "fosforan(V) wapnia" to "calcium phosphate",
+
+            // Oxides names
+            "tlenek azotu(V)" to "nitrogen(V) oxide",
+            "tlenek fosforu(V)" to "phosphorus(V) oxide",
+            "dwutlenek krzemu" to "silicon dioxide",
+            "tlenek azotu(II)" to "nitrogen(II) oxide",
+
+            // Parent acids
+            "kwas solny" to "hydrochloric acid",
+
+            // Dissociation types
+            "kwas" to "acid",
+            "zasada" to "base",
+            "sól" to "salt",
+
+            // General prompts and subtitles
+            "Uzupełnij równanie reakcji" to "Complete the reaction equation",
+            "Dobierz odpowiednie współczynniki stechiometryczne" to "Choose appropriate stoichiometric coefficients",
+            "Wybierz poprawną odpowiedź na podstawie karty pierwiastka." to "Choose the correct answer based on the element card.",
+            "Wstaw brakujące pierwiastki w puste miejsca w układzie okresowym." to "Insert the missing elements into the blank spaces in the periodic table.",
+
+            // periodicTableSets titles
+            "Umieść brakujące gazy szlachetne w układzie" to "Place the missing noble gases in the table",
+            "Uzupełnij halogeny w układzie" to "Complete the halogens in the table",
+            "Uzupełnij litowce w układzie" to "Complete the alkali metals in the table",
+            "Uzupełnij berylowce w układzie" to "Complete the alkaline earth metals in the table",
+            "Umieść brakujące pierwiastki w układzie" to "Place the missing elements in the table",
+            "Umieść brakujące metale szlachetne w układzie" to "Place the missing noble metals in the table",
+            "Uzupełnij halogeny i litowce w układzie" to "Complete the halogens and alkali metals in the table",
+            "Znajdź miejsca pierwiastków 3. okresu" to "Find the positions of the period 3 elements",
+            "Znajdź miejsca pierwiastków 2. okresu" to "Find the positions of the period 2 elements",
+            "Znajdź miejsca metali przejściowych okresu 4" to "Find the positions of the transition metals of period 4",
+            "Uzupełnij niemetale reaktywne w układzie" to "Complete the reactive nonmetals in the table",
+            "Uzupełnij pierwiastki bloku s w układzie" to "Complete the s-block elements in the table",
+            "Znajdź miejsca niemetali 3. okresu" to "Find the positions of the period 3 nonmetals",
+            "Znajdź miejsca pierwiastków 4. okresu — blok p" to "Find the positions of the period 4 elements — p-block",
+            "Uzupełnij koniec i początek okresu 4 i 5" to "Complete the start and end of periods 4 and 5",
+
+            // periodicTableSets hints
+            "Gazy szlachetne — gr. 18 (ostatnia kolumna)." to "Noble gases — group 18 (last column).",
+            "Halogeny — gr. 17." to "Halogens — group 17.",
+            "Litowce — gr. 1." to "Alkali metals — group 1.",
+            "Berylowce — gr. 2." to "Alkaline earth metals — group 2.",
+            "Patrz na numer grupy i okresu." to "Look at the group and period numbers.",
+            "Metale przejściowe — gr. 3–12." to "Transition metals — groups 3–12.",
+            "Litowce → gr. 1, halogeny → gr. 17." to "Alkali metals → group 1, halogens → group 17.",
+            "Wszystkie w 3. wierszu układu." to "All in the 3rd row of the table.",
+            "Wszystkie w 2. wierszu układu." to "All in the 2nd row of the table.",
+            "Ti, Cr, Mn, Fe, Ni — środkowy blok, okres 4." to "Ti, Cr, Mn, Fe, Ni — middle block, period 4.",
+            "C, N, O, P, S — niemetale reaktywne." to "C, N, O, P, S — reactive nonmetals.",
+            "Blok s — gr. 1 i 2 (oraz H i He)." to "s-block — groups 1 and 2 (plus H and He).",
+            "Prawa strona 3. wiersza — niemetale." to "Right side of the 3rd row — nonmetals.",
+            "Prawa strona 4. wiersza — po metalach przejściowych." to "Right side of the 4th row — after transition metals.",
+            "Gr. 1 (litowce) i gr. 18 (gazy szlachetne)." to "Group 1 (alkali metals) and group 18 (noble gases).",
+
+            // Acid Hints and Types (chemia_3_1)
+            "Kwasy beztlenowe nie zawierają tlenu (HX, H₂X). Kwasy tlenowe zawierają tlen (np. HNO₃, H₂SO₄)." to "Binary acids do not contain oxygen (HX, H₂X). Oxyacids contain oxygen (e.g. HNO₃, H₂SO₄).",
+            "HF – fluorowodorowy, trawiący szkło." to "HF – hydrofluoric, etches glass.",
+            "HCl – chlorowodorowy (solny), składnik soku żołądkowego." to "HCl – hydrochloric (salts), component of gastric juice.",
+            "HBr – bromowodorowy, podobny do HCl." to "HBr – hydrobromic, similar to HCl.",
+            "HI – jodowodorowy, silny kwas beztlenowy." to "HI – hydroiodic, strong binary acid.",
+            "H₂S – siarkowodorowy, znany ze smrodu zgniłych jaj." to "H₂S – hydrosulfuric, known for the smell of rotten eggs.",
+            "H₂SO₄ – siarkowy(VI), siarka na +6. Najważniejszy kwas przemysłowy." to "H₂SO₄ – sulfuric, sulfur at +6. Most important industrial acid.",
+            "H₂SO₃ – siarkowy(IV), siarka na +4. Przyczyna kwaśnych deszczy." to "H₂SO₃ – sulfurous, sulfur at +4. Cause of acid rain.",
+            "HNO₃ – azotowy(V), azot na +5. Używany do nawozów i materiałów wybuchowych." to "HNO₃ – nitric, nitrogen at +5. Used for fertilizers and explosives.",
+            "HNO₂ – azotowy(III), azot na +3. Słabszy kwas niż HNO₃." to "HNO₂ – nitrous, nitrogen at +3. Weaker acid than HNO₃.",
+            "H₃PO₄ – fosforowy(V). Składnik nawozów i napojów cola." to "H₃PO₄ – phosphoric. Ingredient in fertilizers and cola drinks.",
+            "H₂CO₃ – węglowy. Powstaje gdy CO₂ rozpuszcza się w wodzie." to "H₂CO₃ – carbonic. Formed when CO₂ dissolves in water.",
+            "HClO₄ – chlorowy(VII), chlor na +7. Jeden z najmocniejszych kwasów." to "HClO₄ – perchloric, chlorine at +7. One of the strongest acids.",
+            "HClO₃ – chlorowy(V), chlor na +5." to "HClO₃ – chloric, chlorine at +5.",
+            "HClO₂ – chlorowy(III), chlor na +3." to "HClO₂ – chlorous, chlorine at +3.",
+            "HClO – chlorowy(I), chlor na +1. Słaby kwas, właściwości odkażające." to "HClO – hypochlorous, chlorine at +1. Weak acid, sanitizing properties.",
+            "H₃BO₃ – borowy. Stosowany w okulistyce jako środek dezynfekcyjny." to "H₃BO₃ – boric. Used in ophthalmology as a disinfectant.",
+
+            // pH Prompts and Hints
+            "Które z poniższych pH odpowiada odczynowi kwasowemu?" to "Which of the following pH values corresponds to an acidic reaction?",
+            "Które z poniższych pH odpowiada odczynowi zasadowemu?" to "Which of the following pH values corresponds to a basic reaction?",
+            "Odczyn kwasowy → pH < 7." to "Acidic reaction → pH < 7.",
+            "Odczyn zasadowy → pH > 7." to "Basic reaction → pH > 7.",
+            "pH = 7 — odczyn obojętny." to "pH = 7 — neutral reaction.",
+
+            "Rozpuszczalność zasad" to "Solubility of bases",
+            "Nazewnictwo soli" to "Naming of salts",
+
+            // Balancing Instructions & Sub-instructions
+            "Zbilansuj reakcję syntezy kwasu" to "Balance the acid synthesis reaction",
+            "Uzupełnij reakcję otrzymywania kwasu" to "Complete the acid preparation reaction",
+            "Zbilansuj równanie reakcji" to "Balance the reaction equation",
+            "Zbilansuj reakcję syntezy wody" to "Balance the water synthesis reaction",
+            "Zbilansuj reakcję metalu z kwasem" to "Balance the metal-acid reaction",
+            "Zbilansuj reakcję zobojętniania" to "Balance the neutralization reaction",
+            "Zbilansuj reakcję spalania" to "Balance the combustion reaction",
+            "Zbilansuj spalanie metanu" to "Balance methane combustion",
+            "Zbilansuj spalanie etanu" to "Balance ethane combustion",
+            "Zbilansuj reakcję rozkładu" to "Balance the decomposition reaction",
+            "Zbilansuj reakcję prażenia wapienia" to "Balance the limestone roasting reaction",
+            "Zbilansuj reakcję elektrolizy wody" to "Balance the water electrolysis reaction",
+            "Uzupełnij reakcję otrzymywania zasady" to "Complete the base preparation reaction",
+            "Uzupełnij reakcję gaszenia wapna" to "Complete the lime slaking reaction",
+            "Zbilansuj reakcję tworzenia tlenku" to "Balance the oxide formation reaction",
+            "Zbilansuj reakcję tworzenia tlenku kwasowego" to "Balance the acidic oxide formation reaction",
+            "Uzupełnij reakcję tlenku kwasowego z wodą" to "Complete the acidic oxide-water reaction",
+            "Uzupełnij reakcję tlenku zasadowego z wodą" to "Complete the basic oxide-water reaction",
+
+            "Siarczan baru wytrąca się jako biały osad" to "Barium sulfate precipitates as a white precipitate",
+            "Metan — główny składnik gazu ziemnego" to "Methane — the main component of natural gas",
+            "Rozkład wody utlenionej (katalizator: MnO₂)" to "Decomposition of hydrogen peroxide (catalyst: MnO₂)",
+            "Historyczna reakcja Lavoisiera — rozkład tlenku rtęci(II)" to "Historic Lavoisier reaction — decomposition of mercury(II) oxide",
+            "Ważna reakcja przemysłowa — produkcja wapna palonego" to "Important industrial reaction — production of quicklime",
+            "Tlenek zasadowy + woda → zasada" to "Basic oxide + water → base",
+            "Wapno palone + woda → wapno gaszone" to "Quicklime + water → slaked lime",
+
+            "Alkohole — gr. -OH" to "Alcohols — group -OH",
+            "Kwasy karboksylowe — gr. -COOH" to "Carboxylic acids — group -COOH",
+            "Aminy — gr. -NH₂" to "Amines — group -NH₂",
+            "Estry — z kwasu + alkoholu" to "Esters — from acid + alcohol",
+
+            // Solubility and Base hints/items (chemia_3_3)
+            "Rozpuszczalne zasady (mocne): NaOH, KOH, LiOH, Ca(OH)₂, Ba(OH)₂. Pozostałe są trudno rozpuszczalne." to "Soluble bases (strong): NaOH, KOH, LiOH, Ca(OH)₂, Ba(OH)₂. The rest are sparingly soluble.",
+            "Inne wodorotlenki — trudno rozpuszczalne" to "Other hydroxides — sparingly soluble",
+            "NaOH, KOH, LiOH — gr. 1" to "NaOH, KOH, LiOH — group 1",
+            "Ca(OH)₂, Ba(OH)₂ — gr. 2" to "Ca(OH)₂, Ba(OH)₂ — group 2",
+
+            // Salt naming hints/items (chemia_3_4)
+            "Chlorki — od HCl (kwas chlorowodorowy)" to "Chlorides — from HCl (hydrochloric acid)",
+            "Siarczany(VI) — od H₂SO₄" to "Sulfates(VI) — from H₂SO₄",
+            "Azotany(V) — od HNO₃" to "Nitrates(V) — from HNO₃",
+            "Węglany — od H₂CO₃" to "Carbonates — from H₂CO₃",
+            "Fosforany(V) — od H₃PO₄" to "Phosphates(V) — from H₃PO₄",
+
+            // Organic functional groups hints (chemia_5_2)
+            "Alkohole zawierają grupę hydroksylową -OH." to "Alcohols contain a hydroxyl group -OH.",
+            "Kwasy karboksylowe zawierają grupę karboksylową -COOH." to "Carboxylic acids contain a carboxyl group -COOH.",
+            "Aminy zawierają grupę aminową -NH₂." to "Amines contain an amine group -NH₂.",
+            "Estry powstają z reakcji kwasu karboksylowego z alkoholem." to "Esters are formed from the reaction of a carboxylic acid with an alcohol.",
+
+            // Oxide classification hints/items (chemia_6_1)
+            "Tlenki zasadowe = tlenki metali; tlenki kwasowe = tlenki niemetali. Amfoteryczne reagują zarówno z kwasami jak i zasadami." to "Basic oxides = metal oxides; acidic oxides = nonmetal oxides. Amphoteric oxides react with both acids and bases.",
+            "zasadowy: tlenek metalu → reaguje z kwasami (→ sól + H₂O)" to "basic: metal oxide → reacts with acids (→ salt + H₂O)",
+            "kwasowy: tlenek niemetalu → reaguje z zasadami (→ sól + H₂O) i z H₂O (→ kwas)" to "acidic: nonmetal oxide → reacts with bases (→ salt + H₂O) and with H₂O (→ acid)",
+            "amfoteryczny: reaguje z kwasami i z zasadami (ZnO, Al₂O₃)" to "amphoteric: reacts with both acids and bases (ZnO, Al₂O₃)",
+            "obojętny: nie reaguje z kwasami ani zasadami (CO, NO)" to "neutral: does not react with acids or bases (CO, NO)",
+
+            // Real-world pH examples (chemia_4_1)
+            "Sok cytrynowy (pH ≈ 2)" to "Lemon juice (pH ≈ 2)",
+            "Ocet (pH ≈ 3)" to "Vinegar (pH ≈ 3)",
+            "Kawa (pH ≈ 5)" to "Coffee (pH ≈ 5)",
+            "Mleko (pH ≈ 6)" to "Milk (pH ≈ 6)",
+            "Woda destylowana (pH = 7)" to "Distilled water (pH = 7)",
+            "Krew ludzka (pH ≈ 7)" to "Human blood (pH ≈ 7)",
+            "Woda morska (pH ≈ 8)" to "Sea water (pH ≈ 8)",
+            "Soda oczyszczona w wodzie (pH ≈ 9)" to "Baking soda in water (pH ≈ 9)",
+            "Mydło (pH ≈ 10)" to "Soap (pH ≈ 10)",
+            "Mleko wapienne (pH ≈ 12)" to "Limewater (pH ≈ 12)",
+
+            // Dissociation hints (chemia_4_2)
+            "Kwasy dysocjują oddając jon H⁺." to "Acids dissociate by releasing H⁺ ions.",
+            "Zasady dysocjują oddając jon OH⁻." to "Bases dissociate by releasing OH⁻ ions.",
+            "Sole to produkty reakcji kwasu z zasadą — dysocjują na kationy metalu i aniony reszty kwasowej." to "Salts are products of the reaction of an acid with a base — they dissociate into metal cations and acid residue anions."
+        )
+
+        dictMap[trimmed]?.let { return it }
+        dictMap[trimmed.lowercase()]?.let { return it }
+
+        ELEMENTS.find { it.name.equals(trimmed, ignoreCase = true) }?.let {
+            return it.localizedName(lang)
+        }
+
+        val lower = trimmed.lowercase()
+        return when {
+            trimmed.startsWith("Kwas o wzorze ") && trimmed.endsWith(" to:") -> {
+                val formula = trimmed.removePrefix("Kwas o wzorze ").removeSuffix(" to:").trim()
+                "The acid with formula $formula is:"
+            }
+            trimmed.startsWith("Wzór ") && trimmed.endsWith(" to:") -> {
+                val name = trimmed.removePrefix("Wzór ").removeSuffix(" to:").trim()
+                "The formula of ${translate(name, lang)} is:"
+            }
+            trimmed.startsWith("Wodorotlenek o wzorze ") && trimmed.endsWith(" to:") -> {
+                val formula = trimmed.removePrefix("Wodorotlenek o wzorze ").removeSuffix(" to:").trim()
+                "The hydroxide with formula $formula is:"
+            }
+            trimmed.startsWith("Sól o wzorze ") && trimmed.endsWith(" to:") -> {
+                val formula = trimmed.removePrefix("Sól o wzorze ").removeSuffix(" to:").trim()
+                "The salt with formula $formula is:"
+            }
+            trimmed.startsWith("Tlenek o wzorze ") && trimmed.endsWith(" to:") -> {
+                val formula = trimmed.removePrefix("Tlenek o wzorze ").removeSuffix(" to:").trim()
+                "The oxide with formula $formula is:"
+            }
+            trimmed.endsWith(" jest kwasem:") -> {
+                val nameFormula = trimmed.removeSuffix(" jest kwasem:").trim()
+                "${translateNameFormula(nameFormula, lang)} is an acid:"
+            }
+            trimmed.endsWith(" jest:") -> {
+                val nameFormula = trimmed.removeSuffix(" jest:").trim()
+                "${translateNameFormula(nameFormula, lang)} is:"
+            }
+            trimmed.endsWith(" jest tlenkiem:") -> {
+                val nameFormula = trimmed.removeSuffix(" jest tlenkiem:").trim()
+                "${translateNameFormula(nameFormula, lang)} is an oxide:"
+            }
+            trimmed.startsWith("Podczas dysocjacji ") && trimmed.endsWith(" powstają jony:") -> {
+                val nameFormula = trimmed.removePrefix("Podczas dysocjacji ").removeSuffix(" powstają jony:").trim()
+                "During the dissociation of ${translateNameFormula(nameFormula, lang)}, the following ions are formed:"
+            }
+            trimmed.startsWith("Który związek chemiczny dysocjuje dając jony ") && trimmed.endsWith("?") -> {
+                val ions = trimmed.removePrefix("Który związek chemiczny dysocjuje dając jony ").removeSuffix("?").trim()
+                "Which chemical compound dissociates to give ${translate(ions, lang)} ions?"
+            }
+            trimmed.startsWith("Jak nazywa się związek o wzorze ") && trimmed.endsWith("?") -> {
+                val formula = trimmed.removePrefix("Jak nazywa się związek o wzorze ").removeSuffix("?").trim()
+                "What is the name of the compound with the formula $formula?"
+            }
+            trimmed.startsWith("Jaki jest wzór sumaryczny ") && trimmed.endsWith("?") -> {
+                val name = trimmed.removePrefix("Jaki jest wzór sumaryczny ").removeSuffix("?").trim()
+                "What is the molecular formula of ${translate(name, lang)}?"
+            }
+            trimmed.startsWith("Jaki jest wzór chemiczny: ") && trimmed.endsWith("?") -> {
+                val name = trimmed.removePrefix("Jaki jest wzór chemiczny: ").removeSuffix("?").trim()
+                "What is the chemical formula of: ${translate(name, lang)}?"
+            }
+            trimmed.startsWith("Który z tych pierwiastków jest ") && trimmed.endsWith("?") -> {
+                val label = trimmed.removePrefix("Który z tych pierwiastków jest ").removeSuffix("?").trim()
+                "Which of these elements is ${translate(label, lang)}?"
+            }
+            trimmed.endsWith(" należy do szeregu:") -> {
+                val nameFormula = trimmed.removeSuffix(" należy do szeregu:").trim()
+                "${translateNameFormula(nameFormula, lang)} belongs to the series:"
+            }
+            trimmed.endsWith(" należy do grupy:") -> {
+                val nameFormula = trimmed.removeSuffix(" należy do grupy:").trim()
+                "${translateNameFormula(nameFormula, lang)} belongs to the group:"
+            }
+            trimmed.startsWith("Ile atomów węgla zawiera ") && trimmed.endsWith("?") -> {
+                val nameFormula = trimmed.removePrefix("Ile atomów węgla zawiera ").removeSuffix("?").trim()
+                "How many carbon atoms does ${translateNameFormula(nameFormula, lang)} contain?"
+            }
+            trimmed.startsWith("Jaką grupę funkcyjną zawiera ") && trimmed.endsWith("?") -> {
+                val nameFormula = trimmed.removePrefix("Jaką grupę funkcyjną zawiera ").removeSuffix("?").trim()
+                "Which functional group does ${translateNameFormula(nameFormula, lang)} contain?"
+            }
+            trimmed.endsWith(" pochodzi od:") -> {
+                val nameFormula = trimmed.removeSuffix(" pochodzi od:").trim()
+                "${translateNameFormula(nameFormula, lang)} is derived from:"
+            }
+            trimmed.startsWith("Roztwór o pH = ") && trimmed.endsWith(" ma odczyn:") -> {
+                val ph = trimmed.removePrefix("Roztwór o pH = ").removeSuffix(" ma odczyn:").trim()
+                "A solution with pH = $ph is:"
+            }
+            trimmed.endsWith(" ma odczyn:") -> {
+                val desc = trimmed.removeSuffix(" ma odczyn:").trim()
+                "${translate(desc, lang)} is:"
+            }
+            trimmed.contains(" → ") -> {
+                trimmed.split(" → ").map { translate(it, lang) }.joinToString(" → ")
+            }
+            trimmed.endsWith(" to kwasowy.") -> {
+                val ph = trimmed.substringBefore(" jest mniejsze od 7").trim()
+                "$ph is less than 7 — acidic reaction."
+            }
+            trimmed.endsWith(" to obojętny.") -> {
+                "pH = 7 — neutral reaction."
+            }
+            trimmed.endsWith(" to zasadowy.") -> {
+                val ph = trimmed.substringBefore(" jest większe od 7").trim()
+                "$ph is greater than 7 — basic reaction."
+            }
+            trimmed.startsWith("Grupa ") && trimmed.contains(" → ") -> {
+                val group = trimmed.substringAfter("Grupa ").substringBefore(" → ").trim()
+                val groupName = trimmed.substringAfter(" → ").trim()
+                "Group $group → ${translate(groupName, lang)}"
+            }
+            trimmed.startsWith("Wzór ") && trimmed.contains(" to ") -> {
+                val middle = trimmed.removePrefix("Wzór ").substringBefore(" to ").trim()
+                val formula = trimmed.substringAfter(" to ").trim().removeSuffix(".")
+                "The formula of ${translate(middle, lang)} is $formula."
+            }
+            trimmed.contains(" to ") -> {
+                val parts = trimmed.split(" to ")
+                val formula = parts[0].trim()
+                val name = parts[1].trim().removeSuffix(".")
+                "$formula is ${translate(name, lang)}."
+            }
+            trimmed.contains(" pochodzi od ") -> {
+                val parts = trimmed.split(" pochodzi od ")
+                val formula = parts[0].trim()
+                val parent = parts[1].trim().removeSuffix(".")
+                "$formula is derived from ${translate(parent, lang)}."
+            }
+            trimmed.startsWith("pH ") && trimmed.endsWith(" — odczyn kwasowy.") -> {
+                val ph = trimmed.removePrefix("pH ").removeSuffix(" — odczyn kwasowy.").trim()
+                "pH $ph is less than 7 — acidic reaction."
+            }
+            trimmed.startsWith("pH ") && trimmed.endsWith(" — odczyn zasadowy.") -> {
+                val ph = trimmed.removePrefix("pH ").removeSuffix(" — odczyn zasadowy.").trim()
+                "pH $ph is greater than 7 — basic reaction."
+            }
+            trimmed.contains(" i ") -> {
+                val parts = trimmed.split(" i ")
+                parts.map { translate(it, lang) }.joinToString(" and ")
+            }
+
+            else -> {
+                // If no exact match is found, apply dynamic word/phrase translation mapping sequentially.
+                var result = trimmed
+                val replacements = mapOf(
+                    // Specific full sentences/phrases
+                    "Wszystkie współczynniki = 1" to "All coefficients = 1",
+                    "Klasyczna reakcja syntezy wody" to "Classic water synthesis reaction",
+                    "Tlenek kwasowy + woda → kwas" to "Acidic oxide + water → acid",
+                    "Kwas siarkowy(IV) — przyczyna kwaśnych deszczy" to "Sulfurous acid — cause of acid rain",
+                    "Przyczyna kwaśnych deszczy" to "Cause of acid rain",
+                    "przyczyna kwaśnych deszczy" to "cause of acid rain",
+                    "Tak powstaje kwas węglowy w napojach gazowanych" to "This is how carbonic acid is formed in carbonated drinks",
+                    "Dwa atomy N → 2 cząsteczki HNO₃" to "Two N atoms → 2 HNO₃ molecules",
+                    "Dwa atomy Cl → 2 cząsteczki kwasu" to "Two Cl atoms → 2 acid molecules",
+                    "Metal + kwas → sól + wodór" to "Metal + acid → salt + hydrogen",
+                    "Zasada + kwas → sól + woda" to "Base + acid → salt + water",
+                    "BaSO₄ to biały osad — reakcja służy do wykrywania siarczanów" to "BaSO₄ is a white precipitate — reaction is used to detect sulfates",
+                    "Spalanie węgla" to "Coal combustion",
+                    "Spalanie siarki" to "Sulfur combustion",
+                    "O₂ = 2 atomy O → 2 cząsteczki MgO" to "O₂ = 2 O atoms → 2 MgO molecules",
+                    "Analogicznie jak spalanie magnezu" to "Analogous to magnesium combustion",
+                    "Katalizator MnO₂ przyspiesza rozkład" to "Catalyst MnO₂ accelerates decomposition",
+                    "Wapno palone (CaO) stosowane w budownictwie" to "Quicklime (CaO) used in construction",
+                    "Elektroliza — odwrotność syntezy wody" to "Electrolysis — inverse of water synthesis",
+                    "2 atomy Na → 2 cząsteczki NaOH" to "2 Na atoms → 2 NaOH molecules",
+                    "2 atomy K → 2 cząsteczki KOH" to "2 K atoms → 2 KOH molecules",
+                    "2 atomy Li → 2 cząsteczki LiOH" to "2 Li atoms → 2 LiOH molecules",
+                    "2 atomy O → 2 cząsteczki MgO" to "2 O atoms → 2 MgO molecules",
+                    "2 atomy Ca → 2 cząsteczki CaO" to "2 Ca atoms → 2 CaO molecules",
+                    "Tlenek zasadowy + woda → zasada" to "Basic oxide + water → base",
+                    "Wapno palone + woda → wapno gaszone" to "Quicklime + water → slaked lime",
+
+                    "Na₂O ma 2Na → 2×NaOH" to "Na₂O has 2Na → 2×NaOH",
+                    "H₂O daje grupę OH⁻ dla każdego Na" to "H₂O gives an OH⁻ group for each Na",
+                    "H₂SO₄ ma 2H⁺ → potrzeba 2 NaOH" to "H₂SO₄ has 2H⁺ → needs 2 NaOH",
+                    "2Na⁺ + SO₄²⁻ → Na₂SO₄" to "2Na⁺ + SO₄²⁻ → Na₂SO₄",
+                    "2OH⁻ + 2H⁺ → 2H₂O" to "2OH⁻ + 2H⁺ → 2H₂O",
+                    "H₃PO₄ ma 3H⁺ → potrzeba 3 NaOH" to "H₃PO₄ has 3H⁺ → needs 3 NaOH",
+                    "3Na⁺ + PO₄³⁻ → Na₃PO₄" to "3Na⁺ + PO₄³⁻ → Na₃PO₄",
+                    "3OH⁻ + 3H⁺ → 3H₂O" to "3OH⁻ + 3H⁺ → 3H₂O",
+                    "O₂ dostarcza 2O" to "O₂ provides 2O",
+                    "2O → 2×MgO" to "2O → 2×MgO",
+                    "2×MgO wymaga 2×Mg" to "2×MgO requires 2×Mg",
+                    "O₂ = 2O → 2×CaO → 2×Ca" to "O₂ = 2O → 2×CaO → 2×Ca",
+                    "O₂ = 2O → 2×Na₂O" to "O₂ = 2O → 2×Na₂O",
+                    "2×Na₂O ma 4Na → 4×Na" to "2×Na₂O has 4Na → 4×Na",
+
+                    // Acids & Hydroxides & Compounds names (case-insensitive or specific forms)
+                    "kwas azotowy(III)" to "nitrous acid",
+                    "kwas azotowy(V)" to "nitric acid",
+                    "kwas siarkowy(IV)" to "sulfurous acid",
+                    "kwas siarkowy(VI)" to "sulfuric acid",
+                    "kwas chlorowy(I)" to "hypochlorous acid",
+                    "kwas chlorowy(III)" to "chlorous acid",
+                    "kwas chlorowy(V)" to "chloric acid",
+                    "kwas chlorowy(VII)" to "perchloric acid",
+                    "kwas węglowy" to "carbonic acid",
+                    "kwas fosforowy(V)" to "phosphoric acid",
+                    "kwas borowy" to "boric acid",
+                    "kwas fluorowodorowy" to "hydrofluoric acid",
+                    "kwas chlorowodorowy" to "hydrochloric acid",
+                    "kwas bromowodorowy" to "hydrobromic acid",
+                    "kwas jodowodorowy" to "hydroiodic acid",
+                    "kwas siarkowodorowy" to "hydrosulfuric acid",
+
+                    "Kwas azotowy(III)" to "Nitrous acid",
+                    "Kwas azotowy(V)" to "Nitric acid",
+                    "Kwas siarkowy(IV)" to "Sulfurous acid",
+                    "Kwas siarkowy(VI)" to "Sulfuric acid",
+                    "Kwas chlorowy(I)" to "Hypochlorous acid",
+                    "Kwas chlorowy(III)" to "Chlorous acid",
+                    "Kwas chlorowy(V)" to "Chloric acid",
+                    "Kwas chlorowy(VII)" to "Perchloric acid",
+                    "Kwas węglowy" to "Carbonic acid",
+                    "Kwas fosforowy(V)" to "Phosphoric acid",
+                    "Kwas borowy" to "Boric acid",
+                    "Kwas fluorowodorowy" to "Hydrofluoric acid",
+                    "Kwas chlorowodorowy" to "Hydrochloric acid",
+                    "Kwas bromowodorowy" to "Hydrobromic acid",
+                    "Kwas jodowodorowy" to "Hydroiodic acid",
+                    "Kwas siarkowodorowy" to "Hydrosulfuric acid",
+
+                    "Tlenek kwasowy" to "Acidic oxide",
+                    "Tlenek zasadowy" to "Basic oxide",
+                    "tlenek kwasowy" to "acidic oxide",
+                    "tlenek zasadowy" to "basic oxide",
+
+                    "ma grupy" to "has groups",
+                    "ma grupę" to "has group",
+                    "potrzeba" to "needs",
+                    "potrzebuje" to "needs",
+                    "wymaga" to "requires",
+                    "dostarcza" to "provides",
+                    "ma " to "has ",
+                    "atomy" to "atoms",
+                    "atom" to "atom",
+                    "cząsteczki" to "molecules",
+                    "cząsteczka" to "molecule",
+                    "cząsteczek" to "molecules",
+                    "Sprawdź " to "Check ",
+                    "Pozostałe " to "Remaining ",
+                    "kwaśnych deszczy" to "acid rain",
+                    "napojach gazowanych" to "carbonated drinks",
+                    "Wszystkie współczynniki = 1" to "All coefficients = 1",
+                    "Klasyczna reakcja syntezy wody" to "Classic water synthesis reaction",
+                    "Katalizator MnO₂ przyspiesza rozkład" to "Catalyst MnO₂ accelerates decomposition",
+                    "Elektroliza — odwrotność syntezy wody" to "Electrolysis — inverse of water synthesis",
+                    "Wapno palone (CaO) stosowane w budownictwie" to "Quicklime (CaO) used in construction",
+                    "Wapno palone + woda → wapno gaszone" to "Quicklime + water → slaked lime",
+                    "Tlenek kwasowy + woda → kwas" to "Acidic oxide + water → acid",
+                    "Tlenek zasadowy + woda → zasada" to "Basic oxide + water → base",
+                    "Metal + kwas → sól + wodór" to "Metal + acid → salt + hydrogen",
+                    "Zasada + kwas → sól + woda" to "Base + acid → salt + water",
+                    "dla każdego" to "for each",
+                    "daje" to "gives",
+                    "odczyn kwasowy" to "acidic reaction",
+                    "odczyn zasadowy" to "basic reaction",
+                    "odczyn obojętny" to "neutral reaction",
+                    "jest mniejsze od 7" to "is less than 7",
+                    "jest większe od 7" to "is greater than 7",
+                    "wynosi" to "is",
+                    "woda" to "water",
+
+                    "wodorotlenkiem" to "hydroxide",
+                    "wodorotlenku" to "hydroxide",
+                    "wodorotlenki" to "hydroxides",
+                    "wodorotlenek" to "hydroxide",
+                    "Wodorotlenkiem" to "Hydroxide",
+                    "Wodorotlenku" to "Hydroxide",
+                    "Wodorotlenki" to "Hydroxides",
+                    "Wodorotlenek" to "Hydroxide",
+                    "współczynników" to "coefficients",
+                    "współczynniki" to "coefficients",
+                    "współczynnik" to "coefficient",
+                    "Współczynników" to "Coefficients",
+                    "Współczynniki" to "Coefficients",
+                    "Współczynnik" to "Coefficient",
+                    "rozpuszczalny" to "soluble",
+                    "rozpuszczalne" to "soluble",
+                    "tlenkiem" to "oxide",
+                    "tlenku" to "oxide",
+                    "tlenki" to "oxides",
+                    "tlenek" to "oxide",
+                    "Tlenkiem" to "Oxide",
+                    "Tlenku" to "Oxide",
+                    "Tlenki" to "Oxides",
+                    "Tlenek" to "Oxide",
+                    "niemetale" to "nonmetals",
+                    "niemetal" to "nonmetal",
+                    "Niemetale" to "Nonmetals",
+                    "Niemetal" to "Nonmetal",
+                    "kwasem" to "acid",
+                    "kwasu" to "acid",
+                    "kwasy" to "acids",
+                    "kwas" to "acid",
+                    "Kwasem" to "Acid",
+                    "Kwasu" to "Acid",
+                    "Kwasy" to "Acids",
+                    "Kwas" to "Acid",
+                    "zasadą" to "base",
+                    "zasadę" to "base",
+                    "zasady" to "bases",
+                    "zasad" to "base",
+                    "zasada" to "base",
+                    "Zasadą" to "Base",
+                    "Zasadę" to "Base",
+                    "Zasady" to "Bases",
+                    "Zasad" to "Base",
+                    "Zasada" to "Base",
+                    "sole" to "salts",
+                    "soli" to "salts",
+                    "sól" to "salt",
+                    "Sole" to "Salts",
+                    "Soli" to "Salts",
+                    "Sól" to "Salt",
+                    "wodór" to "hydrogen",
+                    "Wodór" to "Hydrogen",
+                    "metalem" to "metal",
+                    "metalu" to "metal",
+                    "metal" to "metal",
+                    "Metalem" to "Metal",
+                    "Metalu" to "Metal",
+                    "Metal" to "Metal",
+                    "reakcją" to "reaction",
+                    "reakcję" to "reaction",
+                    "reakcje" to "reactions",
+                    "reakcja" to "reaction",
+                    "reakcji" to "reaction",
+                    "Reakcją" to "Reaction",
+                    "Reakcję" to "Reaction",
+                    "Reakcje" to "Reactions",
+                    "Reakcja" to "Reaction",
+                    "Reakcji" to "Reaction",
+                    "syntezę" to "synthesis",
+                    "syntezy" to "synthesis",
+                    "synteza" to "synthesis",
+                    "Syntezę" to "Synthesis",
+                    "Syntezy" to "Synthesis",
+                    "Synteza" to "Synthesis",
+                    "spalania" to "combustion",
+                    "spalanie" to "combustion",
+                    "Spalania" to "Combustion",
+                    "Spalanie" to "Combustion",
+                    "zbilansuj" to "balance",
+                    "Zbilansuj" to "Balance",
+                    "uzupełnij" to "complete",
+                    "Uzupełnij" to "Complete",
+                    "dobierz" to "choose",
+                    "Dobierz" to "Choose",
+                    "wodoru" to "hydrogen",
+                    "Wodoru" to "Hydrogen",
+                    "węgla" to "carbon",
+                    "Węgla" to "Carbon",
+                    "tlenu" to "oxygen",
+                    "Tlenu" to "Oxygen",
+                    "azotu" to "nitrogen",
+                    "Azotu" to "Nitrogen",
+                    "gazem" to "gas",
+                    "gazy" to "gases",
+                    "gaz" to "gas",
+                    "Gazem" to "Gas",
+                    "Gazy" to "Gases",
+                    "Gaz" to "Gas",
+                    "Razem" to "Total",
+                    "razem" to "total",
+                    "obojętny" to "neutral",
+                    "zasadowy" to "basic",
+                    "kwasowy" to "acidic",
+                    "obojętna" to "neutral",
+                    "zasadowa" to "basic",
+                    "kwasowa" to "acidic",
+                    "obojętne" to "neutral",
+                    "zasadowe" to "basic",
+                    "kwasowe" to "acidic",
+                    "Obojętny" to "Neutral",
+                    "Zasadowy" to "Basic",
+                    "Kwasowy" to "Acidic",
+                    "Obojętna" to "Neutral",
+                    "Zasadowa" to "Basic",
+                    "Kwasowa" to "Acidic",
+                    "Obojętne" to "Neutral",
+                    "Zasadowe" to "Basic",
+                    "Kwasowe" to "Acidic"
+                )
+
+                for ((pl, en) in replacements) {
+                    result = result.replace(pl, en)
+                }
+                result
+            }
+        }
+    }
+
+
 }

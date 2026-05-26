@@ -54,4 +54,21 @@ fun ensureTablesExist(driver: SqlDriver) {
         """.trimIndent(),
         parameters = 0
     )
+
+    // Stored questions for lessons
+    driver.execute(
+        identifier = null,
+        sql = """
+            CREATE TABLE IF NOT EXISTS storedQuestion (
+                lesson_id TEXT NOT NULL,
+                question_id INTEGER NOT NULL,
+                language TEXT NOT NULL,
+                type TEXT NOT NULL,
+                data_json TEXT NOT NULL,
+                PRIMARY KEY (lesson_id, question_id, language)
+            )
+        """.trimIndent(),
+        parameters = 0
+    )
 }
+

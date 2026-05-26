@@ -20,3 +20,25 @@ interface Platform {
  * - **iOS:** `Platform.ios.kt` -> `IOSPlatform`
  */
 expect fun getPlatform(): Platform
+
+/**
+ * Helper to write text to a local file path. No-op on platforms without local file access (e.g. iOS simulator sandbox).
+ */
+expect fun writeTextToFile(path: String, text: String)
+
+/**
+ * Helper to read text from a local file path. Returns empty string if the file doesn't exist or is unreadable.
+ */
+expect fun readTextFromFile(path: String): String
+
+/**
+ * Exits the application process.
+ */
+expect fun exitApp()
+
+/**
+ * Returns the two-letter ISO language code of the system (e.g. "pl", "en").
+ */
+expect fun getSystemLanguage(): String
+
+

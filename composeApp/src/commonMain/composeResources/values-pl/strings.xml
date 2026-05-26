@@ -412,4 +412,9 @@
     <string name="lesson_desc_chemia_4_2">Jony kwasów, zasad i soli</string>
     <string name="lesson_chemia_6_1">Rodzaje tlenków</string>
     <string name="lesson_desc_chemia_6_1">Wzory, nazwy i klasyfikacja tlenków + równania tworzenia</string>
+    <string name="database_error_title">Błąd bazy danych</string>
+    <string name="database_error_desc">Aplikacja napotkała błąd podczas otwierania lub migracji bazy danych. Możesz zresetować bazę danych (co usunie Twoje lokalne postępy i przywróci działanie aplikacji) lub zamknąć aplikację i poczekać na poprawkę.</string>
+    <string name="database_error_tech_details">Szczegóły techniczne:</string>
+    <string name="database_error_reset_progress">Resetuj postępy</string>
+    <string name="database_error_exit_app">Zamknij aplikację</string>
 </resources>

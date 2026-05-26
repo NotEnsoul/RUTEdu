@@ -10,6 +10,5 @@ import prz.rutedu.app.database.DriverFactory
  * [ComposeUIViewController] that hosts the [App] composable.
  */
 fun MainViewController() = ComposeUIViewController {
-    val driver = DriverFactory().createDriver();
-    App(driver)
+    App(DriverFactory())
 }

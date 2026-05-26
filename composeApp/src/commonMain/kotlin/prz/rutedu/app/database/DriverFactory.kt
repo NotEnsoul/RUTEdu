@@ -28,4 +28,10 @@ expect class DriverFactory {
      * The schema is applied (or migrated) automatically on first open.
      */
     fun createDriver(): SqlDriver
+
+    /**
+     * Deletes the local database file and any associated journal/WAL files.
+     * @return true if deletion succeeded, false otherwise.
+     */
+    fun deleteDatabase(): Boolean
 }

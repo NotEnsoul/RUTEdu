@@ -409,8 +409,8 @@ sealed class Question(open val id: Int) {
      * against [correctExpr] using [prz.rutedu.app.math.MathEngine.areEquivalent].
      *
      * On iOS ([prz.rutedu.app.math.mathEngineAvailable] = false), this question type is never
-     * generated — [prz.rutedu.app.data.AlgebraQuestionGenerator] returns [SelectFromList]
-     * fallbacks instead.
+     * returned — [prz.rutedu.app.data.QuestionBank] filters and returns [SelectFromList]
+     * fallbacks instead from the database.
      *
      * Rendered by `ExpressionTypeAnswerContent`.
      *

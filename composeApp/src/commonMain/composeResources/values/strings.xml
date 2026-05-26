@@ -412,4 +412,9 @@
     <string name="lesson_desc_chemia_4_2">Ions of acids, bases and salts in solution</string>
     <string name="lesson_chemia_6_1">Types of Oxides</string>
     <string name="lesson_desc_chemia_6_1">Formulas, naming and classification of oxides</string>
+    <string name="database_error_title">Database Error</string>
+    <string name="database_error_desc">The application encountered an error while opening or migrating the database. You can reset the database (which will delete your local progress and restore the application) or close the application and wait for a fix.</string>
+    <string name="database_error_tech_details">Technical Details:</string>
+    <string name="database_error_reset_progress">Reset Progress</string>
+    <string name="database_error_exit_app">Exit App</string>
 </resources>

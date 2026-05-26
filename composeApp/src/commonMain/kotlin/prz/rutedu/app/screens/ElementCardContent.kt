@@ -43,6 +43,8 @@ import rutedu.composeapp.generated.resources.Res
 import rutedu.composeapp.generated.resources.element_card_configuration
 import rutedu.composeapp.generated.resources.element_card_group
 import prz.rutedu.app.models.getElementNameRes
+import prz.rutedu.app.locale.LocalAppLocale
+import prz.rutedu.app.models.localizedGroupName
 
 /**
  * Formats a float to exactly 3 decimal places without using `String.format` (which is not
@@ -188,9 +190,10 @@ internal fun ElementCardContent(
                         Spacer(Modifier.height(6.dp))
                     }
                     if (element.groupName.isNotEmpty()) {
+                        val lang = LocalAppLocale.current
                         ElementInfoRow(
                             label = stringResource(Res.string.element_card_group),
-                            value = "${element.tableCol} (${element.groupName.lowercase()})",
+                            value = "${element.tableCol} (${element.localizedGroupName(lang).lowercase()})",
                             accentColor = accentColor
                         )
                     }

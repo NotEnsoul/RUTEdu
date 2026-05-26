@@ -31,12 +31,32 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import app.cash.sqldelight.db.SqlDriver
+import prz.rutedu.app.database.DriverFactory
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Icon
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Warning
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.text.style.TextAlign
 import org.jetbrains.compose.resources.stringResource
 import prz.rutedu.app.components.BottomNavBar
 import prz.rutedu.app.components.NavTab
 import prz.rutedu.app.data.SubjectRepository
 import prz.rutedu.app.locale.AppLocaleProvider
 import prz.rutedu.app.locale.customAppLocale
+import prz.rutedu.app.locale.getCurrentLanguage
 import prz.rutedu.app.screens.ConfigListScreen
 import prz.rutedu.app.screens.GameMode
 import prz.rutedu.app.screens.GameScreen
@@ -182,29 +202,74 @@ private fun showBottomNav(route: String?): Boolean =
  */
 @Composable
 @Preview
-fun App(driver: SqlDriver) {
-    val navController = rememberNavController()
-    val db = remember { Database(driver) }
+fun App(driverFactory: DriverFactory) {
+    var driverState by remember { mutableStateOf<SqlDriver?>(null) }
+    var databaseError by remember { mutableStateOf<Throwable?>(null) }
 
-    // Load initial settings synchronously during the first composition to prevent flashes
-    remember(db) {
+    remember(driverFactory) {
         try {
-            val savedLanguage = db.databaseQueries.getLanguage().executeAsOneOrNull()
-            if (savedLanguage != null) {
-                customAppLocale = savedLanguage
-            }
-        } catch (_: Exception) {}
-        try {
-            val savedTheme = db.databaseQueries.getThemeMode().executeAsOneOrNull()
-            if (savedTheme != null) {
-                customAppThemeMode = ThemeMode.fromString(savedTheme)
-            }
-        } catch (_: Exception) {}
+            driverState = driverFactory.createDriver()
+        } catch (e: Throwable) {
+            databaseError = e
+        }
         Unit
     }
 
-    RUTEduTheme {
-        AppLocaleProvider {
+    if (databaseError != null) {
+        RUTEduTheme {
+            DatabaseErrorScreen(
+                error = databaseError!!,
+                onReset = {
+                    driverFactory.deleteDatabase()
+                    databaseError = null
+                    try {
+                        driverState = driverFactory.createDriver()
+                    } catch (e: Throwable) {
+                        databaseError = e
+                    }
+                },
+                onExit = {
+                    exitApp()
+                }
+            )
+        }
+    } else if (driverState != null) {
+        val driver = driverState!!
+        val navController = rememberNavController()
+        val db = remember { Database(driver) }
+
+        // Load initial settings synchronously during the first composition to prevent flashes
+        remember(db) {
+            try {
+                val savedLanguage = db.databaseQueries.getLanguage().executeAsOneOrNull()
+                if (savedLanguage != null) {
+                    customAppLocale = savedLanguage
+                }
+            } catch (_: Exception) {}
+            try {
+                val savedTheme = db.databaseQueries.getThemeMode().executeAsOneOrNull()
+                if (savedTheme != null) {
+                    customAppThemeMode = ThemeMode.fromString(savedTheme)
+                }
+            } catch (_: Exception) {}
+            try {
+                prz.rutedu.app.data.QuestionBank.loadQuestions(driver, getCurrentLanguage())
+            } catch (_: Exception) {}
+            Unit
+        }
+
+        LaunchedEffect(driver) {
+            prz.rutedu.app.data.QuestionBank.seedDatabaseIfNeeded(driver)
+            prz.rutedu.app.data.QuestionBank.loadQuestions(driver, getCurrentLanguage())
+        }
+
+        LaunchedEffect(customAppLocale) {
+            prz.rutedu.app.data.QuestionBank.loadQuestions(driver, getCurrentLanguage())
+        }
+
+
+        RUTEduTheme {
+            AppLocaleProvider {
             val backStackEntry by navController.currentBackStackEntryAsState()
             val currentRoute = backStackEntry?.destination?.route
 
@@ -426,6 +491,7 @@ fun App(driver: SqlDriver) {
         }
     }
 }
+}
 
 /**
  * Temporary stand-in screen shown for tabs (NAUKA, ĆWICZENIA) that have not yet been
@@ -449,5 +515,114 @@ private fun PlaceholderScreen(label: String, bottomPadding: Dp = 0.dp) {
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onBackground
         )
+    }
+}
+
+@Composable
+fun DatabaseErrorScreen(
+    error: Throwable,
+    onReset: () -> Unit,
+    onExit: () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+            .padding(16.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .verticalScroll(rememberScrollState()),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .padding(24.dp)
+                    .fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Warning,
+                    contentDescription = "Warning",
+                    tint = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.height(48.dp).width(48.dp)
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Text(
+                    text = stringResource(Res.string.database_error_title),
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    textAlign = TextAlign.Center
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Text(
+                    text = stringResource(Res.string.database_error_desc),
+                    fontSize = 14.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(8.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+                ) {
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        Text(
+                            text = stringResource(Res.string.database_error_tech_details),
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = error.message ?: error.toString(),
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.error,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                Button(
+                    onClick = onReset,
+                    modifier = Modifier.fillMaxWidth().height(48.dp),
+                    shape = RoundedCornerShape(24.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                ) {
+                    Text(
+                        text = stringResource(Res.string.database_error_reset_progress),
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onError
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                OutlinedButton(
+                    onClick = onExit,
+                    modifier = Modifier.fillMaxWidth().height(48.dp),
+                    shape = RoundedCornerShape(24.dp)
+                ) {
+                    Text(
+                        text = stringResource(Res.string.database_error_exit_app),
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+            }
+        }
     }
 }
